@@ -1,0 +1,7 @@
+case_type: modelslim
+case_name: multi_modal_quant_anti_flux
+enable: y
+script:
+  start: run.sh
+timeout: 45
+rank_size: 1

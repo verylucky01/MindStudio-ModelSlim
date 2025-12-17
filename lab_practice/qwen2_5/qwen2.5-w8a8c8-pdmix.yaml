@@ -1,0 +1,115 @@
+apiversion: modelslim_v0
+metadata:
+  config_id: qwen2.5-w8a8c8-pdmix
+  score: 80
+  verified_model_types:
+    - Qwen2.5-72B-Instruct
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: True
+spec:
+  anti_cfg:
+    anti_method: m6
+    flex_config:
+      alpha: 0.75
+      beta: 0.1
+    disable_anti_names:
+      - model.layers.0.self_attn.o_proj
+      - model.layers.1.self_attn.o_proj
+      - model.layers.2.self_attn.o_proj
+      - model.layers.3.self_attn.o_proj
+      - model.layers.4.self_attn.o_proj
+      - model.layers.5.self_attn.o_proj
+      - model.layers.6.self_attn.o_proj
+      - model.layers.7.self_attn.o_proj
+      - model.layers.8.self_attn.o_proj
+      - model.layers.9.self_attn.o_proj
+      - model.layers.10.self_attn.o_proj
+      - model.layers.11.self_attn.o_proj
+      - model.layers.12.self_attn.o_proj
+      - model.layers.13.self_attn.o_proj
+      - model.layers.14.self_attn.o_proj
+      - model.layers.15.self_attn.o_proj
+      - model.layers.16.self_attn.o_proj
+      - model.layers.17.self_attn.o_proj
+      - model.layers.18.self_attn.o_proj
+      - model.layers.19.self_attn.o_proj
+      - model.layers.20.self_attn.o_proj
+      - model.layers.21.self_attn.o_proj
+      - model.layers.22.self_attn.o_proj
+      - model.layers.23.self_attn.o_proj
+      - model.layers.24.self_attn.o_proj
+      - model.layers.25.self_attn.o_proj
+      - model.layers.26.self_attn.o_proj
+      - model.layers.27.self_attn.o_proj
+      - model.layers.28.self_attn.o_proj
+      - model.layers.29.self_attn.o_proj
+      - model.layers.30.self_attn.o_proj
+      - model.layers.31.self_attn.o_proj
+      - model.layers.32.self_attn.o_proj
+      - model.layers.33.self_attn.o_proj
+      - model.layers.34.self_attn.o_proj
+      - model.layers.35.self_attn.o_proj
+      - model.layers.36.self_attn.o_proj
+      - model.layers.37.self_attn.o_proj
+      - model.layers.38.self_attn.o_proj
+      - model.layers.39.self_attn.o_proj
+      - model.layers.40.self_attn.o_proj
+      - model.layers.41.self_attn.o_proj
+      - model.layers.42.self_attn.o_proj
+      - model.layers.43.self_attn.o_proj
+      - model.layers.44.self_attn.o_proj
+      - model.layers.45.self_attn.o_proj
+      - model.layers.46.self_attn.o_proj
+      - model.layers.47.self_attn.o_proj
+      - model.layers.48.self_attn.o_proj
+      - model.layers.49.self_attn.o_proj
+      - model.layers.50.self_attn.o_proj
+      - model.layers.51.self_attn.o_proj
+      - model.layers.52.self_attn.o_proj
+      - model.layers.53.self_attn.o_proj
+      - model.layers.54.self_attn.o_proj
+      - model.layers.55.self_attn.o_proj
+      - model.layers.56.self_attn.o_proj
+      - model.layers.57.self_attn.o_proj
+      - model.layers.58.self_attn.o_proj
+      - model.layers.59.self_attn.o_proj
+      - model.layers.60.self_attn.o_proj
+      - model.layers.61.self_attn.o_proj
+      - model.layers.62.self_attn.o_proj
+      - model.layers.63.self_attn.o_proj
+      - model.layers.64.self_attn.o_proj
+      - model.layers.65.self_attn.o_proj
+      - model.layers.66.self_attn.o_proj
+      - model.layers.67.self_attn.o_proj
+      - model.layers.68.self_attn.o_proj
+      - model.layers.69.self_attn.o_proj
+      - model.layers.70.self_attn.o_proj
+      - model.layers.71.self_attn.o_proj
+      - model.layers.72.self_attn.o_proj
+      - model.layers.73.self_attn.o_proj
+      - model.layers.74.self_attn.o_proj
+      - model.layers.75.self_attn.o_proj
+      - model.layers.76.self_attn.o_proj
+      - model.layers.77.self_attn.o_proj
+      - model.layers.78.self_attn.o_proj
+      - model.layers.79.self_attn.o_proj
+  calib_cfg:
+    w_bit: 8
+    a_bit: 8
+    mm_tensor: False
+    act_method: 2
+    use_kvcache_quant: True
+    pdmix: True
+    disable_names:
+      - 'model.layers.0.mlp.down_proj'
+      - 'model.layers.1.mlp.down_proj'
+      - 'model.layers.2.mlp.down_proj'
+      - 'model.layers.79.mlp.down_proj'
+      - 'lm_head'
+  calib_dataset: qwen2.5_w8a8_pdmix_calib_prompt.jsonl
+  anti_dataset: qwen2.5_w8a8_pdmix_anti_prompt.jsonl
+  calib_save_params:
+    part_file_size: 4

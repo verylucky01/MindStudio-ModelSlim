@@ -1,0 +1,7 @@
+case_type: modelslim
+case_name: multi_modal_sample_optimization_osp1.2
+enable: y
+script:
+  start: run.sh
+timeout: 45
+rank_size: 1

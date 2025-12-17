@@ -1,0 +1,45 @@
+# 量化配置
+apiversion: multimodal_sd_modelslim_v1
+metadata:
+  config_id: hunyuan_video_w8a8_int8
+  score: 0.95
+  verified_model_types:
+    - hunyuan_video
+    - hunyuan-video
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: False
+
+spec:
+  process:
+    - type: "linear_quant"
+      qconfig:
+        act:
+          scope: "per_token"   # default is per_tensor
+          dtype: "int8"        # default is int8
+          symmetric: True      # default is True
+          method: "minmax"      # default is minmax
+        weight:
+          scope: "per_channel"   # default is per_channel
+          dtype: "int8"        # default is int8
+          symmetric: True       # default is True
+          method: "minmax"      # default is minmax
+      include:
+        - "*"
+      exclude:
+        - ""
+
+  save:
+    - type: "mindie_format_saver"
+      part_file_size: 0
+
+  # 基础配置
+  multimodal_sd_config:
+    dump_config:
+      capture_mode: "args"
+      dump_data_dir: ""  # default is save_path
+    model_config:
+      prompt: "A stylish woman walks down a Tokyo street filled with warm glowing neon and animated city signage. She wears a black leather jacket, a long red dress, and black boots, and carries a black purse. She wears sunglasses and red lipstick. She walks confidently and casually. The street is damp and reflective, creating a mirror effect of the colorful lights. Many pedestrians walk about."
+      # 模型加载参数

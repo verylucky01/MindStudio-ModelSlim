@@ -1,0 +1,26 @@
+apiversion: modelslim_v0
+metadata:
+  config_id: qwen3-32b-w8a8s
+  score: 90
+  verified_model_types:
+    - Qwen3-32B
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: True
+    kv_cache: False
+spec:
+  calib_cfg:
+    w_bit: 4
+    a_bit: 8
+    fraction: 0.011
+    use_sigma: True
+    is_lowbit: True
+    co_sparse: True
+    mm_tensor: False
+  calib_params:
+    mix_cfg:
+      "model.layers.*.mlp.down_proj": "float"
+  calib_dataset: cn_en.jsonl
+  calib_save_params:
+     part_file_size: 4

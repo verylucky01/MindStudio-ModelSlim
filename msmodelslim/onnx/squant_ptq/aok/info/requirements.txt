@@ -1,0 +1,4 @@
+python>=3.7.5
+numpy>=1.21.6
+onnx>=1.16.2
+onnxruntime==1.11.1

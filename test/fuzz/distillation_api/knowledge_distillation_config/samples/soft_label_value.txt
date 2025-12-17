@@ -1,0 +1,8 @@
+teacher_fc
+s_module
+student_fc
+t_output_idx
+0
+HiddenMse
+1
+0.001

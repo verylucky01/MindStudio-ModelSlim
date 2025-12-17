@@ -1,0 +1,70 @@
+general:
+    backend: pytorch  # pytorch | tensorflow
+    device_category: NPU
+    logger:
+        level: info
+    task:
+      local_base_path: ./
+      task_id: "quant_sample_pt"
+    device_evaluate_before_train: False
+
+register:
+  pkg_path: [ "./" ]
+  modules:
+    - module: "sample_net_torch"  # 模块导入
+      script_network: [ "get_model" ]
+
+pipeline: [ nas ]
+
+nas:
+    pipe_step:
+        type: SearchPipeStep
+    model:
+        model_desc:
+          type: ScriptModelGen
+          common:
+            network: get_model
+        input_shape: [ 1,3,224,224 ]
+    dataset:
+        type: RandomDataset
+        common:
+            image_size: 224
+            batch_size: 32
+            channel_size: 3
+            img_len: 1000
+    search_algorithm:
+        type: QuantRL
+        codec: QuantRLCodec
+        policy:
+            max_episode: 50
+            num_warmup: 20
+
+        objective_keys: [ 'accuracy', 'compress_ratio', 'latency' ]
+        reward_type: 'acc_first'
+        custom_reward: False
+        latency_acc_ratio: 0.5
+        stop_early: False
+        acc_threshold: 0.5
+        latency_threshold: 5
+        compress_threshold: 40
+    search_space:
+        type: SearchSpace
+        hyperparameters:
+            -   key: network.bit_candidates
+                type: CATEGORY
+                range: [ 8, 32 ]
+    trainer:
+        type: OriTrainer
+        epochs: 1
+        seed: 234
+        callbacks: [ QuantPTQCallback, ConvertOnnxCallback ]
+        calib_portion: 0.01
+        custom_calib:
+            pkg_path: /automl/resnet/
+            path: /automl/resnet/train.py
+            func: train_func
+        custom_eval:
+            pkg_path: /automl/resnet/
+            path: /automl/resnet/train.py
+            func: eval_func
+            metric_name: "accuracy_top1"

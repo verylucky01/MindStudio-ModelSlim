@@ -1,0 +1,104 @@
+apiversion: modelslim_v1
+metadata:
+  config_id: deepseekr1_w4a8c8_per_channel
+  score: 90
+  verified_model_types:
+    - DeepSeek-R1-0528
+  label:
+    w_bit: 4
+    a_bit: 8
+    is_sparse: False
+    kv_cache: True
+
+default_w8a8: &default_w8a8
+  act:
+    scope: "per_tensor"
+    dtype: "int8"
+    symmetric: False
+    method: "minmax"
+  weight:
+    scope: "per_channel"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+
+default_w8a8_dynamic: &default_w8a8_dynamic
+  act:
+    scope: "per_token"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+  weight:
+    scope: "per_channel"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+
+default_w4a8_dynamic: &default_w4a8_dynamic
+  act:
+    scope: "per_token"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+  weight:
+    scope: "per_channel"
+    dtype: "int4"
+    symmetric: True
+    method: "ssz"
+
+spec:
+  process:
+    - type: "quarot"
+      block_size: 32
+    - type: "flex_smooth_quant"
+      enable_subgraph_type:
+        - 'norm-linear'
+        - 'ov'
+      include:
+        - "*"
+    - type: "group"
+      configs:
+        - type: "linear_quant"
+          qconfig: *default_w8a8
+          include:
+            - "*self_attn*"
+          exclude:
+            - "*kv_b_proj"
+        - type: "linear_quant"
+          qconfig: *default_w8a8_dynamic
+          include:
+            - "*mlp*"
+          exclude:
+            - "*gate"
+            - "*mlp.experts.*"
+        - type: "linear_quant"
+          qconfig: *default_w8a8_dynamic
+          include:
+            - "model.layers.61.mlp.experts*"
+        - type: "linear_quant"
+          qconfig: *default_w4a8_dynamic
+          include:
+            - "*mlp.experts*"
+          exclude:
+            - "model.layers.61.*"
+    - type: "fa3_quant"
+      include:
+        - "*"
+      exclude:
+        - "model.layers.0.*"
+        - "model.layers.1.*"
+        - "model.layers.2.*"
+        - "model.layers.46.*"
+        - "model.layers.47.*"
+        - "model.layers.50.*"
+        - "model.layers.54.*"
+        - "model.layers.55.*"
+        - "model.layers.56.*"
+        - "model.layers.57.*"
+        - "model.layers.58.*"
+        - "model.layers.59.*"
+        - "model.layers.60.*"
+        - "model.layers.61.*"
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4

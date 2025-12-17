@@ -1,0 +1,67 @@
+apiversion: modelslim_v1
+metadata:
+  config_id: qwen3-30B-w4a8-v1
+  score: 90
+  verified_model_types:
+    - Qwen3-30B
+  label:
+    w_bit: 4
+    a_bit: 8
+    is_sparse: False
+    kv_cache: False
+
+default_w8a8_dynamic: &default_w8a8_dynamic
+  act:
+    scope: "per_token"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+  weight:
+    scope: "per_channel"
+    dtype: "int8"
+    symmetric: True
+    method: "ssz"
+
+default_w4a8_dynamic: &default_w4a8_dynamic
+  act:
+    scope: "per_token"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+  weight:
+    scope: "per_channel"
+    dtype: "int4"
+    symmetric: True
+    method: "ssz"
+    ext:
+      group_size: 64
+
+spec:
+  process:
+    - type: "flex_smooth_quant"
+      enable_subgraph_type:
+        - 'norm-linear'
+        - 'ov'
+      include:
+        - "*"
+    - type: "group"
+      configs:
+        - type: "linear_quant"
+          qconfig: *default_w8a8_dynamic
+          include: ["*self_attn*"]
+        - type: "linear_quant"
+          qconfig: *default_w8a8_dynamic
+          include: ["*mlp*"]
+          exclude: ["*gate*", "*mlp.experts.*"]
+        - type: "linear_quant"
+          qconfig: *default_w8a8_dynamic
+          include: ["*model.layers.41.mlp.experts*", "*model.layers.41.mlp.experts*", "*model.layers.42.mlp.experts*", "*model.layers.43.mlp.experts*", "*model.layers.44.mlp.experts*", "*model.layers.45.mlp.experts*", "*model.layers.46.mlp.experts*", "*model.layers.47.mlp.experts*"]  
+        - type: "linear_quant"
+          qconfig: *default_w4a8_dynamic
+          include: ["*mlp.experts*"]
+          exclude: ["model.layers.41.*", "model.layers.42.*", "model.layers.43.*", "model.layers.44.*", "model.layers.45.*", "model.layers.46.*", "model.layers.47.*"]
+
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
+

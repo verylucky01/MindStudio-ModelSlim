@@ -1,0 +1,22 @@
+apiversion: modelslim_v1
+
+spec:
+  process:
+    - type: "linear_quant"
+      qconfig:
+        act:
+          scope: "per_token"   # default is per_tensor
+          dtype: "int8"        # default is int8
+          symmetric: True      # default is True
+          method: "minmax"      # default is minmax
+        weight:
+          scope: "per_channel"   # default is per_channel
+          dtype: "int8"        # default is int8
+          symmetric: True       # default is True
+          method: "minmax"      # default is minmax
+      include: ["*"]
+      exclude: ["*down_proj*"]
+
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4

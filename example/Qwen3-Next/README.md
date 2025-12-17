@@ -1,0 +1,43 @@
+# Qwen3-Next 量化案例
+
+## 模型介绍
+
+- [Qwen3-Next-80B-A3B-Instruct](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct) 代表了Qwen团队推出的下一代基础模型，专为极端上下文长度和大规模参数效率进行了优化。其引入了一系列架构创新，在最大化性能的同时最小化计算成本。
+
+## 硬件产品支持
+
+- 支持Atlas 800T A2、Atlas 800I A2、Atlas 800T A3、Atlas 800I A3系列产品
+
+## 环境配置
+
+- 环境配置请参考[安装指南](../../docs/安装指南.md)
+- transformers版本需要配置安装4.57.0及其之后的版本
+    - pip install transformers==4.57.1
+
+## 支持的模型版本与量化策略
+
+| 模型系列 | 模型版本 | HuggingFace链接                                                 | W8A8 | W8A16 | W4A8 | W4A16 | W4A4  | 稀疏量化 | KV Cache | Attention | 量化命令                                          |
+|---------|---------|---------------------------------------------------------------|-----|-----|-----|--------|------|---------|----------|-----------|-----------------------------------------------|
+| **Qwen3-Next** | Qwen3-Next-80B-A3B-Instruct | [Qwen3-Next-80B-A3B-Instruct](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct)   | ✅ |  |    |        |   |  |   |   | [W8A8](#qwen3-next-80b-a3b-instruct-w8a8量化)|
+
+**说明：**
+- ✅ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
+- 空格表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
+- 点击量化命令列中的链接可跳转到对应的具体量化命令
+
+
+## 量化权重生成
+
+
+### 使用案例
+
+- 请将{MODEL_PATH}替换为用户实际浮点权重路径，{SAVE_PATH}替换为量化权重保存路径。
+
+#### 1. Qwen3-Next-80B-A3B-Instruct
+##### <span id="qwen3-next-80b-a3b-instruct-w8a8量化">Qwen3-Next-80B-A3B-Instruct W8A8量化</span>
+
+该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+
+  ```shell
+  msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type Qwen3-Next-80B-A3B-Instruct --quant_type w8a8 --trust_remote_code True
+  ```

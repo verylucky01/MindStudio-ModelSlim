@@ -1,0 +1,6 @@
+{  "type": "DagNet",
+   "conv": "{\"name\": \"conv1\", \"module\": {\"in_channels\": 3, \"out_channels\": 64}, \"module_type\": \"Conv2d\", \"parent_node_names\": [], \"child_node_names\": [\"bn1\"], \"_arch_params_type\": \"DagNode\"}",
+   "bn": "{\"name\": \"bn1\", \"module\": {\"num_features\": 64}, \"module_type\": \"_BatchNorm\", \"parent_node_names\": [\"conv1\"], \"child_node_names\": [\"relu\"], \"_arch_params_type\": \"DagNode\"}",
+   "relu": "{\"name\": \"bn1\", \"module\": {\"num_features\": 64}, \"module_type\": \"_BatchNorm\", \"parent_node_names\": [\"conv1\"], \"child_node_names\": [\"relu\"], \"_arch_params_type\": \"DagNode\"}",
+   "maxpool": "{\"name\": \"bn1\", \"module\": {\"num_features\": 64}, \"module_type\": \"_BatchNorm\", \"parent_node_names\": [\"conv1\"], \"child_node_names\": [\"relu\"], \"_arch_params_type\": \"DagNode\"}"
+}

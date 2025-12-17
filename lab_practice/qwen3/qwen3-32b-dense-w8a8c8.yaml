@@ -1,0 +1,58 @@
+apiversion: modelslim_v1
+metadata:
+  config_id: qwen3-32b-dense-w8a8c8
+  score: 90
+  verified_model_types:
+    - Qwen3-32B
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: True
+spec:
+  process:
+    - type: "iter_smooth"                  
+      alpha: 0.5               
+      scale_min: 1e-5                                     
+      enable_subgraph_type:                
+        - 'norm-linear'
+        - 'linear-linear'
+        - 'ov'
+        - 'up-down'
+      include:                             
+        - "*"
+    - type: "linear_quant"
+      qconfig:
+        act:
+          scope: "pd_mix"  
+          dtype: "int8"        
+          symmetric: False    
+          method: "minmax"      
+        weight:
+          scope: "per_channel"  
+          dtype: "int8"        
+          symmetric: True      
+          method: "minmax"     
+      include: ["*"]
+      exclude: 
+        - 'model.layers.1.mlp.down_proj'
+        - 'model.layers.2.mlp.down_proj'
+        - 'model.layers.6.mlp.down_proj'
+        - 'model.layers.7.mlp.down_proj'
+        - 'model.layers.11.mlp.down_proj'
+        - 'model.layers.43.mlp.down_proj'
+        - 'model.layers.44.mlp.down_proj'
+        - 'model.layers.45.mlp.down_proj'
+        - 'model.layers.62.mlp.down_proj'
+    - type: "dynamic_cache" 
+      qconfig:
+        scope: "per_channel"
+        dtype: "int8" 
+        symmetric: True 
+        method: "minmax"
+      include: 
+        - "*"
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
+  dataset: "qwen3_cot.json"

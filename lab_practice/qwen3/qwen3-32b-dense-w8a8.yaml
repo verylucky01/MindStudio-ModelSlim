@@ -1,0 +1,33 @@
+apiversion: modelslim_v0
+metadata:
+  config_id: qwen3-32b-dense-w8a8
+  score: 90
+  verified_model_types:
+    - Qwen3-32B
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: False
+spec:
+  anti_cfg:
+    anti_method: m4
+  calib_cfg:
+    w_bit: 8
+    a_bit: 8
+    mm_tensor: False
+    pdmix: True
+    disable_names:
+      - 'lm_head'
+      - 'model.layers.1.mlp.down_proj'
+      - 'model.layers.2.mlp.down_proj'
+      - 'model.layers.6.mlp.down_proj'
+      - 'model.layers.7.mlp.down_proj'
+      - 'model.layers.11.mlp.down_proj'
+      - 'model.layers.43.mlp.down_proj'
+      - 'model.layers.44.mlp.down_proj'
+      - 'model.layers.45.mlp.down_proj'
+      - 'model.layers.62.mlp.down_proj'
+  calib_dataset: mix_calib.jsonl
+  calib_save_params:
+    part_file_size: 4

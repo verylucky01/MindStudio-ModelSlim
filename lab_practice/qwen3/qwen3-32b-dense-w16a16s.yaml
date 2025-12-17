@@ -1,0 +1,22 @@
+apiversion: modelslim_v1
+metadata:
+  config_id: qwen3-32b-dense-w16a16s
+  score: 90
+  verified_model_types:
+    - Qwen3-32B
+  label:
+    w_bit: 16
+    a_bit: 16
+    is_sparse: True
+    kv_cache: False
+spec:
+  process:
+    - type: "float_sparse"                  
+      sparse_ratio: 0.4                      
+      include: ["*"]
+      exclude: []
+
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
+  dataset: "long_calib.jsonl"

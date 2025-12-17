@@ -1,0 +1,9 @@
+apiversion: "modelslim_v1"
+spec:
+  process:
+    - type: "quarot"
+      online: true
+      down_proj_online_layers: [ 1,2 ]
+      max_tp_size: 2
+
+  dataset: test.json

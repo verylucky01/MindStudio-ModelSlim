@@ -1,0 +1,7 @@
+case_type: modelslim
+case_name: multi_modal_quant_timestep_flux
+enable: y
+script:
+  start: run.sh
+timeout: 30
+rank_size: 1

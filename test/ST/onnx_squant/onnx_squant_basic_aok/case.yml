@@ -1,0 +1,7 @@
+case_type: modelslim
+case_name: onnx_squant_basic_aok
+enable: y
+script:
+  start: run.sh
+timeout: 135
+rank_size: 1

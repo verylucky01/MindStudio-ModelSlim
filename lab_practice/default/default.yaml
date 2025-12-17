@@ -1,0 +1,24 @@
+apiversion: modelslim_v0
+metadata:
+  config_id: default
+  score: 50
+  verified_model_types: []
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: False
+spec:
+  calib_cfg:
+    w_bit: 8
+    a_bit: 8
+    mm_tensor: False
+  calib_file: boolq.jsonl
+
+  
+
+
+
+
+
+

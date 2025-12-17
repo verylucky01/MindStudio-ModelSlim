@@ -1,0 +1,56 @@
+{
+  "name": "conv1",
+  "module": {
+    "training": false,
+    "_buffers": {},
+    "_backward_hooks": {},
+    "_forward_hooks": {},
+    "_forward_pre_hooks": {},
+    "_state_dict_hooks": {},
+    "_load_state_dict_pre_hooks": {},
+    "_modules": {},
+    "in_channels": 3,
+    "out_channels": 64,
+    "kernel_size": [
+      7,
+      7
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "padding": [
+      3,
+      3
+    ],
+    "dilation": [
+      1,
+      1
+    ],
+    "transposed": false,
+    "output_padding": [
+      0,
+      0
+    ],
+    "groups": 1,
+    "padding_mode": "zeros",
+    "_padding_repeated_twice": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "obj_class": "Conv2d",
+    "obj_module": "torch.nn.modules.conv"
+  },
+  "module_type": "Conv2d",
+  "parent_node_names": [],
+  "child_node_names": [
+    "bn1"
+  ],
+  "x_len": 1,
+  "list_type_x": false,
+  "saved_args": [],
+  "saved_kwargs": {},
+  "_arch_params_type": "DagNode"
+}

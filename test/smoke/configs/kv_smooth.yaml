@@ -1,0 +1,9 @@
+apiversion: "modelslim_v1"
+spec:
+  process:
+    - type: "kv_smooth"
+      smooth_factor: 1.0
+      include: [ "*" ]
+      exclude: [ "model.layers.0.self_attn" ]
+
+  dataset: test.json

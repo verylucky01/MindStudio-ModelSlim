@@ -1,0 +1,24 @@
+apiversion: modelslim_v0
+metadata:
+  config_id: qwen3-14b-dense-w8a8
+  score: 90
+  verified_model_types:
+    - Qwen3-14B
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: False
+spec:
+  anti_cfg:
+    anti_method: m4
+  calib_cfg:
+    w_bit: 8
+    a_bit: 8
+    mm_tensor: False
+    pdmix: True
+  calib_params:
+    disable_level: L10
+  calib_dataset: mix_calib.jsonl
+  calib_save_params:
+    part_file_size: 4

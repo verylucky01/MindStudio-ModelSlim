@@ -1,0 +1,838 @@
+# Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+
+import argparse
+import logging
+import os
+import re
+import random
+import sys
+import time
+from pathlib import Path
+from typing import Optional, Dict, Any, Tuple, Generator, List
+
+import torch
+from torch import nn, distributed as dist
+from tqdm import tqdm
+
+from msmodelslim.core.const import DeviceType
+from msmodelslim.core.base.protocol import ProcessRequest
+from msmodelslim.model.base import BaseModelAdapter
+from msmodelslim.model.common.layer_wise_forward import TransformersForwardBreak, \
+    generated_decoder_layer_visit_func_with_keyword
+from msmodelslim.utils.cache import to_device
+from msmodelslim.utils.exception import InvalidModelError, SchemaValidateError, UnsupportedError
+from msmodelslim.utils.logging import logger_setter
+from ..interface_hub import ModelInfoInterface, MultimodalSDPipelineInterface
+
+SUPPORTED_TASKS = ['hunyuan_video']
+
+
+@logger_setter()
+class HunyuanVideoModelAdapter(BaseModelAdapter,
+                          ModelInfoInterface,
+                          MultimodalSDPipelineInterface,
+                          ):
+    def __init__(self,
+                 model_type: str,
+                 model_path: Path,
+                 trust_remote_code: bool = False):
+        super().__init__(model_type, model_path, trust_remote_code)
+        self.pipeline = None
+        self.transformer = None
+        self.model_args = None
+
+        self._get_default_model_args()
+
+    def get_model_type(self) -> str:
+        return self.model_type
+    
+    def get_model_pedigree(self) -> str:
+        return 'hunyuan_video'
+    
+    def handle_dataset(self, dataset: Any, device: DeviceType = DeviceType.NPU) -> Generator[Any, None, None]:
+        return dataset
+    
+    def init_model(self, device: DeviceType = DeviceType.NPU) -> Dict[str, nn.Module]:
+        return {'': self.transformer}
+    
+    def generate_model_forward(self, model: torch.nn.Module,
+                               inputs: Any,
+                               ) -> Generator[ProcessRequest, Any, None]:
+        transformer_blocks = [
+            (name, module)
+            for name, module in model.named_modules()
+            if "streamblock" in module.__class__.__name__.lower()
+        ]
+        first_block_input = None
+
+        def break_hook(module: nn.Module, hook_args: Tuple[Any, ...], hook_kwargs: Dict[str, Any]):
+            nonlocal first_block_input
+            first_block_input = (hook_args, hook_kwargs,)
+            raise TransformersForwardBreak()
+
+        hooks = [transformer_blocks[0][1].register_forward_pre_hook(break_hook, with_kwargs=True)]
+
+        try:
+            if isinstance(inputs, list) or isinstance(inputs, tuple):
+                model(*inputs)
+            elif isinstance(inputs, dict):
+                model(**inputs)
+            else:
+                model(inputs)
+        except TransformersForwardBreak:
+            pass
+        except Exception as e:
+            raise e
+        finally:
+            for hook in hooks:
+                hook.remove()
+
+        if first_block_input is None:
+            raise InvalidModelError("Can't get first block input.", action="Please check the model and input")
+
+        first_block_input = to_device(first_block_input, 'cpu')
+        current_inputs = first_block_input
+
+        if dist.is_initialized():
+            dist.barrier()
+
+        for name, block in transformer_blocks:
+            args, kwargs = current_inputs
+            outputs = yield ProcessRequest(name, block, args, kwargs)
+            hidden_states = outputs
+            current_inputs = ((hidden_states,), current_inputs[1])
+
+    def generate_model_visit(self, model: torch.nn.Module,
+                             transformer_blocks: Optional[List[Tuple[str, torch.nn.Module]]] = None,
+                             ) -> Generator[ProcessRequest, Any, None]:
+        return generated_decoder_layer_visit_func_with_keyword(model, keyword="streamblock")
+
+    def enable_kv_cache(self, model: nn.Module, need_kv_cache: bool) -> None:
+        pass
+
+    def run_calib_inference(self):
+        """运行校准推理"""
+        stream = torch.npu.Stream()
+        args = self.model_args
+        prompt = self.model_args.prompt
+        # Start sampling
+        for _ in tqdm(range(1), desc='Dump calib data by float model inference'):
+            begin = time.time()
+            outputs = self.hunyuan_video_sampler.predict(
+            prompt=prompt, 
+            height=args.video_size[0],
+            width=args.video_size[1],
+            video_length=args.video_length,
+            seed=args.seed,
+            negative_prompt=args.neg_prompt,
+            infer_steps=args.infer_steps,
+            guidance_scale=args.cfg_scale,
+            num_videos_per_prompt=args.num_videos,
+            flow_shift=args.flow_shift,
+            batch_size=args.batch_size,
+            embedded_guidance_scale=args.embedded_cfg_scale
+        )
+        stream.synchronize()
+        end = time.time()
+        logging.info(f"Generating video used time {end - begin: .4f}s")
+
+    def apply_quantization(self, process_model_func):
+        from contextlib import contextmanager
+        import torch.cuda.amp as amp
+
+        @contextmanager
+        def noop_no_sync():
+            yield
+
+        no_sync = getattr(self, 'no_sync', noop_no_sync)
+
+        for name, module in self.transformer.named_modules():
+            if 'blocks' not in name:
+                module.to('npu')
+            else:
+                module.to('cpu')
+        with amp.autocast(dtype=torch.bfloat16), torch.no_grad(), no_sync():
+            process_model_func()
+
+    def load_pipeline(self):
+        self._load_pipeline()
+        self._setup_cache()
+
+    def set_model_args(self, override_model_config: object):
+        self.model_args.model_base = self.model_path
+        self.model_args.dit_weight = os.path.join(self.model_args.model_base, 
+            "hunyuan-video-t2v-720p",
+            "transformers",
+            "mp_rank_00_model_states.pt"
+        )
+        self.model_args.vae_path = os.path.join(self.model_args.model_base, 
+            "hunyuan-video-t2v-720p",
+            "vae"
+        )
+        self.model_args.text_encoder_path = os.path.join(self.model_args.model_base, 
+            "text_encoder"
+        )
+        self.model_args.text_encoder_2_path = os.path.join(self.model_args.model_base, 
+            "clip-vit-large-patch14"
+        )
+
+        missing_attrs = []
+        for key in override_model_config.keys():
+            if not hasattr(self.model_args, key):
+                missing_attrs.append(key)
+
+        if missing_attrs:
+            available = [a for a in dir(self.model_args)]
+            raise SchemaValidateError(
+                f"illegal config attributes: {missing_attrs}. \n"
+                f"supported config attributes: {available}"
+            )
+        
+        for key in override_model_config.keys():
+            setattr(self.model_args, key, override_model_config[key])
+
+        parser = self._get_parser()
+        argv = []
+        for key, val in vars(self.model_args).items():
+            if val is None:
+                continue
+            elif key == "video_size":
+                continue
+            elif isinstance(val, bool):
+                if val:
+                    argv.append(f"--{key}")
+            else:
+                argv.extend([f"--{key}", str(val)])
+
+        self.model_args = parser.parse_args(argv)
+        self.model_args.latent_channels = int(self.model_args.latent_channels)
+        self.model_args = self.__sanity_check_args(self.model_args)
+
+        self._validate_args(self.model_args)
+
+    def _get_default_model_args(self):
+        parser = self._get_parser()
+        args = parser.parse_args([])
+        self.model_args = args
+
+    def _get_parser(self) -> argparse.ArgumentParser:
+        self._check_import_dependency()
+        parser = argparse.ArgumentParser(description="HunyuanVideo inference script")
+
+        parser = self.__add_device_args(parser)
+        parser = self.__add_network_args(parser)
+        parser = self.__add_extra_models_args(parser)
+        parser = self.__add_denoise_schedule_args(parser)
+        parser = self.__add_inference_args(parser)
+        parser = self.__add_parallel_args(parser)
+        parser = self.__add_ditcache_args(parser)
+        parser = self.__add_attentioncache_args(parser)
+        parser = self.__add_quant_args(parser)
+
+        return parser
+
+    def _check_import_dependency(self):
+        try:
+            import hyvideo
+            from hyvideo.constants import PRECISION_TO_TYPE, C_SCALE, PROMPT_TEMPLATE_ENCODE, \
+                PROMPT_TEMPLATE_ENCODE_VIDEO, NEGATIVE_PROMPT, PROMPT_TEMPLATE, PRECISIONS, \
+                    NORMALIZATION_TYPE, ACTIVATION_TYPE, MODEL_BASE, DATA_TYPE, VAE_PATH, \
+                        TEXT_ENCODER_PATH, TOKENIZER_PATH, TEXT_PROJECTION
+            from hyvideo.modules.models import HUNYUAN_VIDEO_CONFIG
+            from hyvideo.inference import HunyuanVideoSampler
+            from hyvideo.utils.file_utils import save_videos_grid
+
+        except ImportError as e:
+        # Concise import error message
+            raise ImportError(
+                "Failed to import required components from hunyuanvideo. "
+                "Please install the hunyuanvideo dependencies from the official source, "
+                "make sure you can run the original floating-point inference successfully, "
+                "and add the hunyuanvideo repository to the Python search path environment variable PYTHONPATH. "
+                "e.g. export PYTHONPATH=/path/to/hunyuanvideo:$PYTHONPATH"
+            ) from e
+
+    def _validate_args(self, args):
+        """Get default parameter configuration, integrating wan config parameters"""
+        self._check_import_dependency()
+        models_root_path = Path(args.model_base)
+        if not models_root_path.exists():
+            raise SchemaValidateError(f"`model_base` not exists : {args.model_base}")
+        args.task_config = 'hunyuanvideo'
+        # create save folder to save the samples
+        save_path = args.save_path if not args.save_path_suffix else f'{args.save_path}_{args.save_path_suffix}'
+        os.makedirs(save_path, exist_ok=True)
+
+        if args.infer_steps is None:
+            args.infer_steps = 50
+        if not isinstance(args.infer_steps, int):
+            raise SchemaValidateError(
+                f"sample_steps must be an integer, got {type(args.infer_steps).__name__}"
+            )
+        if args.infer_steps <= 0:
+            raise SchemaValidateError(f"sample_steps mush be greater than 0")
+
+        if args.batch_size is None:
+            args.batch_size = 1
+        if not isinstance(args.batch_size, int):
+            raise SchemaValidateError(
+                f"batch_size must be an integer, got {type(args.batch_size).__name__}"
+            )
+        if args.batch_size <= 0:
+            raise SchemaValidateError(f"batch_size must be greater than 0")
+        if args.seed is None:
+            args.seed = 0
+        args.seed = args.seed if args.seed >= 0 else random.randint(0, sys.maxsize)
+
+        # Validate prompt
+        prompt = getattr(args, "prompt", None)
+        if prompt is None:
+            raise SchemaValidateError("Missing required parameter: prompt")
+        if not isinstance(args.prompt, str):
+            raise SchemaValidateError(f"prompt must be a string, got {type(args.prompt).__name__}")
+        if not args.prompt.strip():
+            raise SchemaValidateError("prompt cannot be an empty string")
+
+    def _setup_cache(self):
+        # 设置Cache机制
+        try:
+            from mindiesd import CacheConfig, CacheAgent
+        except ImportError as e:
+            # Concise import error message
+            raise ImportError(
+                "Failed to import required components from mindiesd. "
+            ) from e
+        args = self.model_args
+        if args.use_cache:
+            # single
+            config_single = CacheConfig(
+                method="dit_block_cache",
+                blocks_count=len(self.transformer.single_blocks),
+                steps_count=args.infer_steps,
+                step_start=args.cache_start_steps,
+                step_interval=args.cache_interval,
+                step_end=args.infer_steps - 1,
+                block_start=args.single_block_start,
+                block_end=args.single_block_end
+            )
+            cache_single = CacheAgent(config_single)
+            self.transformer.cache_single = cache_single
+        if args.use_cache_double:
+            # double
+            config_double = CacheConfig(
+                method="dit_block_cache",
+                blocks_count=len(self.transformer.double_blocks),
+                steps_count=args.infer_steps,
+                step_start=args.cache_start_steps,
+                step_interval=args.cache_interval,
+                step_end=args.infer_steps - 1,
+                block_start=args.double_block_start,
+                block_end=args.double_block_end
+            )
+            cache_dual = CacheAgent(config_double)
+            self.transformer.cache_dual = cache_dual
+
+        if args.use_attentioncache:
+            config_double = CacheConfig(
+                method="attention_cache",
+                blocks_count=len(self.transformer.double_blocks),
+                steps_count=args.infer_steps,
+                step_start=args.start_step,
+                step_interval=args.attentioncache_interval,
+                step_end=args.end_step
+            )
+            config_single = CacheConfig(
+                method="attention_cache",
+                blocks_count=len(self.transformer.single_blocks),
+                steps_count=args.infer_steps,
+                step_start=args.start_step,
+                step_interval=args.attentioncache_interval,
+                step_end=args.end_step
+            )
+        else:
+            config_double = CacheConfig(
+                method="attention_cache",
+                blocks_count=len(self.transformer.double_blocks),
+                steps_count=args.infer_steps
+            )
+            config_single = CacheConfig(
+                method="attention_cache",
+                blocks_count=len(self.transformer.single_blocks),
+                steps_count=args.infer_steps
+            )
+        cache_double = CacheAgent(config_double)
+        cache_single = CacheAgent(config_single)
+        for block in self.transformer.double_blocks:
+            block.cache = cache_double
+        for block in self.transformer.single_blocks:
+            block.cache = cache_single
+
+    def _load_pipeline(self):
+        self._check_import_dependency()
+
+        import hyvideo
+        from hyvideo.inference import HunyuanVideoSampler
+
+        args = self.model_args
+        if args.ulysses_degree > 1 or args.ring_degree > 1:
+            raise UnsupportedError("context parallel are not supported in non-distributed environments")
+        if args.vae_parallel:
+            raise UnsupportedError("vae parallel are not support in non-distributed environment")
+
+        logging.info("load hunyuan_video models")
+        models_root_path = Path(args.model_base)
+        self.hunyuan_video_sampler = HunyuanVideoSampler.from_pretrained(models_root_path, args=args)
+        self.transformer = self.hunyuan_video_sampler.pipeline.transformer
+
+    def __add_device_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="HunyuanVideo device args")
+
+        group.add_argument(
+            "--device_id",
+            type=int,
+            default=0
+        )
+        return parser
+
+    def __add_network_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="HunyuanVideo network args")
+        from hyvideo.constants import PRECISIONS
+        from hyvideo.modules.models import HUNYUAN_VIDEO_CONFIG
+        # Main model
+        group.add_argument(
+            "--model",
+            type=str,
+            choices=list(HUNYUAN_VIDEO_CONFIG.keys()),
+            default="HYVideo-T/2-cfgdistill",
+        )
+        group.add_argument(
+            "--latent_channels",
+            type=str,
+            default=16,
+            help="Number of latent channels of DiT. If None, it will be determined by `vae`. If provided, "
+            "it still needs to match the latent channels of the VAE model.",
+        )
+        group.add_argument(
+            "--precision",
+            type=str,
+            default="bf16",
+            choices=PRECISIONS,
+            help="Precision mode. Options: fp32, fp16, bf16. Applied to the backbone model and optimizer.",
+        )
+
+        # RoPE
+        group.add_argument(
+            "--rope_theta", type=int, default=256, help="Theta used in RoPE."
+        )
+        return parser
+
+    def __add_extra_models_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(
+            title="Extra models args, including vae, text encoders and tokenizers)"
+        )
+        from hyvideo.constants import PROMPT_TEMPLATE, PRECISIONS, \
+            VAE_PATH, TEXT_ENCODER_PATH, TOKENIZER_PATH
+        # - VAE
+        group.add_argument(
+            "--vae_parallel",
+            action="store_true",
+            help="Use vae parallel",
+        )
+
+        group.add_argument(
+            "--vae_path",
+            type=str,
+            default="vae",
+            help="Path of VAE model",
+        )
+        group.add_argument(
+            "--vae",
+            type=str,
+            default="884-16c-hy",
+            choices=list(VAE_PATH),
+            help="Name of the VAE model.",
+        )
+        group.add_argument(
+            "--vae_precision",
+            type=str,
+            default="fp16",
+            choices=PRECISIONS,
+            help="Precision mode for the VAE model.",
+        )
+        group.add_argument(
+            "--vae_tiling",
+            action="store_true",
+            help="Enable tiling for the VAE model to save GPU memory.",
+        )
+        group.set_defaults(vae_tiling=True)
+        logging.info(f"Enable tiling for the VAE model to save GPU memory.")
+        group.add_argument(
+            "--text_encoder_path",
+            type=str,
+            default="text_encoder",
+            help="Path of text encoder model",
+        )
+        group.add_argument(
+            "--text_encoder",
+            type=str,
+            default="llm",
+            choices=list(TEXT_ENCODER_PATH),
+            help="Name of the text encoder model.",
+        )
+        group.add_argument(
+            "--text_encoder_precision",
+            type=str,
+            default="fp16",
+            choices=PRECISIONS,
+            help="Precision mode for the text encoder model.",
+        )
+        group.add_argument(
+            "--text_states_dim",
+            type=int,
+            default=4096,
+            help="Dimension of the text encoder hidden states.",
+        )
+        group.add_argument(
+            "--text_len", type=int, default=256, help="Maximum length of the text input."
+        )
+        group.add_argument(
+            "--tokenizer",
+            type=str,
+            default="llm",
+            choices=list(TOKENIZER_PATH),
+            help="Name of the tokenizer model.",
+        )
+        group.add_argument(
+            "--prompt_template",
+            type=str,
+            default="dit-llm-encode",
+            choices=PROMPT_TEMPLATE,
+            help="Image prompt template for the decoder-only text encoder model.",
+        )
+        group.add_argument(
+            "--prompt_template_video",
+            type=str,
+            default="dit-llm-encode-video",
+            choices=PROMPT_TEMPLATE,
+            help="Video prompt template for the decoder-only text encoder model.",
+        )
+        group.add_argument(
+            "--hidden_state_skip_layer",
+            type=int,
+            default=2,
+            help="Skip layer for hidden states.",
+        )
+        group.add_argument(
+            "--apply_final_norm",
+            action="store_true",
+            help="Apply final normalization to the used text encoder hidden states.",
+        )
+
+        # - CLIP
+        group.add_argument(
+            "--text_encoder_2_path",
+            type=str,
+            default="clip-vit-large-patch14",
+            help="Path of text encoder model",
+        )
+        group.add_argument(
+            "--text_encoder_2",
+            type=str,
+            default="clipL",
+            choices=list(TEXT_ENCODER_PATH),
+            help="Name of the second text encoder model.",
+        )
+        group.add_argument(
+            "--text_encoder_precision_2",
+            type=str,
+            default="fp16",
+            choices=PRECISIONS,
+            help="Precision mode for the second text encoder model.",
+        )
+        group.add_argument(
+            "--text_states_dim_2",
+            type=int,
+            default=768,
+            help="Dimension of the second text encoder hidden states.",
+        )
+        group.add_argument(
+            "--tokenizer_2",
+            type=str,
+            default="clipL",
+            choices=list(TOKENIZER_PATH),
+            help="Name of the second tokenizer model.",
+        )
+        group.add_argument(
+            "--text_len_2",
+            type=int,
+            default=77,
+            help="Maximum length of the second text input.",
+        )
+
+        return parser
+
+    def __add_denoise_schedule_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="Denoise schedule args")
+
+        group.add_argument(
+            "--denoise_type",
+            type=str,
+            default="flow",
+            help="Denoise type for noised inputs.",
+        )
+
+        # Flow Matching
+        group.add_argument(
+            "--flow_shift",
+            type=float,
+            default=7.0,
+            help="Shift factor for flow matching schedulers.",
+        )
+        group.add_argument(
+            "--flow_reverse",
+            action="store_true",
+            help="If reverse, learning/sampling from t=1 -> t=0.",
+        )
+        group.add_argument(
+            "--flow_solver",
+            type=str,
+            default="euler",
+            help="Solver for flow matching.",
+        )
+        group.add_argument(
+            "--use_linear_quadratic_schedule",
+            action="store_true",
+            help="Use linear quadratic schedule for flow matching."
+            "Following MovieGen (https://ai.meta.com/static-resource/movie-gen-research-paper)",
+        )
+        group.add_argument(
+            "--linear_schedule_end",
+            type=int,
+            default=25,
+            help="End step for linear quadratic schedule for flow matching.",
+        )
+
+        return parser
+
+    def __add_inference_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="Inference args")
+
+        # ======================== Model loads ========================
+        group.add_argument(
+            "--model_base",
+            type=str,
+            default="ckpts",
+            help="Root path of all the models, including t2v models and extra models.",
+        )
+        group.add_argument(
+            "--dit_weight",
+            type=str,
+            default="ckpts/hunyuan-video-t2v-720p/transformers/mp_rank_00_model_states.pt",
+            help="Path to the HunyuanVideo model. If None, search the model in the args.model_root."
+            "1. If it is a file, load the model directly."
+            "2. If it is a directory, search the model in the directory. Support two types of models: "
+            "1) named `pytorch_model_*.pt`"
+            "2) named `*_model_states.pt`, where * can be `mp_rank_00`.",
+        )
+        group.add_argument(
+            "--model_resolution",
+            type=str,
+            default="540p",
+            choices=["540p", "720p"],
+            help="Root path of all the models, including t2v models and extra models.",
+        )
+        group.add_argument(
+            "--load_key",
+            type=str,
+            default="module",
+            help="Key to load the model states. 'module' for the main model, 'ema' for the EMA model.",
+        )
+        group.add_argument(
+            "--use_cpu_offload",
+            action="store_true",
+            help="Use CPU offload for the model load.",
+        )
+
+        # ======================== Inference general setting ========================
+        group.add_argument(
+            "--batch_size",
+            type=int,
+            default=1,
+            help="Batch size for inference and evaluation.",
+        )
+        group.add_argument(
+            "--infer_steps",
+            type=int,
+            default=50,
+            help="Number of denoising steps for inference.",
+        )
+        group.add_argument(
+            "--disable_autocast",
+            action="store_true",
+            help="Disable autocast for denoising loop and vae decoding in pipeline sampling.",
+        )
+        group.add_argument(
+            "--save_path",
+            type=str,
+            default="./results",
+            help="Path to save the generated samples.",
+        )
+        group.add_argument(
+            "--save_path_suffix",
+            type=str,
+            default="",
+            help="Suffix for the directory of saved samples.",
+        )
+        group.add_argument(
+            "--name_suffix",
+            type=str,
+            default="",
+            help="Suffix for the names of saved samples.",
+        )
+        group.add_argument(
+            "--num_videos",
+            type=int,
+            default=1,
+            help="Number of videos to generate for each prompt.",
+        )
+        # ---sample size---
+        group.add_argument(
+            "--video_size",
+            type=int,
+            nargs="+",
+            default=(720, 1280),
+            help="Video size for training. If a single value is provided, it will be used for both height "
+            "and width. If two values are provided, they will be used for height and width "
+            "respectively.",
+        )
+        group.add_argument(
+            "--video_length",
+            type=int,
+            default=129,
+            help="How many frames to sample from a video. if using 3d vae, the number should be 4n+1",
+        )
+        # --- prompt ---
+        group.add_argument(
+            "--prompt",
+            type=str,
+            default=None,
+            help="Prompt for sampling during evaluation.",
+        )
+        group.add_argument(
+            "--seed_type",
+            type=str,
+            default="auto",
+            choices=["file", "random", "fixed", "auto"],
+            help="Seed type for evaluation. If file, use the seed from the CSV file. If random, generate a "
+            "random seed. If fixed, use the fixed seed given by `--seed`. If auto, `csv` will use the "
+            "seed column if available, otherwise use the fixed `seed` value. `prompt` will use the "
+            "fixed `seed` value.",
+        )
+        group.add_argument("--seed", type=int, default=None, help="Seed for evaluation.")
+
+        # Classifier-Free Guidance
+        group.add_argument(
+            "--neg_prompt", type=str, default=None, help="Negative prompt for sampling."
+        )
+        group.add_argument(
+            "--cfg_scale", type=float, default=1.0, help="Classifier free guidance scale."
+        )
+        group.add_argument(
+            "--embedded_cfg_scale",
+            type=float,
+            default=6.0,
+            help="Embeded classifier free guidance scale.",
+        )
+
+        group.add_argument(
+            "--use_fp8",
+            action="store_true",
+            help="Enable use fp8 for inference acceleration."
+        )
+
+        group.add_argument(
+            "--reproduce",
+            action="store_true",
+            help="Enable reproducibility by setting random seeds and deterministic algorithms.",
+        )
+
+        return parser
+
+    def __add_parallel_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="Parallel args")
+
+        # ======================== Model loads ========================
+        group.add_argument(
+            "--ulysses_degree",
+            type=int,
+            default=1,
+            help="Ulysses degree.",
+        )
+        group.add_argument(
+            "--ring_degree",
+            type=int,
+            default=1,
+            help="Ulysses degree.",
+        )
+
+        return parser
+
+    def __add_ditcache_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="Dit Cache args")
+        
+        # single cache related config
+        group.add_argument("--use_cache", action='store_true')
+        group.add_argument("--cache_interval", type=int, default=3)
+        group.add_argument("--cache_start_steps", type=int, default=10)
+
+        group.add_argument("--single_block_start", type=int, default=5)
+        group.add_argument("--single_block_end", type=int, default=35)
+
+        ## double stream cache related config
+        group.add_argument("--use_cache_double", action='store_true')
+        group.add_argument("--double_block_start", type=int, default=3)
+        group.add_argument("--double_block_end", type=int, default=18)
+
+        # cache searcher config
+        group.add_argument("--search_single_cache", action='store_true')
+        group.add_argument("--search_double_cache", action='store_true')
+        group.add_argument("--cache_ratio", type=float, default=1.2)
+
+        return parser
+
+    def __add_attentioncache_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="Attention Cache args")
+
+        group.add_argument("--use_attentioncache", action='store_true')
+        group.add_argument("--attentioncache_ratio", type=float, default=1.2)
+        group.add_argument("--attentioncache_interval", type=int, default=3)
+        group.add_argument("--start_step", type=int, default=9)
+        group.add_argument("--end_step", type=int, default=47)
+
+        return parser
+
+    def __add_quant_args(self, parser: argparse.ArgumentParser):
+        group = parser.add_argument_group(title="Quant args")
+        group.add_argument(
+            "--quant_desc_path",
+            type=str,
+            help="Path to quantization description file (enables quantization if specified, \
+                format: quant_model_description_*.json)"
+        )
+        return parser
+
+    def __sanity_check_args(self, args):
+        # VAE channels
+        vae_pattern = r"\d{2,3}-\d{1,2}c-\w+"
+        if not re.match(vae_pattern, args.vae):
+            raise SchemaValidateError(
+                f"Invalid VAE model: {args.vae}. Must be in the format of '{vae_pattern}'."
+            )
+        vae_channels = int(args.vae.split("-")[1][:-1])
+        if args.latent_channels is None:
+            args.latent_channels = vae_channels
+        if vae_channels != args.latent_channels:
+            raise SchemaValidateError(
+                f"Latent channels ({args.latent_channels}) must match the VAE channels ({vae_channels})."
+            )
+        return args

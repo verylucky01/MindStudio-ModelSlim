@@ -1,0 +1,9 @@
+apiversion: "modelslim_v1"
+spec:
+  process:
+    - type: "iter_smooth"
+      alpha: 0.9
+      scale_min: 1e-5
+      symmetric: False
+      enable_subgraph_type:
+        - 'norm-linear'

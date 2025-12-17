@@ -1,0 +1,83 @@
+apiversion: modelslim_v1
+metadata:
+  config_id: qwen3-32b-dense-w4a4
+  score: 90
+  verified_model_types:
+    - Qwen3-32B
+  label:
+    w_bit: 4
+    a_bit: 4
+    is_sparse: False
+    kv_cache: False
+
+default_w8a8_dynamic: &default_w8a8_dynamic
+  weight:
+    scope: "per_channel"
+    dtype: "int8"
+    symmetric: true
+    method: "autoround"
+    ext:
+      scale_dtype: "bfloat16"
+  act:
+    scope: "per_token"
+    dtype: "int8"
+    symmetric: true
+    method: "minmax"
+    ext:
+      scale_dtype: "bfloat16"
+
+
+default_w4a4_dynamic: &default_w4a4_dynamic
+  weight:
+    scope: "per_group"
+    dtype: "int4"
+    symmetric: true
+    method: "autoround"
+    ext:
+      group_size: 256
+      scale_dtype: "bfloat16"
+  act:
+    scope: "per_token"
+    dtype: "int4"
+    symmetric: true
+    method: "minmax"
+    ext:
+      scale_dtype: "bfloat16"
+
+
+spec:
+  process:
+
+    - type: "iter_smooth"
+      alpha: 0.9
+      scale_min: 1e-2
+      enable_subgraph_type: [ "ov", "up-down" ]
+
+    - type: "quarot"
+      online: true
+      block_size: -1
+      max_tp_size: 4
+      down_proj_online_layers: [ 1,3,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 ]
+
+    - type: "autoround_quant"
+      iters: 400
+      enable_round_tuning: true
+      strategies:
+        - qconfig: *default_w4a4_dynamic
+          exclude:
+            - "model.layers.{0,1,2,3,4,59,60,61,62,63}.mlp.down_proj"
+          include:
+            - "*.up_proj"
+            - "*.gate_proj"
+            - "*.o_proj"
+            - "model.layers.{1,3,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26}.mlp.down_proj"
+
+        - qconfig: *default_w8a8_dynamic
+          exclude:
+            - "model.layers.{0,1,2,3,4,59,60,61,62,63}.mlp.down_proj"
+
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
+
+  dataset: mix_calib.jsonl

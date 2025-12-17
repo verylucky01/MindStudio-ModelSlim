@@ -1,0 +1,34 @@
+apiversion: modelslim_v0
+metadata:
+  config_id: qwen3-8b-w8a8s
+  score: 90
+  verified_model_types:
+    - Qwen3-8B
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: True
+    kv_cache: False
+spec:
+  anti_cfg:
+    anti_method: m6
+  calib_cfg:
+    w_bit: 4
+    a_bit: 8
+    mm_tensor: False
+    is_lowbit: True
+    fraction: 0.012
+  calib_params:
+    mix_cfg:
+      "model.layers.1.mlp.gate_proj": "float"
+      "model.layers.1.mlp.up_proj": "float"
+      "model.layers.16.mlp.gate_proj": "float"
+      "model.layers.16.mlp.up_proj": "float"
+      "model.layers.3.mlp.gate_proj": "float"
+      "model.layers.3.mlp.up_proj": "float"
+      "model.layers.4.mlp.gate_proj": "float"
+      "model.layers.4.mlp.up_proj": "float"
+      "model.layers.7.mlp.gate_proj": "float"
+      "model.layers.7.mlp.up_proj": "float"
+      "model.layers.*.mlp.down_proj": "float"
+  calib_dataset: mix_calib.jsonl

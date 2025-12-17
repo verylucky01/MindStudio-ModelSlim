@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+declare -i ret_ok=0
+declare -i ret_failed=1
+run_ok=$ret_ok
+
+chmod 640 $MSMODELSLIM_SOURCE_DIR/example/multimodal_sd/Flux/calib_prompts.txt
+
+docker start smoke_flux
+
+# 执行m3异常值抑制用例
+docker exec -i smoke_flux bash -c "ASCEND_RT_VISIBLE_DEVICES='$ASCEND_RT_VISIBLE_DEVICES' CANN_PATH='$CANN_PATH' PROJECT_PATH='$PROJECT_PATH' MSMODELSLIM_SOURCE_DIR='$MSMODELSLIM_SOURCE_DIR' $PROJECT_PATH/test-case/multi_modal_quant_anti_flux/quant_flux_m3.sh"
+
+if [ $? -eq 0 ]
+then
+    echo multi_modal_quant_anti_flux_m3: Success
+else
+    echo multi_modal_quant_anti_flux_m3: Failed
+    run_ok=$ret_failed
+fi
+
+# 执行m4异常值抑制用例
+docker exec -i smoke_flux bash -c "ASCEND_RT_VISIBLE_DEVICES='$ASCEND_RT_VISIBLE_DEVICES' CANN_PATH='$CANN_PATH' PROJECT_PATH='$PROJECT_PATH' MSMODELSLIM_SOURCE_DIR='$MSMODELSLIM_SOURCE_DIR' $PROJECT_PATH/test-case/multi_modal_quant_anti_flux/quant_flux_m4.sh"
+
+if [ $? -eq 0 ]
+then
+    echo multi_modal_quant_anti_flux_m4: Success
+else
+    echo multi_modal_quant_anti_flux_m4: Failed
+    run_ok=$ret_failed
+fi
+
+# 执行m6异常值抑制用例
+docker exec -i smoke_flux bash -c "ASCEND_RT_VISIBLE_DEVICES='$ASCEND_RT_VISIBLE_DEVICES' CANN_PATH='$CANN_PATH' PROJECT_PATH='$PROJECT_PATH' MSMODELSLIM_SOURCE_DIR='$MSMODELSLIM_SOURCE_DIR' $PROJECT_PATH/test-case/multi_modal_quant_anti_flux/quant_flux_m6.sh"
+
+if [ $? -eq 0 ]
+then
+    echo multi_modal_quant_anti_flux_m6: Success
+else
+    echo multi_modal_quant_anti_flux_m6: Failed
+    run_ok=$ret_failed
+fi
+
+docker stop smoke_flux
+
+exit $run_ok

@@ -1,0 +1,29 @@
+apiversion: modelslim_v1
+
+spec:
+  process:
+    - type: "autoround_quant"
+      strategies:
+        - qconfig:
+            act:
+              scope: "per_token"
+              dtype: "int8"
+              symmetric: True
+              method: "minmax"
+            weight:
+              scope: "per_group"
+              dtype: "int8"
+              symmetric: True
+              method: "minmax"
+              ext:
+                group_size: 32
+          include:
+            - "*"
+          exclude:
+            - "*mlp*"
+
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
+
+  dataset: test.json

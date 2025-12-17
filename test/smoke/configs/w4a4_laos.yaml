@@ -1,0 +1,80 @@
+apiversion: "modelslim_v1"
+
+default_w8a8_dynamic: &default_w8a8_dynamic
+  weight:
+    scope: "per_channel"
+    dtype: "int8"
+    symmetric: true
+    method: "autoround"
+    ext:
+      scale_dtype: "bfloat16"
+  act:
+    scope: "per_token"
+    dtype: "int8"
+    symmetric: true
+    method: "minmax"
+    ext:
+      scale_dtype: "bfloat16"
+
+
+default_w4a4_dynamic: &default_w4a4_dynamic
+  weight:
+    scope: "per_group"
+    dtype: "int4"
+    symmetric: true
+    method: "autoround"
+    ext:
+      group_size: 32
+      scale_dtype: "bfloat16"
+  act:
+    scope: "per_token"
+    dtype: "int4"
+    symmetric: true
+    method: "minmax"
+    ext:
+      scale_dtype: "bfloat16"
+
+
+spec:
+  process:
+    - type: "iter_smooth"
+      alpha: 0.9
+      scale_min: 1e-5
+      symmetric: False
+      enable_subgraph_type: [ "ov", "up-down" ]
+
+    - type: "quarot"
+      online: True
+      block_size: 32
+      max_tp_size: 2
+      down_proj_online_layers: [ 1 ]
+
+    - type: "iter_smooth"
+      alpha: 0.9
+      scale_min: 1e-5
+      symmetric: False
+      enable_subgraph_type: [ "norm-linear" ]
+
+    - type: "autoround_quant"
+      iters: 1
+      enable_minmax_tuning: True
+      enable_round_tuning: True
+      strategies:
+        - qconfig: *default_w8a8_dynamic
+          exclude:
+            - "*.up_proj"
+            - "*.gate_proj"
+            - "*.o_proj"
+            - "model.layers.1.mlp.down_proj"
+
+        - qconfig: *default_w4a4_dynamic
+          include:
+            - "*.up_proj"
+            - "*.gate_proj"
+            - "*.o_proj"
+            - "model.layers.1.mlp.down_proj"
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
+
+  dataset: "test.json"

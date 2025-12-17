@@ -1,0 +1,7 @@
+case_type: modelslim
+case_name: ra_compression_llama
+enable: y
+script:
+  start: run.sh
+timeout: 100
+rank_size: 1

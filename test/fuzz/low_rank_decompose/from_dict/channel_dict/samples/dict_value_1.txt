@@ -1,0 +1,1 @@
+{"embedding.1": 16, "feature.0": [64, 64], "feature.2": [32, 32], "inner": 192}

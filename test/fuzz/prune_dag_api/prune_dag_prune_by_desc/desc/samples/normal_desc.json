@@ -1,0 +1,338 @@
+{
+  "layer4.2.conv2": {
+    "output": [
+      256,
+      "x--xxx--xx-xx--xxxx-x---x-xx--x--xxxxxxxx---x-xx-x-x-x-xx-x-x-xxx-x-xx---x-xxxxxx---xxxx-x-x-x---xx-x-x--xxxx-x-x-xx-xx---x-x-x--x----xx---xx-xxxx-x-x-x-xx--xxx----x--xx--xxxx-xx-xx-----x-x----xx-x----xx--x--xxx--x-xx--x--xx----xxx-x--x-xx--x-xxx--x--xxx-----x--xxx--x---x--xx--x-x-x----xxx--x-x--xx-----xx---x-xx-xx-x---x-xx--xx-xx---xxx-xx-xxx--xx-x---x-x--xx--xx--x-x--x-xx-xx---xx-xxxx-x-xx--xx-x-xxxxxx---xxxx----x--xx-xxxx--x--x-----x-x-xxxx-----xx-x-x--x-x---x--xxx----x-x-xx-xx----xx-x-xxxx--xx-x-x--x-xx"
+    ],
+    "input": [
+      408,
+      "-x--------x----xxx-x--x-------------x-------------xx------x--x-x-------x---x---x----x----x---x-----x-----x--x---x-----------x--x---x--x-x-x-x-------x-x---------x----------x-----------------x--------xxx---x----xx------------x------------x--------x-xxxx-----x-xxx------------xx---x--x--------x------x----------------x-xx----xx----x-----x---------x---x---x---x--xx--------xx---------x--xx-xx----x-x-x-------x-x-x--xx------x-x----xx-------------x-------x-----------x---x-x-xx----------x-------xx--------x---x--x----x"
+    ]
+  },
+  "layer4.2.conv3": {
+    "input": [
+      256,
+      "x--xxx--xx-xx--xxxx-x---x-xx--x--xxxxxxxx---x-xx-x-x-x-xx-x-x-xxx-x-xx---x-xxxxxx---xxxx-x-x-x---xx-x-x--xxxx-x-x-xx-xx---x-x-x--x----xx---xx-xxxx-x-x-x-xx--xxx----x--xx--xxxx-xx-xx-----x-x----xx-x----xx--x--xxx--x-xx--x--xx----xxx-x--x-xx--x-xxx--x--xxx-----x--xxx--x---x--xx--x-x-x----xxx--x-x--xx-----xx---x-xx-xx-x---x-xx--xx-xx---xxx-xx-xxx--xx-x---x-x--xx--xx--x-x--x-xx-xx---xx-xxxx-x-xx--xx-x-xxxxxx---xxxx----x--xx-xxxx--x--x-----x-x-xxxx-----xx-x-x--x-x---x--xxx----x-x-xx-xx----xx-x-xxxx--xx-x-x--x-xx"
+    ]
+  },
+  "layer4.2.bn2": {
+    "input": [
+      256,
+      "x--xxx--xx-xx--xxxx-x---x-xx--x--xxxxxxxx---x-xx-x-x-x-xx-x-x-xxx-x-xx---x-xxxxxx---xxxx-x-x-x---xx-x-x--xxxx-x-x-xx-xx---x-x-x--x----xx---xx-xxxx-x-x-x-xx--xxx----x--xx--xxxx-xx-xx-----x-x----xx-x----xx--x--xxx--x-xx--x--xx----xxx-x--x-xx--x-xxx--x--xxx-----x--xxx--x---x--xx--x-x-x----xxx--x-x--xx-----xx---x-xx-xx-x---x-xx--xx-xx---xxx-xx-xxx--xx-x---x-x--xx--xx--x-x--x-xx-xx---xx-xxxx-x-xx--xx-x-xxxxxx---xxxx----x--xx-xxxx--x--x-----x-x-xxxx-----xx-x-x--x-x---x--xxx----x-x-xx-xx----xx-x-xxxx--xx-x-x--x-xx"
+    ]
+  },
+  "layer4.1.conv2": {
+    "output": [
+      256,
+      "xxx-xxxx--xxx-xx-x-xxx-x-xxx--x--xxxx-xx---x-xx-x-x-xxx-xxxxx--xx----xxx-xx--x-----x-xx-xxx--xxxx--xxx---x--xx--x-xxxx--x----x------xxx-xxx----xxxx--x-----xxxxxx-x-x----x------xxxxx-xxx--x-x---xx--xx--x-x---xxx--x-xxx-xx--x-xxxxx-x-----x----xx-----xxxx-x---xx--x-xx-x-----xxxxx---x----xx-xx-x-x-xx-xxxxx-x-x-x-x----x-xx--x--x---xxxxx--x-x------xx-xxx-xx--xxx---x-xx-xx-xxxxx-x--x-------xxxxx-x--x--xx--xxx--------x-xx-x---x-----xxxxxx-x-x---x----xx---xx-xx-xx----x-xx--xxx-xx-x-x-xxx----xx-x-xx--x--x-xxxxxx--x-x"
+    ],
+    "input": [
+      428,
+      "x---xxx--------x-----xx------x---------x--x------x-xx---x------x-------xx-------x-x------------xx----x--x----xx---------x----------------------------x--xx--x-x--x------------------x------x-----x----xx---x----x--x-x---x-x--xx----x---x--x----------xx--------x--x----x-------xx-------------x---x-------xx-x--x--------------x--------x-------x--x-------xx-x--x---------------------------x-----x---x----------------xx---------x----x------x---x--------------x------------xx------------------x------x-x------------------"
+    ]
+  },
+  "layer4.1.conv3": {
+    "input": [
+      256,
+      "xxx-xxxx--xxx-xx-x-xxx-x-xxx--x--xxxx-xx---x-xx-x-x-xxx-xxxxx--xx----xxx-xx--x-----x-xx-xxx--xxxx--xxx---x--xx--x-xxxx--x----x------xxx-xxx----xxxx--x-----xxxxxx-x-x----x------xxxxx-xxx--x-x---xx--xx--x-x---xxx--x-xxx-xx--x-xxxxx-x-----x----xx-----xxxx-x---xx--x-xx-x-----xxxxx---x----xx-xx-x-x-xx-xxxxx-x-x-x-x----x-xx--x--x---xxxxx--x-x------xx-xxx-xx--xxx---x-xx-xx-xxxxx-x--x-------xxxxx-x--x--xx--xxx--------x-xx-x---x-----xxxxxx-x-x---x----xx---xx-xx-xx----x-xx--xxx-xx-x-x-xxx----xx-x-xx--x--x-xxxxxx--x-x"
+    ]
+  },
+  "layer4.1.bn2": {
+    "input": [
+      256,
+      "xxx-xxxx--xxx-xx-x-xxx-x-xxx--x--xxxx-xx---x-xx-x-x-xxx-xxxxx--xx----xxx-xx--x-----x-xx-xxx--xxxx--xxx---x--xx--x-xxxx--x----x------xxx-xxx----xxxx--x-----xxxxxx-x-x----x------xxxxx-xxx--x-x---xx--xx--x-x---xxx--x-xxx-xx--x-xxxxx-x-----x----xx-----xxxx-x---xx--x-xx-x-----xxxxx---x----xx-xx-x-x-xx-xxxxx-x-x-x-x----x-xx--x--x---xxxxx--x-x------xx-xxx-xx--xxx---x-xx-xx-xxxxx-x--x-------xxxxx-x--x--xx--xxx--------x-xx-x---x-----xxxxxx-x-x---x----xx---xx-xx-xx----x-xx--xxx-xx-x-x-xxx----xx-x-xx--x--x-xxxxxx--x-x"
+    ]
+  },
+  "layer4.0.conv2": {
+    "output": [
+      256,
+      "-xxx--xxx-xxxxx--xx---x-x-xx-x-x-xx----x--x---x--x---x-x----xxxx---x-xxxxxxxx--xxxxx-xx-x--xx---x-x---x-----x-xx-xxx-----xxxxx---x-----x---xx-xx--x-----x-xx-----xx----x---xxxx-xx-x-xxxx----xx-xxxx-x---x---x-x--x-x-x-xxx--x--x-----xx-xx-xx-xxx-xxxx-x-xx-xxx--x-xx-x---x--xx--xxxxxx-xxx-xx--x---x---xx-----x----x---x--xxxxx-xx-xxxx-x--xx--xx-x--xxxxx--x-----xx--xx-x----x----xxx-x-x-xx-x--x-xx----x-xxxxx-----x--x-xx-x--xx--xx-xxxx-x-x--xx-xx---xx-xxx-xxx-xx-xx-x-x-xxxxx--x---x-xxx-xxx--xx----x-xx---xx-xxxx--xx-x"
+    ],
+    "input": [
+      370,
+      "--xx-x-x--x----------x--xx--x--------x------xx-----xx-xxxx----------xx--x--x---x---x-------x---x--x------x--------x--x------xx-x--x--x--x--xx--x---x-----x--x--x-xx-xx--xx---------x-xx----x------x---------xx-----------x--x-x-x--x-x---x-x----xx-x-x-x----xx-x--------x---x-x-----x----x--x----xx-xx---xx-x--x---x-x---xx-x-x----x--x-x---x-x--xx-------x-------------x--x------xx--xx-xxx-----xx-x---x-x-x-----xx---------x----x--x---------x-xx-x-----------x-x--x----x---x------------xxxxx------x--x-x----x---xx-----x-x--"
+    ]
+  },
+  "layer4.0.conv3": {
+    "input": [
+      256,
+      "-xxx--xxx-xxxxx--xx---x-x-xx-x-x-xx----x--x---x--x---x-x----xxxx---x-xxxxxxxx--xxxxx-xx-x--xx---x-x---x-----x-xx-xxx-----xxxxx---x-----x---xx-xx--x-----x-xx-----xx----x---xxxx-xx-x-xxxx----xx-xxxx-x---x---x-x--x-x-x-xxx--x--x-----xx-xx-xx-xxx-xxxx-x-xx-xxx--x-xx-x---x--xx--xxxxxx-xxx-xx--x---x---xx-----x----x---x--xxxxx-xx-xxxx-x--xx--xx-x--xxxxx--x-----xx--xx-x----x----xxx-x-x-xx-x--x-xx----x-xxxxx-----x--x-xx-x--xx--xx-xxxx-x-x--xx-xx---xx-xxx-xxx-xx-xx-x-x-xxxxx--x---x-xxx-xxx--xx----x-xx---xx-xxxx--xx-x"
+    ]
+  },
+  "layer4.0.bn2": {
+    "input": [
+      256,
+      "-xxx--xxx-xxxxx--xx---x-x-xx-x-x-xx----x--x---x--x---x-x----xxxx---x-xxxxxxxx--xxxxx-xx-x--xx---x-x---x-----x-xx-xxx-----xxxxx---x-----x---xx-xx--x-----x-xx-----xx----x---xxxx-xx-x-xxxx----xx-xxxx-x---x---x-x--x-x-x-xxx--x--x-----xx-xx-xx-xxx-xxxx-x-xx-xxx--x-xx-x---x--xx--xxxxxx-xxx-xx--x---x---xx-----x----x---x--xxxxx-xx-xxxx-x--xx--xx-x--xxxxx--x-----xx--xx-x----x----xxx-x-x-xx-x--x-xx----x-xxxxx-----x--x-xx-x--xx--xx-xxxx-x-x--xx-xx---xx-xxx-xxx-xx-xx-x-x-xxxxx--x---x-xxx-xxx--xx----x-xx---xx-xxxx--xx-x"
+    ]
+  },
+  "layer3.5.conv2": {
+    "output": [
+      128,
+      "x----xxxxxx---x-xxx-x-xx-x-xxx--xx--xx-xxxx---x-xxxx--x--x--x-xxx-xx--xx-x----xx--x-x-xx---xxx-xxxxx---xxxxx----x---xx-xxx-x-x-------xxx---x--xx--xx---xx-x-xxxx-xx--xxx----xxxx--x-----x--xxxx--xxxx------xxx-xx-x-x----xx-----x--xxxx-x--x-x----xxx--xxxx-x---"
+    ]
+  },
+  "layer3.5.conv3": {
+    "input": [
+      128,
+      "x----xxxxxx---x-xxx-x-xx-x-xxx--xx--xx-xxxx---x-xxxx--x--x--x-xxx-xx--xx-x----xx--x-x-xx---xxx-xxxxx---xxxxx----x---xx-xxx-x-x-------xxx---x--xx--xx---xx-x-xxxx-xx--xxx----xxxx--x-----x--xxxx--xxxx------xxx-xx-x-x----xx-----x--xxxx-x--x-x----xxx--xxxx-x---"
+    ]
+  },
+  "layer3.5.bn2": {
+    "input": [
+      128,
+      "x----xxxxxx---x-xxx-x-xx-x-xxx--xx--xx-xxxx---x-xxxx--x--x--x-xxx-xx--xx-x----xx--x-x-xx---xxx-xxxxx---xxxxx----x---xx-xxx-x-x-------xxx---x--xx--xx---xx-x-xxxx-xx--xxx----xxxx--x-----x--xxxx--xxxx------xxx-xx-x-x----xx-----x--xxxx-x--x-x----xxx--xxxx-x---"
+    ]
+  },
+  "layer3.4.conv2": {
+    "output": [
+      128,
+      "xxxx-x-xx-xx-x------x---x---x-x-x--xxxxx-x--x---xxxx-x--x-xx--xxxxxx-xx--x---x--xxxxx-x-x-x-----x-x-x--x--x--x------x--x-xxx--xxxxx-x---xx----xxxx--x----xx-x----x-xxxx-x-xxx-xxx-x-----xxxx-x-x--x-xxx--x---x---xxx-xxx---xxx-xx-x-x--xx-xx-x-x---xx---xxx-xxxx"
+    ]
+  },
+  "layer3.4.conv3": {
+    "input": [
+      128,
+      "xxxx-x-xx-xx-x------x---x---x-x-x--xxxxx-x--x---xxxx-x--x-xx--xxxxxx-xx--x---x--xxxxx-x-x-x-----x-x-x--x--x--x------x--x-xxx--xxxxx-x---xx----xxxx--x----xx-x----x-xxxx-x-xxx-xxx-x-----xxxx-x-x--x-xxx--x---x---xxx-xxx---xxx-xx-x-x--xx-xx-x-x---xx---xxx-xxxx"
+    ]
+  },
+  "layer3.4.bn2": {
+    "input": [
+      128,
+      "xxxx-x-xx-xx-x------x---x---x-x-x--xxxxx-x--x---xxxx-x--x-xx--xxxxxx-xx--x---x--xxxxx-x-x-x-----x-x-x--x--x--x------x--x-xxx--xxxxx-x---xx----xxxx--x----xx-x----x-xxxx-x-xxx-xxx-x-----xxxx-x-x--x-xxx--x---x---xxx-xxx---xxx-xx-x-x--xx-xx-x-x---xx---xxx-xxxx"
+    ]
+  },
+  "layer3.3.conv2": {
+    "output": [
+      128,
+      "-x-x--------xx----xxxxx---x-x-x-x--x-xxx-x-x-x---------x--x--x-xx--xx-xxxxx-xxxx-xx-x----x---x-x-x---x-----xx--x-xxxxx-x-x-x-x-xx----x--xxxx-xxxxxx-xx-x-x-x-x-x-x---x-x-xxx---xx--xxxx---xxxx-xxx--xx-xx--x--x----xxxxxxxx-xxx-x-x--x-xxx--xx-x-xx-xx----x---xx"
+    ]
+  },
+  "layer3.3.conv3": {
+    "input": [
+      128,
+      "-x-x--------xx----xxxxx---x-x-x-x--x-xxx-x-x-x---------x--x--x-xx--xx-xxxxx-xxxx-xx-x----x---x-x-x---x-----xx--x-xxxxx-x-x-x-x-xx----x--xxxx-xxxxxx-xx-x-x-x-x-x-x---x-x-xxx---xx--xxxx---xxxx-xxx--xx-xx--x--x----xxxxxxxx-xxx-x-x--x-xxx--xx-x-xx-xx----x---xx"
+    ]
+  },
+  "layer3.3.bn2": {
+    "input": [
+      128,
+      "-x-x--------xx----xxxxx---x-x-x-x--x-xxx-x-x-x---------x--x--x-xx--xx-xxxxx-xxxx-xx-x----x---x-x-x---x-----xx--x-xxxxx-x-x-x-x-xx----x--xxxx-xxxxxx-xx-x-x-x-x-x-x---x-x-xxx---xx--xxxx---xxxx-xxx--xx-xx--x--x----xxxxxxxx-xxx-x-x--x-xxx--xx-x-xx-xx----x---xx"
+    ]
+  },
+  "layer3.1.conv2": {
+    "output": [
+      128,
+      "------x-x-x-xxxxxx---x-xxxx--xxxxx-x-x--x-xx-xxx-xxxxx---x----xx----x-xx-xx-x-x-xxxxx-x--xxxxxxx-x-----xxx--x-xx-----xxx----x---x---xxx---xx-x-xxxx--xx-------x-x-x--xxxx-xx-xx--x---x-x-x---xx--x-xx---xxx--xx-x--xx---xxxxxxx-xx----x-xxxxx-----xx---xx---xx--"
+    ]
+  },
+  "layer3.1.conv3": {
+    "input": [
+      128,
+      "------x-x-x-xxxxxx---x-xxxx--xxxxx-x-x--x-xx-xxx-xxxxx---x----xx----x-xx-xx-x-x-xxxxx-x--xxxxxxx-x-----xxx--x-xx-----xxx----x---x---xxx---xx-x-xxxx--xx-------x-x-x--xxxx-xx-xx--x---x-x-x---xx--x-xx---xxx--xx-x--xx---xxxxxxx-xx----x-xxxxx-----xx---xx---xx--"
+    ]
+  },
+  "layer3.1.bn2": {
+    "input": [
+      128,
+      "------x-x-x-xxxxxx---x-xxxx--xxxxx-x-x--x-xx-xxx-xxxxx---x----xx----x-xx-xx-x-x-xxxxx-x--xxxxxxx-x-----xxx--x-xx-----xxx----x---x---xxx---xx-x-xxxx--xx-------x-x-x--xxxx-xx-xx--x---x-x-x---xx--x-xx---xxx--xx-x--xx---xxxxxxx-xx----x-xxxxx-----xx---xx---xx--"
+    ]
+  },
+  "layer3.2.conv2": {
+    "output": [
+      128,
+      "xxx--xx-x-x-x--x-xx--xxx-x--xxxxxxxx--x-x--x--x--x--x------x--xx--x--x--xxxxx-x---x-x--------x-xxxx--x-xxx--x---xxxx-x-xx-xxxxxxx--xxx--xx----xx---x-xxxx-xxxxx-xxx--x--xx---x-----x-xx--x-xxxx-x----xx--xxxxxx-----x--xx--x-x-x-xxx-x-xx-xxx-x-xx----x---x----x"
+    ]
+  },
+  "layer3.2.conv3": {
+    "input": [
+      128,
+      "xxx--xx-x-x-x--x-xx--xxx-x--xxxxxxxx--x-x--x--x--x--x------x--xx--x--x--xxxxx-x---x-x--------x-xxxx--x-xxx--x---xxxx-x-xx-xxxxxxx--xxx--xx----xx---x-xxxx-xxxxx-xxx--x--xx---x-----x-xx--x-xxxx-x----xx--xxxxxx-----x--xx--x-x-x-xxx-x-xx-xxx-x-xx----x---x----x"
+    ]
+  },
+  "layer3.2.bn2": {
+    "input": [
+      128,
+      "xxx--xx-x-x-x--x-xx--xxx-x--xxxxxxxx--x-x--x--x--x--x------x--xx--x--x--xxxxx-x---x-x--------x-xxxx--x-xxx--x---xxxx-x-xx-xxxxxxx--xxx--xx----xx---x-xxxx-xxxxx-xxx--x--xx---x-----x-xx--x-xxxx-x----xx--xxxxxx-----x--xx--x-x-x-xxx-x-xx-xxx-x-xx----x---x----x"
+    ]
+  },
+  "layer3.0.conv2": {
+    "output": [
+      128,
+      "x-x-x-xx--xx------x-x-x--xxxxx-x-x---xxxx-x-xx---xx-----xxxx---xx-x----x---xxx--x-xxxx--x-x-xxxx--x---xxxx----x---x-------xx---x-x-xxxxx-xx--xxx-----x--x--x-xx-x----xxx-xxx-xx---xxxx-xxxxxx---xxxxxxx--x-x-x-x-x-xx----x--x-xxx-xx-xx-xx--xxx-xx----x-xxx----x"
+    ]
+  },
+  "layer3.0.conv3": {
+    "input": [
+      128,
+      "x-x-x-xx--xx------x-x-x--xxxxx-x-x---xxxx-x-xx---xx-----xxxx---xx-x----x---xxx--x-xxxx--x-x-xxxx--x---xxxx----x---x-------xx---x-x-xxxxx-xx--xxx-----x--x--x-xx-x----xxx-xxx-xx---xxxx-xxxxxx---xxxxxxx--x-x-x-x-x-xx----x--x-xxx-xx-xx-xx--xxx-xx----x-xxx----x"
+    ]
+  },
+  "layer3.0.bn2": {
+    "input": [
+      128,
+      "x-x-x-xx--xx------x-x-x--xxxxx-x-x---xxxx-x-xx---xx-----xxxx---xx-x----x---xxx--x-xxxx--x-x-xxxx--x---xxxx----x---x-------xx---x-x-xxxxx-xx--xxx-----x--x--x-xx-x----xxx-xxx-xx---xxxx-xxxxxx---xxxxxxx--x-x-x-x-x-xx----x--x-xxx-xx-xx-xx--xxx-xx----x-xxx----x"
+    ]
+  },
+  "layer2.1.conv2": {
+    "output": [
+      64,
+      "xx--x-xxx-x---x--xx---x----x--x----x-x--xxxxxxx-x-xxxxx-xxxxx---xx---xxx----x---x--xx--x---xx-x-x--xx-x-xxxxxxxxx-------xx--x-xx"
+    ]
+  },
+  "layer2.1.conv3": {
+    "input": [
+      64,
+      "xx--x-xxx-x---x--xx---x----x--x----x-x--xxxxxxx-x-xxxxx-xxxxx---xx---xxx----x---x--xx--x---xx-x-x--xx-x-xxxxxxxxx-------xx--x-xx"
+    ]
+  },
+  "layer2.1.bn2": {
+    "input": [
+      64,
+      "xx--x-xxx-x---x--xx---x----x--x----x-x--xxxxxxx-x-xxxxx-xxxxx---xx---xxx----x---x--xx--x---xx-x-x--xx-x-xxxxxxxxx-------xx--x-xx"
+    ]
+  },
+  "layer2.2.conv2": {
+    "output": [
+      64,
+      "xxx-xxx-xxxxxx---x--x-x-xx-xx---xxx-x--x--------xx-xxxx-x-x--x-x-xx--x-x-xxxxx---x-x--x--x------x----xxxx-xx-xx--xx--xx-x---x-xx"
+    ]
+  },
+  "layer2.2.conv3": {
+    "input": [
+      64,
+      "xxx-xxx-xxxxxx---x--x-x-xx-xx---xxx-x--x--------xx-xxxx-x-x--x-x-xx--x-x-xxxxx---x-x--x--x------x----xxxx-xx-xx--xx--xx-x---x-xx"
+    ]
+  },
+  "layer2.2.bn2": {
+    "input": [
+      64,
+      "xxx-xxx-xxxxxx---x--x-x-xx-xx---xxx-x--x--------xx-xxxx-x-x--x-x-xx--x-x-xxxxx---x-x--x--x------x----xxxx-xx-xx--xx--xx-x---x-xx"
+    ]
+  },
+  "layer2.3.conv2": {
+    "output": [
+      64,
+      "x---x---xxxx----x--x-x-xxxxxx-xx--------xxxx-x-xx---xx-----x-x-xxx-x-xxx-xx-x-x-xxx---xxxxx-x--xxxx-x-xxx---xx--x-xx--x----x--x-"
+    ]
+  },
+  "layer2.3.conv3": {
+    "input": [
+      64,
+      "x---x---xxxx----x--x-x-xxxxxx-xx--------xxxx-x-xx---xx-----x-x-xxx-x-xxx-xx-x-x-xxx---xxxxx-x--xxxx-x-xxx---xx--x-xx--x----x--x-"
+    ]
+  },
+  "layer2.3.bn2": {
+    "input": [
+      64,
+      "x---x---xxxx----x--x-x-xxxxxx-xx--------xxxx-x-xx---xx-----x-x-xxx-x-xxx-xx-x-x-xxx---xxxxx-x--xxxx-x-xxx---xx--x-xx--x----x--x-"
+    ]
+  },
+  "layer2.0.conv2": {
+    "output": [
+      64,
+      "--xx---x--x--xx--xx-xxxxx-xxx-x--xx--x-x---x--x-xxx-x-x--x---xxxx-xxxx-xxx-x-----xxxx-xx-xx---x---xx----xx-xx--x-xxx-x-x----xx--"
+    ]
+  },
+  "layer2.0.conv3": {
+    "input": [
+      64,
+      "--xx---x--x--xx--xx-xxxxx-xxx-x--xx--x-x---x--x-xxx-x-x--x---xxxx-xxxx-xxx-x-----xxxx-xx-xx---x---xx----xx-xx--x-xxx-x-x----xx--"
+    ]
+  },
+  "layer2.0.bn2": {
+    "input": [
+      64,
+      "--xx---x--x--xx--xx-xxxxx-xxx-x--xx--x-x---x--x-xxx-x-x--x---xxxx-xxxx-xxx-x-----xxxx-xx-xx---x---xx----xx-xx--x-xxx-x-x----xx--"
+    ]
+  },
+  "layer1.1.conv2": {
+    "output": [
+      32,
+      "--xx---xxx--xx--x-xx-x------xx-x-x--xx-x----x---xxx-x-xxxxx-xxxx"
+    ]
+  },
+  "layer1.1.conv3": {
+    "input": [
+      32,
+      "--xx---xxx--xx--x-xx-x------xx-x-x--xx-x----x---xxx-x-xxxxx-xxxx"
+    ]
+  },
+  "layer1.1.bn2": {
+    "input": [
+      32,
+      "--xx---xxx--xx--x-xx-x------xx-x-x--xx-x----x---xxx-x-xxxxx-xxxx"
+    ]
+  },
+  "layer1.2.conv2": {
+    "output": [
+      32,
+      "----xxxxxxxxx-xx--x-x---xxxx--x--x--xxx-x-x-x--x----xx--x----xxx"
+    ]
+  },
+  "layer1.2.conv3": {
+    "input": [
+      32,
+      "----xxxxxxxxx-xx--x-x---xxxx--x--x--xxx-x-x-x--x----xx--x----xxx"
+    ]
+  },
+  "layer1.2.bn2": {
+    "input": [
+      32,
+      "----xxxxxxxxx-xx--x-x---xxxx--x--x--xxx-x-x-x--x----xx--x----xxx"
+    ]
+  },
+  "layer1.0.conv2": {
+    "output": [
+      32,
+      "x-xx-x---x--------xxxx-x-x-x-x---x-xxx-xxxx---xx-----xxx-xx-xxxx"
+    ]
+  },
+  "layer1.0.conv3": {
+    "input": [
+      32,
+      "x-xx-x---x--------xxxx-x-x-x-x---x-xxx-xxxx---xx-----xxx-xx-xxxx"
+    ]
+  },
+  "layer1.0.bn2": {
+    "input": [
+      32,
+      "x-xx-x---x--------xxxx-x-x-x-x---x-xxx-xxxx---xx-----xxx-xx-xxxx"
+    ]
+  },
+  "layer4.0.conv1": {
+    "output": [
+      370,
+      "--xx-x-x--x----------x--xx--x--------x------xx-----xx-xxxx----------xx--x--x---x---x-------x---x--x------x--------x--x------xx-x--x--x--x--xx--x---x-----x--x--x-xx-xx--xx---------x-xx----x------x---------xx-----------x--x-x-x--x-x---x-x----xx-x-x-x----xx-x--------x---x-x-----x----x--x----xx-xx---xx-x--x---x-x---xx-x-x----x--x-x---x-x--xx-------x-------------x--x------xx--xx-xxx-----xx-x---x-x-x-----xx---------x----x--x---------x-xx-x-----------x-x--x----x---x------------xxxxx------x--x-x----x---xx-----x-x--"
+    ]
+  },
+  "layer4.0.bn1": {
+    "input": [
+      370,
+      "--xx-x-x--x----------x--xx--x--------x------xx-----xx-xxxx----------xx--x--x---x---x-------x---x--x------x--------x--x------xx-x--x--x--x--xx--x---x-----x--x--x-xx-xx--xx---------x-xx----x------x---------xx-----------x--x-x-x--x-x---x-x----xx-x-x-x----xx-x--------x---x-x-----x----x--x----xx-xx---xx-x--x---x-x---xx-x-x----x--x-x---x-x--xx-------x-------------x--x------xx--xx-xxx-----xx-x---x-x-x-----xx---------x----x--x---------x-xx-x-----------x-x--x----x---x------------xxxxx------x--x-x----x---xx-----x-x--"
+    ]
+  },
+  "layer4.2.conv1": {
+    "output": [
+      408,
+      "-x--------x----xxx-x--x-------------x-------------xx------x--x-x-------x---x---x----x----x---x-----x-----x--x---x-----------x--x---x--x-x-x-x-------x-x---------x----------x-----------------x--------xxx---x----xx------------x------------x--------x-xxxx-----x-xxx------------xx---x--x--------x------x----------------x-xx----xx----x-----x---------x---x---x---x--xx--------xx---------x--xx-xx----x-x-x-------x-x-x--xx------x-x----xx-------------x-------x-----------x---x-x-xx----------x-------xx--------x---x--x----x"
+    ]
+  },
+  "layer4.2.bn1": {
+    "input": [
+      408,
+      "-x--------x----xxx-x--x-------------x-------------xx------x--x-x-------x---x---x----x----x---x-----x-----x--x---x-----------x--x---x--x-x-x-x-------x-x---------x----------x-----------------x--------xxx---x----xx------------x------------x--------x-xxxx-----x-xxx------------xx---x--x--------x------x----------------x-xx----xx----x-----x---------x---x---x---x--xx--------xx---------x--xx-xx----x-x-x-------x-x-x--xx------x-x----xx-------------x-------x-----------x---x-x-xx----------x-------xx--------x---x--x----x"
+    ]
+  },
+  "layer4.1.conv1": {
+    "output": [
+      428,
+      "x---xxx--------x-----xx------x---------x--x------x-xx---x------x-------xx-------x-x------------xx----x--x----xx---------x----------------------------x--xx--x-x--x------------------x------x-----x----xx---x----x--x-x---x-x--xx----x---x--x----------xx--------x--x----x-------xx-------------x---x-------xx-x--x--------------x--------x-------x--x-------xx-x--x---------------------------x-----x---x----------------xx---------x----x------x---x--------------x------------xx------------------x------x-x------------------"
+    ]
+  },
+  "layer4.1.bn1": {
+    "input": [
+      428,
+      "x---xxx--------x-----xx------x---------x--x------x-xx---x------x-------xx-------x-x------------xx----x--x----xx---------x----------------------------x--xx--x-x--x------------------x------x-----x----xx---x----x--x-x---x-x--xx----x---x--x----------xx--------x--x----x-------xx-------------x---x-------xx-x--x--------------x--------x-------x--x-------xx-x--x---------------------------x-----x---x----------------xx---------x----x------x---x--------------x------------xx------------------x------x-x------------------"
+    ]
+  }
+}

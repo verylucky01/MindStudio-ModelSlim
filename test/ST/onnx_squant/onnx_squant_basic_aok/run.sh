@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+declare -i ret_ok=0
+declare -i ret_failed=1
+run_ok=$ret_ok
+
+rm -rf $PROJECT_PATH/output/onnx_squant/resnet50_quant.onnx
+
+
+python3 -m ais_bench --model $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/resnet50_bs64.om \
+                     --input $PROJECT_PATH/resource/onnx_squant/prep_dataset \
+                     --output $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/ \
+                     --output_dirname result \
+                     --outfmt TXT
+
+python3 $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/vision_metric_ImageNet.py \
+        $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/result \
+        $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/val_label.txt \
+        $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/ \
+        result.json
+
+python run.py
+if [ $? -eq 0 ]
+then
+    echo onnx_squant_basic_aok: Success
+else
+    echo onnx_squant_basic_aok: Failed
+    run_ok=$ret_failed
+fi
+
+atc --model=$PROJECT_PATH/output/onnx_squant/resnet50_quant.onnx \
+    --framework=5 \
+    --output=$PROJECT_PATH/resource/onnx_squant/resnet50_quant_bs64 \
+    --input_format=NCHW \
+    --input_shape="actual_input_1:64,3,224,224" \
+    --enable_small_channel=1 \
+    --log=error \
+    --soc_version=Ascend310P3 \
+    --insert_op_conf=$PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/aipp_resnet50.aippconfig
+
+python3 -m ais_bench --model $PROJECT_PATH/resource/onnx_squant/resnet50_quant_bs64.om \
+                     --input $PROJECT_PATH/resource/onnx_squant/prep_dataset \
+                     --output $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/ \
+                     --output_dirname result_quant \
+                     --outfmt TXT
+
+python3 $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/vision_metric_ImageNet.py \
+        $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/result_quant \
+        $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/val_label.txt \
+        $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/ \
+        result_quant.json
+
+cat $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/result.json | python -m json.tool
+cat $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/result_quant.json | python -m json.tool
+
+rm -rf $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/result.json
+rm -rf $PROJECT_PATH/resource/onnx_squant/Resnet50_Pytorch_Infer/result_quant.json
+
+exit $run_ok
