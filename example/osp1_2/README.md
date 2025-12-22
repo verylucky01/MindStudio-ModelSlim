@@ -5,7 +5,7 @@
 [Open-Sora-Plan v1.2](https://github.com/PKU-YuanGroup/Open-Sora-Plan) 是一个开源的多模态视频生成模型，由北大-兔展AIGC联合实验室共同发起，专注于高效视频生成任务。
 
 ## 环境配置
-请参考 [多模态视图生成推理优化工具](../../docs/功能指南/脚本量化与其他功能/pytorch/multimodal_sd/多模态生成模型推理优化.md#环境要求) 完成环境配置。
+请参考 [多模态视图生成推理优化工具](../../docs/zh/feature_guide/scripts_based_quantization_and_other_features/pytorch/inference_optimization_for_multimodal_generative_model.md#环境要求) 完成环境配置。
 
 ## 支持的模型版本与优化策略
 

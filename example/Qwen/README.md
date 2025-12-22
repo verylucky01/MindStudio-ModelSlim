@@ -5,7 +5,7 @@
 
 ## 环境配置
 
-- 环境配置请参考[安装说明](../../docs/安装指南.md)
+- 环境配置请参考[安装说明](../../docs/zh/install_guide.md)
 - Qwen3 系列transformers版本需要配置安装4.51.0版本
     - pip install transformers==4.51.0
 
@@ -87,8 +87,8 @@
 | w_method | 权重量化方法 | MinMax | 可选值：['MinMax', 'GPTQ', 'HQQ', 'NF']。 |
 
 
-- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/QuantConfig.md)
-  以及量化参数配置类 [Calibrator](../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/Calibrator.md)
+- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
+  以及量化参数配置类 [Calibrator](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)
 
 #### W4A4 Flatquant Dynamic量化专用参数说明 (w4a4.py)
 | 参数名 | 含义 | 默认值 | 使用方法 | 
@@ -169,7 +169,7 @@
   python3 quant_qwen.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl --w_bit 8 --a_bit 8 --device_type npu --trust_remote_code True
   ```
 ##### <span id="qwen25-72b-支持attention量化">Qwen2.5-72B 支持Attention量化</span>
-- 需修改`modeling_qwen2.py`文件和`config.json`文件，配置方法参考[FA量化使用说明](../../docs/功能指南/脚本量化与其他功能/pytorch/llm_ptq/FA量化使用说明.md)。 
+- 需修改`modeling_qwen2.py`文件和`config.json`文件，配置方法参考[FA量化使用说明](../../docs/zh/feature_guide/scripts_based_quantization_and_other_features/pytorch/fa_quantization_usage.md)。 
 - 相比于W8A8量化，需额外设置`use_fa_quant`参数为True
   ```shell
   python3 quant_qwen.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl --w_bit 8 --a_bit 8 --device_type npu --anti_method m4 --act_method 1 --use_fa_quant True --trust_remote_code True
@@ -213,7 +213,7 @@
 #### 5. Qwen3 系列
 ##### <span id="qwen3-32b-w8a8量化">Qwen3-32B W8A8量化</span>
 
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8量化权重路径} --device npu --model_type Qwen3-32B --quant_type w8a8 --trust_remote_code True
@@ -221,7 +221,7 @@
 
 ##### <span id="qwen3-32b-w8a8c8量化">Qwen3-32B W8A8C8量化</span>
 
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8C8量化权重路径} --device npu --model_type Qwen3-32B --quant_type w8a8c8 --trust_remote_code True
@@ -238,14 +238,14 @@
 
 ##### <span id="qwen3-32b-稀疏量化">Qwen3-32B 稀疏量化</span>
 
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8量化权重路径} --device npu --model_type Qwen3-32B --quant_type w8a8s --trust_remote_code True
   ```
 
 ##### <span id="qwen3-32b-w16a16s-浮点稀疏量化">Qwen3-32B W16A16S 浮点稀疏量化</span>
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type Qwen3-32B --quant_type w16a16s --trust_remote_code True
@@ -257,7 +257,7 @@
   ```
 ##### <span id="qwen3-14b-w8a8量化">Qwen3-14B W8A8量化</span>
 
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8量化权重路径} --device npu --model_type Qwen3-14B --quant_type w8a8 --trust_remote_code True
@@ -265,7 +265,7 @@
 
 ##### <span id="qwen3-14b-稀疏量化">Qwen3-14B 稀疏量化</span>
 
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8量化权重路径} --device npu --model_type Qwen3-14B --quant_type w8a8s --trust_remote_code True
@@ -273,7 +273,7 @@
 
 ##### <span id="qwen3-8b-稀疏量化">Qwen3-8B 稀疏量化</span>
 
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8量化权重路径} --device npu --model_type Qwen3-8B --quant_type w8a8s --trust_remote_code True

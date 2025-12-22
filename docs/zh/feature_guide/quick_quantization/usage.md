@@ -1,0 +1,65 @@
+# 一键量化使用说明
+
+## 简介
+
+一键量化功能面向零基础用户，集成热门开源模型量化功能，具备“开箱即用”的特性。本功能支持全局调用量化命令，用户指定必要参数后，即可对目标原始权重执行指定的量化操作。
+
+## 使用前准备
+
+请参考[安装指南](../../install_guide.md)安装 msModelSlim 工具
+
+## 一键量化功能介绍
+
+### 功能说明
+
+一键量化功能通过命令行方式启动，可以通过如下命令运行：
+
+``` bash
+msmodelslim quant [ARGS]
+```
+
+用户输入命令后，系统将根据指定需求，在最佳实践库中匹配到最佳配置从而实施量化。
+
+### 注意事项
+
+1. 最佳实践库中的配置文件放在 `msit/msmodelslim/lab_practice` 中。
+2. 若最佳实践库中未搜寻到最佳配置，系统则会向用户询问是否采用默认配置，即使用 `msit/msmodelslim/lab_practice/default/default.yaml` 实施量化。
+3. 如果需要打印量化运行日志，可通过以下环境变量进行设置。
+
+    | 环境变量                  | 解释        | 是否可选 | 范围             |
+    |-----------------------|-----------|------|----------------|
+    | MSMODELSLIM_LOG_LEVEL | 打印同级及以上日志 | 可选   | INFO(默认),DEBUG |
+
+
+### 参数说明
+
+| 参数名称              | 解释        | 是否可选              | 范围                                                                                   |
+|-------------------|-----------|-------------------|--------------------------------------------------------------------------------------|
+| model_path        | 模型路径      | 必选                | 类型：Str                                                                               |
+| save_path         | 量化权重保存路径  | 必选                | 类型：Str                                                                               |
+| device            | 量化设备      | 可选                | 1. 类型：Str <br>2. 参考值：'npu','npu:0,1,2,3','cpu' <br>3. 默认值为"npu"（单设备）<br>4. 指定多个设备时（如：'npu:0,1,2,3'），系统启动DP逐层量化，请确定配置的算法是否支持分布式执行，可以参考[分布式逐层量化特性说明](./dp_layer_wise_quantization.md)|
+| model_type        | 模型名称      | 必选                | 1. 类型：Str <br>2. 大小写敏感，请参考[大模型支持矩阵](../../foundation_model_support_matrix.md)                                               |  |
+| config_path       | 指定配置路径    | 与"quant_type"二选一  | 1. 类型：Str <br>2. 配置文件格式为yaml <br>3. 当前只支持最佳实践库中已验证的配置，若自定义配置，msModelSlim不为量化结果负责。配置指导可参考[一键量化配置协议说明](configuration_protocols.md)。 <br> |
+| quant_type        | 量化类型      | 与"config_path"二选一 | w4a8, w4a8c8, w8a8, w8a8s, w8a8c8，w16a16s，请参考[大模型支持矩阵](../../foundation_model_support_matrix.md)                                   |
+| trust_remote_code | 是否信任自定义代码 | 可选                | 1. 类型：Bool，默认值：False <br>2. 请确保加载的自定义代码文件的安全性，设置为True有安全风险。                          |
+| h, help           | 命令行参数帮助信息 | 可选                |               -            |
+
+
+### 使用示例
+``` bash
+#全局调用命令行，使用指定量化类型quant_type
+msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device ${DEVICE} --model_type ${MODEL_TYPE} --quant_type ${QUANT_TYPE} --trust_remote_code ${TRUST_REMOTE_CODE}
+
+#全局调用命令行，使用指定配置config_path
+msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device ${DEVICE} --model_type ${MODEL_TYPE} --config_path ${CONFIG_PATH} --trust_remote_code ${TRUST_REMOTE_CODE}
+```
+
+【样例1】使用一键量化功能量化 Qwen2.5-7B-Instruct 模型，量化方式采用 w8a8 ，则量化命令如下，其中\${MODEL_PATH}为Qwen2.5-7B-Instruct原始浮点权重路径，\${SAVE_PATH}为用户自定义的量化权重保存路径。
+
+``` bash
+msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type Qwen2.5-7B-Instruct --quant_type w8a8 --trust_remote_code True
+```
+
+## 相关资料
+- 对于过大的模型，可以参考[一键量化的逐层量化特性说明](layer_wise_quantization.md)使用逐层量化，能够明显降低显存使用。
+- 对于一键量化支持的多种算法，可以参考[一键量化V1架构支持的算法](../../algorithms_instruction/)。

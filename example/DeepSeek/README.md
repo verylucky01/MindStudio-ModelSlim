@@ -19,7 +19,7 @@
 
 ## 环境配置
 
-- 环境配置请参考[安装指南](../../docs/安装指南.md)
+- 环境配置请参考[安装指南](../../docs/zh/install_guide.md)
 - 对于DeepSeek-V3系列/DeepSeek-R1系列模型，由于模型比较大，请先完成"
   运行前必检"（[DeepSeek-V3运行前必检](#运行前必检) / [DeepSeek-R1运行前必检](#运行前必检-1)）。
 - 由于模型量化对显存要求较高，请确保在单卡显存不低于64G的环境下执行。
@@ -121,8 +121,8 @@
 注：在量化脚本里面通过transformers库对模型进行加载时，调用`from_pretrained`函数时会指定`trust_remote_code=True`
 让修改后的modeling文件能够正确的被加载。(请确保加载的modeling文件的安全性)
 
-更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/QuantConfig.md)
-以及量化参数配置类 [Calibrator](../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/Calibrator.md)
+更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
+以及量化参数配置类 [Calibrator](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)
 
 ### 使用案例
 

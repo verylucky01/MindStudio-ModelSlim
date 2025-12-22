@@ -90,7 +90,7 @@ msmodelslim quant \
     --trust_remote_code True
 ```
 ### 一键量化命令参数说明
-一键量化参数基本说明可参考：[一键量化参数说明](../../../docs/功能指南/一键量化/使用说明.md#参数说明)
+一键量化参数基本说明可参考：[一键量化参数说明](../../../docs/zh/feature_guide/quick_quantization/usage.md#参数说明)
 
 针对Wan2.1模型，有不同的限制：
 
@@ -192,5 +192,5 @@ spec:
 ## 相关资源
 
 - [Wan2.1模型仓库](https://modelers.cn/models/MindIE/Wan2.1)
-- [一键量化配置协议说明](../../../docs/功能指南/一键量化/配置协议说明.md)
-- [逐层量化特性说明](../../../docs/功能指南/一键量化/逐层量化特性说明)
+- [一键量化配置协议说明](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md)
+- [逐层量化特性说明](../../../docs/zh/feature_guide/quick_quantization/layer_wise_quantization.md)

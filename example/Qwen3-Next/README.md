@@ -10,7 +10,7 @@
 
 ## 环境配置
 
-- 环境配置请参考[安装指南](../../docs/安装指南.md)
+- 环境配置请参考[安装指南](../../docs/zh/install_guide.md)
 - transformers版本需要配置安装4.57.0及其之后的版本
     - pip install transformers==4.57.1
 
@@ -36,7 +36,7 @@
 #### 1. Qwen3-Next-80B-A3B-Instruct
 ##### <span id="qwen3-next-80b-a3b-instruct-w8a8量化">Qwen3-Next-80B-A3B-Instruct W8A8量化</span>
 
-该模型的量化已经集成至[一键量化](../../docs/功能指南/一键量化/使用说明.md)。
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)。
 
   ```shell
   msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type Qwen3-Next-80B-A3B-Instruct --quant_type w8a8 --trust_remote_code True

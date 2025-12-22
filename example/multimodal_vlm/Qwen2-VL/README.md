@@ -10,7 +10,7 @@
 
 ## 环境配置
 
-- 基础环境配置请参考[安装指南](../../../docs/安装指南.md)
+- 基础环境配置请参考[安装指南](../../../docs/zh/install_guide.md)
 - transformers版本需要配置安装为4.46.0
   ```
   pip install transformers==4.46.0
@@ -68,5 +68,5 @@
 | anti_method | 异常值抑制算法 | 'm2' | 可选参数;<br>可选值：['m2', 'm4']。'm2'对应多模态理解模型场景下优化后的Outlier Suppression Plus异常值抑制算法，'m4'对应Iterative Smooth异常值抑制算法。 |
 | mindie_format | 多模态理解模型量化后的权重配置文件是否兼容MindIE现有版本 | False | 开启`mindie_format`时保存的量化权重格式能够兼容MindIE当前的版本。 |
 
-- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/QuantConfig.md)
-  以及量化参数配置类 [Calibrator](../../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/Calibrator.md)
+- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
+  以及量化参数配置类 [Calibrator](../../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)

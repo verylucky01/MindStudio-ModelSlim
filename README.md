@@ -2,87 +2,105 @@
 
 # msModelSlim
 
-[![说明文档](https://img.shields.io/badge/Documentation-latest-brightgreen.svg?style=flat)](./docs/README.md)
+[![说明文档](https://img.shields.io/badge/Documentation-latest-brightgreen.svg?style=flat)](./docs/zh/README.md)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue)](../LICENSE)
 
-[安装指南](./docs/安装指南.md) |
-[快速入门](./docs/快速入门/一键量化快速入门.md) |
-[支持矩阵](./docs/支持矩阵/大模型支持矩阵.md) |
-[功能指南](./docs/README.md#功能指南) |
-[自主量化](./docs/自主量化/模型接入.md) |
-[案例集](./docs/README.md#案例集) |
-[FAQ](./docs/FAQ.md)
+[安装指南](docs/zh/install_guide.md) |
+[快速入门](docs/zh/quick_quantization_quick_start.md) |
+[支持矩阵](docs/zh/foundation_model_support_matrix.md) |
+[功能指南](./docs/zh/README.md#功能指南) |
+[自主量化](docs/zh/custom_quantization/integrating_models.md) |
+[案例集](./docs/zh/README.md#案例集) |
+[FAQ](./docs/zh/FAQ.md)
 
 </div>
 
-## 🔥🔥🔥Latest News
-- [2025/12/10] 🚀 msModelSlim 支持 [DeepSeek-V3.2-Exp W4A8](./example/DeepSeek/README.md#deepseek-v32-w4a8) 量化，单卡64G显存，100G内存即可执行。
-- [2025/12/5] 🚀 msModelSlim 支持 [Qwen3-VL-235B-A22B W8A8](./example/multimodal_vlm/Qwen3-VL-MoE/README.md) 量化。
-- [2025/10/16] 🚀 msModelSlim 支持 [Qwen3-235B-A22B W4A8](./example/Qwen3-MOE/README.md#qwen3-235b-a22b-w4a8-混合量化)、[Qwen3-30B-A3B W4A8](./example/Qwen3-MOE/README.md#qwen3-30b-a3b-w4a8-混合量化) 量化。vLLM Ascend已支持量化模型推理部署 [部署指导](https://vllm-ascend.readthedocs.io/en/latest/user_guide/feature_guide/quantization.html#)
-- [2025/09/30] 🚀 msModelSlim 支持 [DeepSeek-V3.2-Exp W8A8](./example/DeepSeek/README.md#deepseek-v32-w8a8) 量化，单卡64G显存，100G内存即可执行
-- [2025/09/18] 🚀 msModelSlim 现已解决Qwen3-235B-A22B在W8A8量化下频繁出现“游戏副本”等异常token的问题 [Qwen3-MoE 量化推荐实践](./example/Qwen3-MOE/README.md)
-- [2025/09/18] 🚀 msModelSlim 支持DeepSeek R1 W4A8 per-channel 量化【Prototype】
-- [2025/09/03] 🤝 msModelSlim 支持大模型量化敏感层分析
-- [2025/08/30] 🌴 msModelSlim 支持Wan2.1模型一键量化
-- [2025/08/25] 🌱 msModelSlim 支持大模型逐层量化
+## 最新消息
+- [2025/12/10] 支持 [DeepSeek-V3.2-Exp W4A8](./example/DeepSeek/README.md#deepseek-v32-w4a8) 量化，单卡64G显存，100G内存即可执行。
+- [2025/12/05] 支持 [Qwen3-VL-235B-A22B W8A8](./example/multimodal_vlm/Qwen3-VL-MoE/README.md) 量化。
+- [2025/10/16] 支持 [Qwen3-235B-A22B W4A8](./example/Qwen3-MOE/README.md#qwen3-235b-a22b-w4a8-混合量化)、[Qwen3-30B-A3B W4A8](./example/Qwen3-MOE/README.md#qwen3-30b-a3b-w4a8-混合量化) 量化。vLLM Ascend已支持量化模型推理部署 [部署指导](https://vllm-ascend.readthedocs.io/en/latest/user_guide/feature_guide/quantization.html#)
+- [2025/09/30] 支持 [DeepSeek-V3.2-Exp W8A8](./example/DeepSeek/README.md#deepseek-v32-w8a8) 量化，单卡64G显存，100G内存即可执行
+- [2025/09/18] 现已解决Qwen3-235B-A22B在W8A8量化下频繁出现“游戏副本”等异常token的问题 [Qwen3-MoE 量化推荐实践](./example/Qwen3-MOE/README.md)
+- [2025/09/18] 支持DeepSeek R1 W4A8 per-channel 量化【Prototype】
+- [2025/09/03] 支持大模型量化敏感层分析
+- [2025/08/30] 支持Wan2.1模型一键量化
+- [2025/08/25] 支持大模型逐层量化
 
 <details close>
 <summary>Previous News</summary>
 
-- [2025/08/21] 🌱 msModelSlim 支持大模型SSZ权重量化算法
+- [2025/08/21] 支持大模型SSZ权重量化算法
 
 </details>
 
 > 注： **Prototype**特性未经过充分验证，可能存在不稳定和bug问题，**beta**表示非商用特性
 
-## msModelSlim简介
+## 简介
 
-msModelSlim，全称MindStudio ModelSlim，昇腾模型压缩工具。 
-
-昇腾模型压缩工具，一个以加速为目标、压缩为技术、昇腾为根本的亲和压缩工具。包含量化和压缩等一系列推理优化技术，旨在加速大语言稠密模型、MoE模型、多模态理解模型、多模态生成模型等。
+MindStudio ModelSlim（昇腾模型压缩工具，msModelSlim），一个以加速为目标、压缩为技术、昇腾为根本的亲和压缩工具。包含量化和压缩等一系列推理优化技术，旨在加速大语言稠密模型、MoE模型、多模态理解模型、多模态生成模型等。
 
 昇腾AI模型开发用户可以灵活调用Python API接口，适配算法和模型，完成精度性能调优，并支持导出不同格式模型，通过MindIE、vLLM Ascend等推理框架在昇腾AI处理器上运行。
 
+## 目录结构
+关键目录如下
+```
+├─config             # 配置文件
+├─docs               # 文档目录
+├─lab_calib          # 校准集
+├─lab_practice       # 最佳实践
+├─msmodelslim
+│  ├─app             # 应用
+│  ├─cli             # 命令行和接口
+│  ├─core            # 其他量化模块和组件
+│  ├─infra           # 量化基础设施
+│  ├─model           # 模型适配
+│  ├─quant           
+│  │  ├─ir           # 量化模式 
+│  │  └─processor    # 算法
+│  └─utils           # 通用基础设施
+└─test               # 测试目录
+```
+
+## 版本说明
+
+msModelSlim的版本说明包含msModelSlim的软件版本配套关系和软件包下载以及每个版本的特性变更说明，具体参见[版本说明](./docs/zh/release_notes.md)。
+
 ## 安装指南
 
-具体安装步骤请查看[安装指南](./docs/安装指南.md)。
+具体安装步骤请查看[安装指南](docs/zh/install_guide.md)。
 
 ## 快速入门
 
 快速入门旨在帮助用户快速通过一键量化的方式完成大模型量化功能。
 
-具体快速入门请查看[快速入门](./docs/快速入门/一键量化快速入门.md)。
+具体快速入门请查看[快速入门](docs/zh/quick_quantization_quick_start.md)。
 
 ## 支持矩阵
 
 支持矩阵旨在以表格形式呈现不同功能和模型已适配场景的情况。
 
-具体支持矩阵请查看[支持矩阵](./docs/支持矩阵/大模型支持矩阵.md)。
+具体支持矩阵请查看[支持矩阵](docs/zh/foundation_model_support_matrix.md)。
 
 ## 功能指南
 
 功能指南基于msModelSlim不同架构下的功能支持情况，提供功能使用说明和接口说明。
 
-具体功能指南请查看[功能指南](./docs/README.md#功能指南)。
+具体功能指南请查看[功能指南](./docs/zh/README.md#功能指南)。
 
 ## 自主量化
 面向需要将自有模型接入 msModelSlim 的开发者，提供自主将模型接入msModelSlim一键量化的指导。
 
-具体模型接入指南请查看[自主量化模型接入指南](./docs/自主量化/模型接入.md)。
+具体模型接入指南请查看[自主量化模型接入指南](docs/zh/custom_quantization/integrating_models.md)。
 
 ## 案例集
 
 案例集通过具体的文字说明和代码示例，以实际应用场景为基础，旨在指导用户快速熟悉特定场景下msModelSlim工具的使用，包括一些精度调优方法等，msModelSlim将持续完善案例集。
 
-具体案例集请查看[案例集](./docs/README.md#案例集)。
+具体案例集请查看[案例集](./docs/zh/README.md#案例集)。
 
 ## 常见问题
 
-相关FAQ请参考链接：[FAQ](./docs/FAQ.md)
-
-## 其他资源
-- [提issue](https://gitcode.com/Ascend/msit/issues/create?type=template&title=Bug-Report|%E7%BC%BA%E9%99%B7%E5%8F%8D%E9%A6%88&template=.gitcode%252FISSUE_TEMPLATE%252Fbug-report.yml&default_branch=master&project_path_with_namespace=Ascend%252F.gitcode)
-- [提新功能诉求](https://gitcode.com/Ascend/msit/issues/create?type=template&title=%E6%96%B0%E9%9C%80%E6%B1%82&template=.gitcode%252FISSUE_TEMPLATE%252Ffeature.yml&default_branch=master&project_path_with_namespace=Ascend%252F.gitcode)
+相关FAQ请参考链接：[FAQ](./docs/zh/FAQ.md)
 
 ## 免责声明
 
@@ -98,10 +116,41 @@ msModelSlim，全称MindStudio ModelSlim，昇腾模型压缩工具。
    - 请确保原始模型数据存放和量化模型数据保存在不含软链接的当前用户目录下，否则可能会引起安全问题。 
 
 ### 致数据集所有者
-如果您不希望您的数据集在msModelSlim中的模型被提及，或希望更新msModelSlim中的模型关于您的数据集的描述，请在Gitcode[提issue](https://gitcode.com/Ascend/msit/issues/create?type=template&title=Bug-Report|%E7%BC%BA%E9%99%B7%E5%8F%8D%E9%A6%88&template=.gitcode%252FISSUE_TEMPLATE%252Fbug-report.yml&default_branch=master&project_path_with_namespace=Ascend%252F.gitcode)，msModelSlim将根据您的issue要求删除或更新您的数据集描述。衷心感谢您对msModelSlim的理解和贡献。
+如果您不希望您的数据集在msModelSlim中的模型被提及，或希望更新msModelSlim中的模型关于您的数据集的描述，请在Gitcode[提issue](https://gitcode.com/Ascend/msmodelslim/issues)，msModelSlim将根据您的issue要求删除或更新您的数据集描述。衷心感谢您对msModelSlim的理解和贡献。
 
-## License声明
-msModelSlim提供的模型，若其模型目录中包含License文件，则遵循该文件中的许可协议。若未包含License文件，则默认适用Apache 2.0许可证。
+## License
+msModelSlim产品的使用许可证，具体请参见[License](./License)。
+
+msModelSlim产品docs目录下的文档适用CC-BY 4.0许可证，具体请参见[License](./docs/zh/License)。
+
+## 贡献声明
+
+1. 提交错误报告：如果您在msModelSlim中发现了一个不存在安全问题的漏洞，请在msModelSlim仓库中的Issues中搜索，以防该漏洞已被提交，如果找不到漏洞可以创建一个新的Issues。如果发现了一个安全问题请不要将其公开，请参阅安全问题处理方式。提交错误报告时应该包含完整信息。
+2. 安全问题处理：本项目中对安全问题处理的形式，请通过邮箱通知项目核心人员确认编辑。
+3. 解决现有问题：通过查看仓库的Issues列表可以发现需要处理的问题信息, 可以尝试解决其中的某个问题。
+4. 如何提出新功能：请使用Issues的Feature标签进行标记，我们会定期处理和确认开发。
+5. 开始贡献：  
+  a. Fork本项目的仓库。  
+  b. Clone到本地。  
+  c. 创建开发分支。  
+  d. 本地自测，提交前请通过所有的已经单元测试，以及为您要解决的问题新增单元测试。  
+  e. 提交代码。  
+  f. 新建Pull Request。  
+  g. 代码检视，您需要根据评审意见修改代码，并再次推送更新。此过程可能会有多轮。  
+  h. 当您的PR获得足够数量的检视者批准后，Committer会进行最终审核。  
+  i. 审核和测试通过后，CI会将您的PR合并入到项目的主干分支。
+
+## 安全声明
+
+描述msModelSlim产品的安全加固信息、公网地址信息及通信矩阵等内容。详情请参见[msModelSlim工具安全声明](./docs/zh/security_statement.md)。
+
+## 建议与交流
+
+欢迎大家为社区做贡献。如果有任何疑问或建议，请提交issues，我们会尽快回复。感谢您的支持。
+
+[issue提交](https://gitcode.com/Ascend/msmodelslim/issues)
+
+[昇腾论坛](https://www.hiascend.com/forum/forum-0106101385921175006-1.html)
 
 ## 致谢
 msModelSlim 由华为公司的下列部门及昇腾生态合作伙伴联合贡献：

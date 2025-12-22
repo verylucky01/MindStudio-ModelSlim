@@ -14,7 +14,7 @@
 
 ## 环境配置
 - 配套CANN版本请选择8.2.RC1及之后的版本
-- 具体环境配置请参考[使用说明](../../docs/安装指南.md)
+- 具体环境配置请参考[使用说明](../../docs/zh/install_guide.md)
 - 当前多模态生成模型统一接口依赖于pydantic库
   - pip install pydantic
 - SD3-Medium依赖于diffusers库

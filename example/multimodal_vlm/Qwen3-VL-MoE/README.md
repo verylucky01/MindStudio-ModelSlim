@@ -11,7 +11,7 @@ Qwen3-VL-MoE 是阿里云 Qwen 团队推出的大规模多模态视觉语言 Mix
 
 ## 环境配置
 
-- 基础环境配置请参考[安装指南](../../../docs/安装指南.md)，注意：由于高版本transformers的特殊性，PyTorch及torch_npu需要配置安装为2.7.1版本
+- 基础环境配置请参考[安装指南](../../../docs/zh/install_guide.md)，注意：由于高版本transformers的特殊性，PyTorch及torch_npu需要配置安装为2.7.1版本
 - 针对 Qwen3-VL-MoE，transformers 版本需要 4.57.1：
   ```bash
   pip install transformers==4.57.1
@@ -63,7 +63,7 @@ Qwen3-VL-MoE 是阿里云 Qwen 团队推出的大规模多模态视觉语言 Mix
 
 #### <span id="qwen3-vl-moe-w8a8-混合量化">Qwen3-VL-235B-A22B W8A8 混合量化</span>
 
-该模型的量化已经集成至[一键量化](../../../docs/功能指南/一键量化/使用说明.md#参数说明)。
+该模型的量化已经集成至[一键量化](../../../docs/zh/feature_guide/quick_quantization/usage.md#参数说明)。
 
 ```shell
 msmodelslim quant \
@@ -90,17 +90,17 @@ msmodelslim quant \
 
 **A**: 有以下几种方式：
 1. 使用 `lab_calib/calibImages/` 目录，并统一自定义所有图像的文本prompt：通过yaml配置文件中default_text字段配置文本prompt；
-2. 使用 `lab_calib/calibImages/` 目录，并自定义每个图像的文本prompt：在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/功能指南/一键量化/配置协议说明.md#dataset---校准数据路径配置)；
+2. 使用 `lab_calib/calibImages/` 目录，并自定义每个图像的文本prompt：在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md#dataset---校准数据路径配置)；
 3. 使用自定义图像目录，并统一自定义所有图像的文本prompt：在yaml配置文件中修改 `dataset` 字段为自定义图像目录，并通过yaml配置文件中default_text字段配置文本prompt；
-4. 使用自定义图像目录，并自定义每个图像的文本prompt：在yaml配置文件中修改 `dataset` 字段为自定义图像目录，在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/功能指南/一键量化/配置协议说明.md#dataset---校准数据路径配置)。
+4. 使用自定义图像目录，并自定义每个图像的文本prompt：在yaml配置文件中修改 `dataset` 字段为自定义图像目录，在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md#dataset---校准数据路径配置)。
 
 建议使用与实际应用场景相似的图像作为校准集，数量一般不超过30张。
 
 ## 相关资源
 
-- [multimodal_vlm_modelslim_v1 量化服务配置详解](../../../docs/功能指南/一键量化/配置协议说明.md#multimodal_vlm_modelslim_v1-量化服务配置详解)
-- [一键量化配置协议说明](../../../docs/功能指南/一键量化/配置协议说明.md)
-- [逐层量化特性说明](../../../docs/功能指南/一键量化/逐层量化特性说明)
-- [QuaRot 算法说明](../../../docs/算法说明/QuaRot.md)
-- [Iterative Smooth 算法说明](../../../docs/算法说明/Iterative_Smooth.md)
-- [LinearQuantProcess 线性层量化处理器说明](../../../docs/功能指南/一键量化/线性层量化处理器)
+- [multimodal_vlm_modelslim_v1 量化服务配置详解](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md#multimodal_vlm_modelslim_v1-量化服务配置详解)
+- [一键量化配置协议说明](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md)
+- [逐层量化特性说明](../../../docs/zh/feature_guide/quick_quantization/layer_wise_quantization.md)
+- [QuaRot 算法说明](../../../docs/zh/algorithms_instruction/QuaRot.md)
+- [Iterative Smooth 算法说明](../../../docs/zh/algorithms_instruction/Iterative_Smooth.md)
+- [LinearQuantProcess 线性层量化处理器说明](../../../docs/zh/feature_guide/quick_quantization/linear_quant.md)
