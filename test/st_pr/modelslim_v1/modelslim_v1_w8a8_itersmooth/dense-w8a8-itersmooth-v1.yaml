@@ -1,0 +1,39 @@
+apiversion: modelslim_v1
+metadata:
+  config_id: qwen3-dense-w8a8-itersmooth-v1
+  score: 90
+  verified_model_types:
+    - Qwen3-8B
+    - Qwen3-14B
+    - Qwen3-32B
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: False
+spec:
+  process:
+    - type: "iter_smooth"
+      alpha: 0.9
+      scale_min: 1e-5
+
+    - type: "linear_quant"
+      qconfig:
+        act:
+          scope: "per_tensor"
+          dtype: "int8"
+          symmetric: False
+          method: "minmax"
+        weight:
+          scope: "per_channel"
+          dtype: "int8"
+          symmetric: True
+          method: "minmax"
+      include:
+        - "*"
+      exclude:
+        - '*mlp*'
+
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
