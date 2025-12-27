@@ -1,7 +1,9 @@
-## MindSpeed适配器
+# MindSpeed适配器
+
+## 简介
 原有的llm_ptq模块主要支持基于transformers框架下的大模型量化压缩功能，本模块提供了针对ModelLink模型的量化适配器，可以直接量化MindSpeed-LLM模型
 
-### 前提条件
+## 使用前准备
 - 仅支持在以下产品中使用。
     - Atlas 训练系列产品。
     - Atlas A2 训练系列产品/Atlas 800I A2 推理产品/A200I A2 Box 异构组件。
@@ -16,6 +18,8 @@ pip3 install accelerate==0.21.0  #若需要使用NPU多卡并行方式对模型�
 pip3 install tqdm==4.66.1
 ```
 - 安装MindSpeed-LLM库,[安装指导](https://gitcode.com/Ascend/MindSpeed-LLM/blob/master/docs/pytorch/install_guide.md)
+
+## 功能介绍
 
 ### 功能约束
 当前模型适配器仅验证过支持w8a8的量化，以及异常值抑制模块的m3和m5算法，仅支持NPU执行量化，不支持CPU量化

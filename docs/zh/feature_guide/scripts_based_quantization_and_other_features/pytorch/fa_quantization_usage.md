@@ -2,14 +2,14 @@
 
 **Flash Attention 3（FA3）**，在KV-Cache的基础上增强了在硬件设备上的利用率，提升了整体在推理场景中的计算效率，以低精度的数据格式完成更快的处理和更少的内存占用。
 
-## 前提条件
+## 使用前准备
 
 前提条件参考[大模型量化的前提条件](foundation_model_post_training_quantization.md#前提条件)
 
 说明：仅Atlas 800I A2推理产品支持FA3量化功能。当前 FA3 量化功能已完成对大语言模型 Llama3.1-70B、Qwen2.5-72B 和多模态模型 Flux.1-dev、HunyuanVideo 的验证。
 
-## 大语言模型FA3量化关键步骤说明如下：
-### 功能实现流程
+## 功能介绍
+### 大语言模型FA3量化关键步骤说明如下
 #### 1.修改modeling文件：
 
 （1）找到对应版本的modeling文件：

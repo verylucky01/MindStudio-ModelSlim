@@ -1,5 +1,6 @@
 # 长序列压缩
-## Alibi编码类型
+
+## Alibi编码类型简介
 
 Alibi编码是一种位置编码方法，与RazorAttention结合使用，通过Alibi编码来识别哪些注意力头对位置信息更为敏感，从而决定哪些头可以被压缩。Alibi编码并不直接在网络中加入显式的位置编码，而是通过在query-key注意力分数上施加一个与距离成比例的偏置实现位置信息的建模。
 
@@ -11,12 +12,13 @@ KV Cache的管理需考虑batch, seq_len, num_heads和head_size这四个维度�
 
 目前支持对表1中Alibi编码的大模型进行长序列压缩（包括但不限于）。
 
-表1 已验证模型列表
+已验证模型列表：
+
 |模型名称|框架|
 |----|-----|
 |baichuan2-13b|PyTorch|
 
-### 前提条件
+## 使用前准备
 已参考[安装指南](../../../install_guide.md)完成开发环境配置。
 执行命令安装如下依赖。
 以下命令若使用非root用户安装，需要在安装命令后加上--user，例如：pip3 install numpy==1.26.4 --user。
@@ -25,7 +27,7 @@ pip3 install numpy==1.26.4
 pip3 install transformers==4.43.1 
 pip3 install torch==2.1.0   # 安装CPU版本的PyTorch 2.1.0（不依赖torch_npu）
 ```
-### 功能实现流程
+## 功能介绍
 
 图1 压缩接口调用流程
 ![Alibi压缩接口调用流程](../figures/[pytorch]alibi_compress_api_calling.png)
@@ -88,7 +90,8 @@ ra.get_alibi_windows(save_path)
 python3 run.py
 .pt文件可用于后续的推理部署任务，具体请参见MindIE的[“加速库支持模型列表”](https://www.hiascend.com/document/detail/zh/mindie/20RC1/modellist/mindie_modellist_0001.html)章节中已适配量化的模型。
 
-## RoPE编码类型
+## RoPE编码类型简介
+
 RoPE（Rotary Position Embedding）编码是一种高效的位置编码方式，有以下特点：
 
 旋转编码：通过旋转操作将位置信息编码到每个token的嵌入向量中。这种旋转操作确保了模型能够捕捉到序列中元素的相对位置信息，而不依赖于绝对位置。
@@ -107,7 +110,8 @@ RoPE（Rotary Position Embedding）编码是一种高效的位置编码方式，
 | Qwen2-72b-instruct   | PyTorch|
 | llama3.1-70b         | PyTorch|
 
-### 前提条件
+## 使用前准备
+
 已参考[安装指南](../../../install_guide.md)完成开发环境配置。
 执行命令安装如下依赖。
 以下命令若使用非root用户安装，需要在安装命令后加上--user，例如：pip3 install numpy==1.26.4 --user。
@@ -121,7 +125,7 @@ pip3 install torch==2.1.0       # 安装CPU版本的PyTorch 2.1.0（依赖torch_
 pip3 install torch_npu-2.1.0.xxx.whl
 ```
 
-### 功能实现流程
+## 功能介绍
 
 图2 压缩接口调用流程
 

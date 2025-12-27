@@ -30,7 +30,7 @@ MindStudio ModelSlim（昇腾模型压缩工具，msModelSlim），一个以加�
 昇腾AI模型开发用户可以灵活调用Python API接口，适配算法和模型，完成精度性能调优，并支持导出不同格式模型，通过MindIE、vLLM Ascend等推理框架在昇腾AI处理器上运行。
 
 ## 目录结构
-关键目录如下
+关键目录如下，详细目录可以参考[目录文件](docs/zh/dir_structure.md)
 ```
 ├─config             # 配置文件
 ├─docs               # 文档目录

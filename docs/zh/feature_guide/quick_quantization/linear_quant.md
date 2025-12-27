@@ -4,9 +4,10 @@
 
 LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对模型的线性层进行量化处理。它支持灵活的量化配置，包括激活值量化和权重量化。
 
-## YAML配置示例
+## 使用前准备
+### YAML配置示例
 
-### W8A8静态量化配置
+#### W8A8静态量化配置
 
 ```yaml
 - type: "linear_quant"
@@ -25,7 +26,7 @@ LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对�
   exclude: [ "*down_proj*" ]
 ```
 
-### W8A8动态量化配置
+#### W8A8动态量化配置
 
 ```yaml
 - type: "linear_quant"
@@ -43,7 +44,7 @@ LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对�
   include: [ "*mlp*" ]
 ```
 
-### W4A8动态量化配置
+#### W4A8动态量化配置
 
 ```yaml
 - type: "linear_quant"
@@ -61,7 +62,7 @@ LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对�
   include: [ "*" ]
 ```
 
-## YAML配置字段详解
+### YAML配置字段详解
 
 | 字段名 | 作用 | 类型 | 说明 | 示例值 |
 |--------|------|------|------|--------|
@@ -92,15 +93,17 @@ LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对�
 | symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `true` |
 | method | 量化方法 | `"minmax"`, `"ssz"` | minmax: 最小最大值量化<br/>ssz: ssz权重量化 | `"minmax"` |
 
-## 层过滤机制详解
+## 功能介绍
 
-### 过滤规则
+### 层过滤机制详解
+
+#### 过滤规则
 
 1. **include规则**: 定义要包含的层，只有匹配include模式的层才会被处理。
 2. **exclude规则**: 定义要排除的层，匹配exclude模式的层会被跳过。
 3. **优先级**: exclude规则的优先级高于include规则。
 
-### 匹配模式（Unix通配符的匹配模式）
+#### 匹配模式（Unix通配符的匹配模式）
 
 | 通配符 | 作用 | 示例 |
 |--------|------|------|
@@ -109,7 +112,7 @@ LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对�
 | `[abc]` | 匹配字符集中的任意一个字符 | `layer[123]` 匹配 "layer1", "layer2", "layer3" |
 | `[!abc]` | 匹配不在字符集中的任意字符 | `layer[!123]` 匹配除 "layer1", "layer2", "layer3" 外的字符串 |
 
-### 过滤顺序
+#### 过滤顺序
 
 1. **第一步**: 检查层名是否匹配include模式。
     - 如果include为空或未设置，默认包含所有层。
@@ -118,7 +121,7 @@ LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对�
     - 如果层名匹配任何exclude模式，该层被排除。
     - 即使该层在第一步中被include包含，也会被exclude排除。
 
-### 示例说明
+#### 示例说明
 
 #### 示例1: 基础过滤
 
@@ -156,7 +159,7 @@ exclude: [ "model.layers.*.self_attn.down_proj" ]
 
 - **结果**: 只包含self_attn层，但排除其中的down_proj子层。
 
-### 常见层名模式
+#### 常见层名模式
 
 #### Transformer架构常见层名
 
@@ -179,7 +182,7 @@ exclude: [ "model.layers.*.self_attn.down_proj" ]
 | MLP层量化 | `include: ["*mlp*"]` | 只量化多层感知机层 |
 | 排除敏感层 | `exclude: ["*down_proj*", "*gate*"]` | 排除对精度敏感的层 |
 
-## 常见问题排查
+## FAQ
 
 ### 量化组合有效性
 

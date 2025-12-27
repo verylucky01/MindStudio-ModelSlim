@@ -1,6 +1,10 @@
-# Precision Tool： 使用方法说明
+# Precision Tool
 
-## Precision Tool为伪量化精度测试工具，在torch_npu路线下进行精度测试。
+## 简介
+
+Precision Tool为伪量化精度测试工具，在torch_npu路线下进行精度测试。
+
+## 使用前准备
 
 1. CANN包安装： 安装开发运行环境的昇腾 AI 推理相关驱动、固件、CANN 包，参照 [昇腾文档](https://www.hiascend.com/zh/document)
 2. 设置 Python 环境变量
@@ -32,6 +36,7 @@ if __name__ == '__main__':
     precision_test.test()
 
 ```
+## 功能介绍
 
 ### 接口介绍
 #### 实例创建接口

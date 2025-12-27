@@ -1,13 +1,12 @@
-## 混合校准数据集使用方法说明
+# 混合校准数据集使用方法说明
 
-### 功能说明
+## 简介
+
 混合校准集接口，通过CalibrationData类混合指定的数据集，支持用户自定义数据集
 
-### 接口说明
-请参考 [CalibrationData](../../../python_api/foundation_model_compression_apis/foundation_model_quantization_apis/CalibrationData.md)
+## 使用前准备
 
-操作步骤：
-1. 前提条件：config文件，用于配置基础数据集的路径，名称包括 boolq、ceval_5_shot、gsm8k、mmlu
+前提条件：config文件，用于配置基础数据集的路径，名称包括 boolq、ceval_5_shot、gsm8k、mmlu
     <br>数据集下载链接
     ```
     https://huggingface.co/datasets/ceval/ceval-exam
@@ -15,13 +14,19 @@
     https://huggingface.co/datasets/cais/mmlu
     https://huggingface.co/datasets/openai/gsm8k
     ```
-2. 如需自定义数据集，创建自定义数据集处理类，继承自DatasetProcessorBase类，并重写process_data()和verify_positive_prompt()方法
-3. 实例化CalibrationData，如需正样本混合校准集，需要实例化tokenizer和model，并作为参数传入CalibrationData；否则设置为None。如需保存需要设置保存路径
-4. 如有自定义数据集，通过add_customized_dataset_processor()接口传入自定义数据集名称和处理类的实例
-5. 设置样本数量，通过set_sample_size()接口
-6. 设置batch_size，通过set_batch_size()接口
-7. 设置随机种子，通过set_shuffle_seed()接口
-8. 调用process接口运行，生成混合校准集
+## 功能介绍
+
+### 接口说明
+请参考 [CalibrationData](../../../python_api/foundation_model_compression_apis/foundation_model_quantization_apis/CalibrationData.md)
+
+操作步骤：
+1. 如需自定义数据集，创建自定义数据集处理类，继承自DatasetProcessorBase类，并重写process_data()和verify_positive_prompt()方法
+2. 实例化CalibrationData，如需正样本混合校准集，需要实例化tokenizer和model，并作为参数传入CalibrationData；否则设置为None。如需保存需要设置保存路径
+3. 如有自定义数据集，通过add_customized_dataset_processor()接口传入自定义数据集名称和处理类的实例
+4. 设置样本数量，通过set_sample_size()接口
+5. 设置batch_size，通过set_batch_size()接口
+6. 设置随机种子，通过set_shuffle_seed()接口
+7. 调用process接口运行，生成混合校准集
 
 ### config文件示例
 - 第一层为dict，key为"configurations"，value为一个list，包含多个数据集信息

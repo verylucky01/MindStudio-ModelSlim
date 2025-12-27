@@ -1,12 +1,15 @@
-## 模型蒸馏
+# 模型蒸馏
+
+## 简介
 
 msModelSlim工具支持API方式的蒸馏调优。蒸馏调优时，用户只需要提供teacher模型、student模型和数据集，调用API接口完成模型的蒸馏调优过程。
 
-目前支持MindSpore和PyTorch框架下Transformer类模型的蒸馏调优，执行前需参考[安装指南](../../../install_guide.md)完成开发环境配置。
-
 模型蒸馏期间，用户可将原始Transformer模型、配置较小参数的Transformer模型分别作为teacher和student进行知识蒸馏。通过手动配置参数，返回一个待蒸馏的DistillDualModels模型实例，用户对其进行训练。训练完毕后，从DistillDualModels模型实例获取训练后的student模型，即通过蒸馏训练后的模型。
 
-## 操作步骤
+## 使用前准备
+目前支持MindSpore和PyTorch框架下Transformer类模型的蒸馏调优，执行前需参考[安装指南](../../../install_guide.md)完成开发环境配置。
+
+## 功能介绍
 
 以下步骤以PyTorch框架的模型为例，MindSpore框架的模型仅在调用部分接口时，入参配置有所差异，使用时请参照具体的API接口说明。
 

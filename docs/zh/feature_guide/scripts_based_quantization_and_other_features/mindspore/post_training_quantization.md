@@ -1,11 +1,12 @@
-## 训练后量化（MindSpore）
+# 训练后量化（MindSpore）
 
-### 概述
+## 简介
 训练后量化过程中，用户需自行提供训练好的权重文件和一小批验证集用来矫正量化因子，调用API接口完成模型的调优过程。目前支持MindSpore框架模型的量化调优。模型量化期间，用户可手动配置参数，并使用部分数据完成对模型的校准，获取一个量化后的模型。
 
+## 使用前准备
 执行训练后量化前，需参考[安装指南](../../../install_guide.md)完成开发环境配置。
 
-### 操作步骤
+## 功能介绍
 1. 用户自行准备预训练模型和数据集。本样例以ResNet50模型为例，获取模型结构定义脚本，并参考[README](https://gitee.com/mindspore/models/blob/master/official/cv/ResNet/README_CN.md)下载所需数据集， 以cifar10数据集为例，在config/resnet50_cifar10_config.yaml里配置data_path和checkpoint_file_path，并在eval.py的基础上进行修改。
 
 2. 新建模型量化脚本resnet50_quant.py，将eval.py内容复制到该文件中，删除eval_net()函数中定义损失，定义metric，计算metric相关的代码，保留如下初始化模型和加载权重相关的代码。
