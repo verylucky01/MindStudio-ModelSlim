@@ -1,17 +1,48 @@
 #!/usr/bin/env bash
 
+declare -i ret_ok=0
+declare -i ret_failed=1
+run_ok=$ret_ok
+
+# 用例名（用于打屏和指定输出路径）
+CASE_NAME=modelslim_v1_w8a8_itersmooth
+
 # 无论在哪个目录执行脚本，SCRIPT_DIR 始终指向当前 .sh 文件所在的绝对目录
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-OUTPUT_DIR="${SCRIPT_DIR}/output_modelslim_v1_w8a8_itersmooth"
+OUTPUT_DIR="${SCRIPT_DIR}/output_${CASE_NAME}"
 # 直接拼接「脚本目录 + 配置文件名」，确保无论在哪执行都能找到配置文件
 CONFIG_FILE="${SCRIPT_DIR}/dense-w8a8-itersmooth-v1.yaml"
 
-msmodelslim quant \
---model_path ${MODEL_RESOURCE_PATH}/Qwen3-14B \
---save_path ${OUTPUT_DIR} \
---device npu \
---model_type Qwen3-14B \
---config_path ${CONFIG_FILE} \
---trust_remote_code True
+# 引入公共模块
+source ${SCRIPT_DIR}/../../utils/common_utils.sh
 
-# 若需清理环境 此处不能直接做操作，不然会误以为执行成功
+# 安装依赖
+pip install -r ${SCRIPT_DIR}/requirements.txt
+
+# 执行量化任务
+msmodelslim quant \
+  --model_path ${MODEL_RESOURCE_PATH}/Qwen3-14B \
+  --save_path ${OUTPUT_DIR} \
+  --device npu \
+  --model_type Qwen3-14B \
+  --config_path ${CONFIG_FILE} \
+  --trust_remote_code True
+
+# 配置待检查文件列表
+FILES=(
+  "config.json"
+  "generation_config.json"
+  "quant_model_description.json"
+  "tokenizer_config.json"
+  "tokenizer.json"
+  # 可在此处添加更多文件，每行一个
+)
+
+if check_files_exist "$OUTPUT_DIR" "${FILES[@]}"; then
+  echo "$CASE_NAME: Success"
+else
+  echo "$CASE_NAME: Failed"
+  run_ok=$ret_failed
+fi
+
+exit $run_ok

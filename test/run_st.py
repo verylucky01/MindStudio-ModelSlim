@@ -117,7 +117,7 @@ class TestCaseExecutor:
         self.log_output(f"=== 测试任务初始化完成 ===")
         self.log_output(f"用例基础目录：{sanitize_all(str(self.base_dir))}")
         self.log_output(f"单个用例超时时间：{self.timeout} 秒")
-        self.log_output(f"日志文件路径：{sanitize_all(str(self.log_file))}  # Shell 提取日志路径关键行")
+        self.log_output(f"日志文件路径：{sanitize_all(str(self.log_file))}")
         self.log_output(f"日志特性：控制台与文件实时同步输出")
         self.log_output("=" * 60)
 
@@ -235,6 +235,9 @@ class TestCaseExecutor:
         try:
             # 先 glob 匹配，再过滤符号链接
             for file_path in self.base_dir.glob(pattern):
+                # 排除utils目录
+                if file_path.parent.resolve() == (self.base_dir / "utils").resolve():
+                    continue
                 # 筛选规则：
                 # 1. 是文件（非目录）
                 # 2. 不是符号链接
@@ -292,8 +295,8 @@ class TestCaseExecutor:
 
         # 1. 输出用例基本信息（Shell 可通过 grep "模块名：" 提取关键信息）
         self.log_output(f"\n=== 用例 {case_idx} 执行详情 ===")
-        self.log_output(f"模块名：{safe_module}  # Shell 提取模块名关键行")
-        self.log_output(f"用例名：{safe_name}    # Shell 提取用例名关键行")
+        self.log_output(f"模块名：{safe_module}")
+        self.log_output(f"用例名：{safe_name}")
         self.log_output(f"用例路径：{safe_path}")
         self.log_output(f"开始时间：{time.strftime('%Y-%m-%d %H:%M:%S')}")
 
@@ -326,23 +329,23 @@ class TestCaseExecutor:
 
             # 5. 判断执行结果（返回码 0 视为成功）
             if result.returncode == 0:
-                self.log_output(f"[执行结果] 状态：成功 ✅  # Shell 提取成功状态关键行")
+                self.log_output(f"[执行结果] 状态：成功 ✅")
                 success = True
             else:
-                self.log_output(f"[执行结果] 状态：失败 ❌  # Shell 提取失败状态关键行")
+                self.log_output(f"[执行结果] 状态：失败 ❌")
 
         except subprocess.TimeoutExpired:
             # 用例超时（subprocess 会自动杀死子进程）
             exec_time = round(time.time() - start_time, 2)
             self.log_output(f"耗时：{exec_time} 秒")
-            self.log_output(f"[执行结果] 状态：超时 ⏰  # Shell 提取超时状态关键行")
+            self.log_output(f"[执行结果] 状态：超时 ⏰")
             self.log_output(f"超时原因：超过 {self.timeout} 秒限制")
 
         except FileNotFoundError:
             # 用例文件不存在（执行中被删除）
             exec_time = round(time.time() - start_time, 2)
             self.log_output(f"耗时：{exec_time} 秒")
-            self.log_output(f"[执行结果] 状态：异常 ⚠️  # Shell 提取异常状态关键行")
+            self.log_output(f"[执行结果] 状态：异常 ⚠")
             self.log_output(f"异常原因：用例文件不存在（可能被删除）")
 
         except Exception as e:
@@ -350,7 +353,7 @@ class TestCaseExecutor:
             exec_time = round(time.time() - start_time, 2)
             err_msg = sanitize_all(str(e))
             self.log_output(f"耗时：{exec_time} 秒")
-            self.log_output(f"[执行结果] 状态：异常 ⚠️  # Shell 提取异常状态关键行")
+            self.log_output(f"[执行结果] 状态：异常 ⚠")
             self.log_output(f"异常原因：{err_msg}")
 
         # 用例分隔线（便于 Shell 按行分割不同用例的日志）
@@ -398,7 +401,7 @@ class TestCaseExecutor:
         total_time = round(sum(res["time"] for res in self.results), 2)
         avg_time = round(total_time / total, 2) if total > 0 else 0.0
 
-        self.log_output(f"总用例数：{total} | 通过：{passed} | 失败：{failed}  # Shell 提取汇总关键行")
+        self.log_output(f"总用例数：{total} | 通过：{passed} | 失败：{failed}")
         self.log_output(f"总耗时：{total_time} 秒 | 平均耗时：{avg_time} 秒/用例")
         self.log_output("=" * 60)
 
@@ -435,7 +438,6 @@ def main():
     # 动态拼接 st_pr 目录的绝对路径（test/st_pr）
     default_base_dir = test_dir / "st_pr"
     # --------------------------------------------------------------------------------
-
 
     # 2. 解析命令行参数（适配 Shell 传参）
     parser = argparse.ArgumentParser(
