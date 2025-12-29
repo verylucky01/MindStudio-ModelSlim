@@ -49,7 +49,7 @@ msmodelslim/
 │       │   └── [8 files: 8 *.md]
 │       ├── custom_quantization/     # 自主量化指南
 │       │   └── [2 files: 2 *.md]
-│       ├── FAQ.md                   # 常见问题解答
+│       ├── faq.md                   # 常见问题解答
 │       ├── feature_guide/           # 功能指南，各功能模块使用说明
 │       │   └── [41 files: 28 *.md, 8 *.png, 3 *.yaml, ...]
 │       ├── foundation_model_support_matrix.md  # 基础模型支持矩阵

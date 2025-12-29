@@ -101,6 +101,6 @@ msmodelslim quant \
 - [multimodal_vlm_modelslim_v1 量化服务配置详解](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md#multimodal_vlm_modelslim_v1-量化服务配置详解)
 - [一键量化配置协议说明](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md)
 - [逐层量化特性说明](../../../docs/zh/feature_guide/quick_quantization/layer_wise_quantization.md)
-- [QuaRot 算法说明](../../../docs/zh/algorithms_instruction/QuaRot.md)
-- [Iterative Smooth 算法说明](../../../docs/zh/algorithms_instruction/Iterative_Smooth.md)
+- [QuaRot 算法说明](../../../docs/zh/algorithms_instruction/quarot.md)
+- [Iterative Smooth 算法说明](../../../docs/zh/algorithms_instruction/iterative_smooth.md)
 - [LinearQuantProcess 线性层量化处理器说明](../../../docs/zh/feature_guide/quick_quantization/linear_quant.md)

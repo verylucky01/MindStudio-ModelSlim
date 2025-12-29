@@ -6,11 +6,11 @@
 
 ## 使用前准备
 
-请参考[安装指南](../../install_guide.md)安装 msModelSlim 工具
+安装 msModelSlim 工具，详情请参见[安装指南](../../install_guide.md)。
 
-## 一键量化功能介绍
+## 功能介绍
 
-### 功能说明
+### 命令格式
 
 一键量化功能通过命令行方式启动，可以通过如下命令运行：
 
@@ -22,8 +22,8 @@ msmodelslim quant [ARGS]
 
 ### 注意事项
 
-1. 最佳实践库中的配置文件放在 `msit/msmodelslim/lab_practice` 中。
-2. 若最佳实践库中未搜寻到最佳配置，系统则会向用户询问是否采用默认配置，即使用 `msit/msmodelslim/lab_practice/default/default.yaml` 实施量化。
+1. 最佳实践库中的配置文件放在 `msmodelslim/lab_practice` 中。
+2. 若最佳实践库中未搜寻到最佳配置，系统则会向用户询问是否采用默认配置，即使用 `msmodelslim/lab_practice/default/default.yaml` 实施量化。
 3. 如果需要打印量化运行日志，可通过以下环境变量进行设置。
 
     | 环境变量                  | 解释        | 是否可选 | 范围             |
@@ -60,6 +60,8 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device $
 msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type Qwen2.5-7B-Instruct --quant_type w8a8 --trust_remote_code True
 ```
 
-## 相关资料
+## 附录
+
+### 相关资料
 - 对于过大的模型，可以参考[一键量化的逐层量化特性说明](layer_wise_quantization.md)使用逐层量化，能够明显降低显存使用。
 - 对于一键量化支持的多种算法，可以参考[一键量化V1架构支持的算法](../../algorithms_instruction/)。

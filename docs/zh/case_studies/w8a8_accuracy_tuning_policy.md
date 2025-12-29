@@ -1,6 +1,6 @@
 # W8A8量化精度调优策略
 
-# 背景
+## 概述
 W8A8量化精度调优策略是结合msModelSlim量化工具和精度测试工具precision tool进行精度验证和调优开展。大模型经过W8A8量化后精度损失大，可以参考本文的精度调优策略进行调优。
 
 注：
@@ -11,8 +11,10 @@ W8A8量化精度调优策略是结合msModelSlim量化工具和精度测试工�
 ```python
 # 设置线程数
 export OMP_NUM_THREADS=48
+
 ```
 
+## 环境准备
 W8A8量化及伪量化测精度过程示例(npu)：  
 参考以下两篇文档完成工具使用前准备工作  
 [安装指南](../install_guide.md)  
@@ -177,7 +179,7 @@ for idx, item in enumerate(res):
 3.校准数据(calib_set)  
 4.量化回退(disable_names)
 
-# 1 调整离群值抑制
+## 1 调整离群值抑制
 原因：通过抑制量化过程中的异常值，使能后续更好的量化。
 
 ```python
@@ -200,7 +202,7 @@ m6：Flex smooth量化算法
 w8a8适用m1、m2、m4、m5、m6
 建议从m1尝试到m6，因为不同模型对不同离群抑制算法表现不一样，当前m2已适配qwen-vl和llava-v1.5-7b多模态模型
 
-# 2 量化参数选择
+## 2 量化参数选择
 ```python
 quant_config = QuantConfig(
     a_bit=8,
@@ -237,7 +239,7 @@ act_method：激活值量化方法
     3.代表min-max和histogram混合的量化的方式。  
     LLM大模型场景下建议使用3。
 
-# 3 校准集调整
+## 3 校准集调整
 1.当算法层面无法提升精度时，可以增大校准数据集(10~50条)。  
 （正常情况下，可以增加数据得到精度提升，但是到一定数据后，提高数据对精度影响有限。有些场景下，减少数据反而得到精度提升。（例如长数据场景））  
 2.针对特定场景切换成应用场景的数据作为校准集。  
@@ -260,7 +262,7 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
 ```
 注： 需要将msmodelslim文件夹下的[precision_tool文件夹](../../../precision_tool)和[security文件夹](../../../security/)复制一份出来，和量化脚本放置于同一目录下，再将待测试数据集放入precision_tool文件夹中，具体操作见：[Precision Tool 使用方法说明及数据集下载链接](../feature_guide/scripts_based_quantization_and_other_features/pytorch/fake_quantization_accuracy_testing_tool.md)  
 
-# 4 量化回退
+## 4 量化回退
 大模型需要量化的原因：模型量化可以降低模型大小，减少计算量，降低内存占用，提升推理速度。
 
 大模型量化线性层的原因：大模型中的线性层层数多、权重数量庞大且存在矩阵相乘（计算量大），通过量化线性层的权重和激活值，可以达到降低模型大小，减少计算量，降低内存占用，提升推理速度。
@@ -326,7 +328,7 @@ disable_names=[
 自动回退会根据range_parm参数由大到小排序回退对精度影响比较大的Linear层。
 设置disable_level='Lx'，x为自动回退的linear层数量，会在终端显示回退的层名称，disable_level='L0'即为不进行回退，x设置的数量超过模型层数就是全部回退，并且也不报错。
 
-# 5 KV Cache int8量化
+## 5 KV Cache int8量化
 
 可在QuantConfig后调用kv_quant函数来开启KV Cache int8量化。  
 ```python
@@ -343,12 +345,12 @@ quant_config = QuantConfig(
 调用kv_quant函数会自动将QuantConfig中use_kvcache_quant设置为True。  
 use_kvcache_quant=True启用KV Cache量化，支持与W8A8、W8A16和稀疏量化同时使用。
 
-# 6 FA3量化
+## 6 FA3量化
 
 [FA量化使用说明](../feature_guide/scripts_based_quantization_and_other_features/pytorch/fa_quantization_usage.md)  
 
 
-# 7 以chatglm2-6b为例，逐步进行调优后的精度改变
+## 7 以chatglm2-6b为例，逐步进行调优后的精度改变
 表格中精度为按下述步骤依次进行操作所得（仅作参考）
   | 步骤                 | 参数更改描述                                                                                                                                                                | 精度 |
   | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
@@ -361,7 +363,7 @@ use_kvcache_quant=True启用KV Cache量化，支持与W8A8、W8A16和稀疏量�
   | 增加量化回退（手动回退+自动回退）             | disable_names手动回退10层，disable_level = "L28"|  0.795 |
 
 
-# 8 模型量化后的部署推理
+## 8 模型量化后的部署推理
 模型量化后，可基于MindIE、vLLM等进行部署推理。
 
 

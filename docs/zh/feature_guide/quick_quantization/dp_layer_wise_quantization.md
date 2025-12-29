@@ -6,6 +6,10 @@ DP逐层量化（Distributed Data Parallel Layer-wise Quantization）是在逐�
 
 ## 使用前准备
 
+安装 msModelSlim 工具，详情请参见[安装指南](../../install_guide.md)。
+
+## 功能介绍
+
 ### 配置方法
 
 在量化入口指定`device`参数为多张NPU卡，系统会自动检测多卡配置并启用DP逐层调度器。

@@ -1,5 +1,6 @@
 # 模型接入指南
 
+## 简介
 本文档面向需要将自有模型接入 msModelSlim 的开发者。  
 msModelSlim认识到量化机制和算法都有适用范围和局限性，而新的模型结构层出不穷，不存在一劳永逸的模型量化方法。  
 为了尽可能简化自有模型量化流程，msModelSlim将量化机制和算法生效所依赖的模型条件抽取出来，以接口形式描述。  
@@ -115,12 +116,12 @@ wan2_2 = msmodelslim.model.wan2_2.model_adapter:Wan2Point2Adapter
 
 | 算法               | 算法介绍       | 适配指导       |
 | ------------------ | ------------- | ------------- |
-| SmoothQuant | [SmoothQuant：离群值抑制算法说明](../algorithms_instruction/Smooth_Quant.md#smooth-quant离群值抑制算法说明) | [SmoothQuant 适配](../algorithms_instruction/Smooth_Quant.md#模型适配)
-| Iterative Smooth | [Iterative Smooth：离群值抑制算法说明](../algorithms_instruction/Iterative_Smooth.md#iterative-smooth离群值抑制算法说明) | [Iterative Smooth 适配](../algorithms_instruction/Iterative_Smooth.md#模型适配)
-| Flex Smooth Quant| [Flex Smooth Quant：灵活平滑量化算法说明](../algorithms_instruction/Flex_Smooth_Quant.md#flex-smooth-quant灵活平滑量化算法说明)| [Flex Smooth Quant 适配](../algorithms_instruction/Flex_Smooth_Quant.md#模型适配)
+| SmoothQuant | [SmoothQuant：离群值抑制算法说明](../algorithms_instruction/smooth_quant.md#smooth-quant离群值抑制算法说明) | [SmoothQuant 适配](../algorithms_instruction/smooth_quant.md#模型适配)
+| Iterative Smooth | [Iterative Smooth：离群值抑制算法说明](../algorithms_instruction/iterative_smooth.md#iterative-smooth离群值抑制算法说明) | [Iterative Smooth 适配](../algorithms_instruction/iterative_smooth.md#模型适配)
+| Flex Smooth Quant| [Flex Smooth Quant：灵活平滑量化算法说明](../algorithms_instruction/flex_smooth_quant.md#flex-smooth-quant灵活平滑量化算法说明)| [Flex Smooth Quant 适配](../algorithms_instruction/flex_smooth_quant.md#模型适配)
 | KV Smooth | [KVSmooth：KVCache量化离群值抑制算法说明](../algorithms_instruction/kv_smooth.md#kvsmoothkvcache量化离群值抑制算法说明) | [KV Smooth 适配](../algorithms_instruction/kv_smooth.md#模型适配)
-| QuaRot | [QuaRot：基于旋转的离群值抑制算法说明](../algorithms_instruction/QuaRot.md#quarot基于旋转的离群值抑制算法说明) | [QuaRot 适配](../algorithms_instruction/QuaRot.md#模型适配)
-| FA3 | [FA3量化：Flash Attention 3激活量化算法说明](../algorithms_instruction/FA3_quant.md#fa3量化flash-attention-3激活量化算法说明) | [FA3 适配](../algorithms_instruction/FA3_quant.md#模型适配)
+| QuaRot | [QuaRot：基于旋转的离群值抑制算法说明](../algorithms_instruction/quarot.md#quarot基于旋转的离群值抑制算法说明) | [QuaRot 适配](../algorithms_instruction/quarot.md#模型适配)
+| FA3 | [FA3量化：Flash Attention 3激活量化算法说明](../algorithms_instruction/fa3_quant.md#fa3量化flash-attention-3激活量化算法说明) | [FA3 适配](../algorithms_instruction/fa3_quant.md#模型适配)
 ## 量化自有模型
 
 当完成模型适配器的编写与注册后，即可使用一键量化能力对自有模型进行量化。

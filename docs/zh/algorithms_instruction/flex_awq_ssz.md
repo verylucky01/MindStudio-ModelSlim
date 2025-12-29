@@ -1,39 +1,67 @@
-# Flex Smooth Quant：灵活平滑量化算法说明
+# Flex AWQ SSZ：灵活激活感知权重量化平滑算法说明
 
-## 背景和作用
+## 简介
 
 - **来源**：华为自研。
-- **概述**：Flex Smooth Quant（灵活平滑量化）是一种用于大语言模型量化过程中抑制激活离群值的算法。该算法通过动态调整权重和激活的缩放因子，在保持模型精度的同时，有效减少量化误差。与传统的平滑算法不同，Flex Smooth Quant提供了更灵活的参数配置，能够根据不同的模型架构和量化需求进行自适应调整。
-- **核心思想**：Flex Smooth Quant算法的核心思想是通过二阶段网格搜索，自动搜索最佳的alpha和beta参数，在激活和权重之间实现更精细的平衡，从而在不同的量化场景下获得精度与量化效率的平衡。
+- **概述**：Flex AWQ SSZ（灵活激活感知权重量化平滑算法）是一种用于大语言模型量化过程中抑制激活离群值的算法。该算法结合了AWQ（Activation-aware Weight Quantization）和SSZ（Smooth Scale Zero）的思想，通过使用实际量化器评估参数有效性，自动搜索最优的alpha参数，在保持模型精度的同时，有效减少量化误差。与传统的平滑算法不同，Flex AWQ SSZ使用真实的量化器进行参数评估，能够更准确地反映量化后的实际效果。
+- **核心思想**：Flex AWQ SSZ算法的核心思想是通过实际量化器（LinearQuantizer）来评估不同alpha参数下的量化误差，自动搜索使量化误差最小的最优alpha参数。算法固定beta为0，激活值尺度计算使用均值（mean）而非最大值（max），从而在不同量化场景下获得精度与量化效率的平衡。
 
-## 使用方式
+## 使用前准备
+
+安装 msModelSlim 工具，详情请参见[安装指南](../install_guide.md)。
+
+## 功能介绍
 
 ### 作为Processor使用
 
 ```yaml
-- type: "flex_smooth_quant"           # 固定为 `flex_smooth_quant`，用于指定 Processor。
-  alpha: 0.8                          # 浮点数, 0-1之间，默认 None，通过算法自动搜索最佳alpha，也支持用户自行配置，激活缩放的系数。
-  beta: 0.7                           # 浮点数, 0-1之间，默认 None，通过算法自动搜索最佳beta，也支持用户自行配置，权重缩放的系数。
-  enable_subgraph_type:               # 字符串列表，指定启用的子图类型，默认启用所有四种类型。
+- type: "flex_awq_ssz"              # 固定为 `flex_awq_ssz`，用于指定 Processor。
+  alpha: 0.8                       # 激活缩放的系数，取值范围为0-1之间，默认值为None（自动搜索），也支持用户自行配置。
+  qconfig:                         # 量化配置，为必填参数。
+    act:                           # 激活值量化配置。
+      scope: "per_token"           # 量化范围：per_token 或 per_tensor。
+      dtype: "int8"                # 量化数据类型：int8。
+      symmetric: True              # 是否对称量化：True 或 False。
+      method: "minmax"            # 量化方法：minmax 或其他方法。
+    weight:                        # 权重量化配置。
+      scope: "per_channel"         # 量化范围：per_channel。
+      dtype: "int4"                # 量化数据类型：int4 或 int8。
+      symmetric: True              # 是否对称量化：True。
+      method: "ssz"                # 量化方法：ssz（Smooth Scale Zero）。
+      ext:                         # 扩展配置（可选）。
+        step: 10                   # SSZ方法的步长参数。
+  enable_subgraph_type:            # 字符串列表，指定启用的子图类型，默认启用所有四种类型。
     - 'norm-linear'
     - 'linear-linear'
     - 'ov'
     - 'up-down'
-  include:                            # 包含的层模式，支持通配符。
+  include:                         # 包含的层模式，支持通配符。
     - "*"
-  exclude:                            # 排除的层模式，支持通配符。
+  exclude:                         # 排除的层模式，支持通配符。
     - "*self_attn*"
 ```
 
-## YAML配置示例
+### YAML配置示例
 
 ```yaml
 spec:
   process:
-    - type: "flex_smooth_quant"
-      alpha: 0.8                          # 激活缩放的权重系数，0-1之间，默认None（自动搜索）。
-      beta: 0.7                           # 权重缩放的权重系数，0-1之间，默认None（自动搜索）。
-      enable_subgraph_type:               # 开启的子图类型。
+    - type: "flex_awq_ssz"
+      alpha: 0.8                          # 激活缩放的系数，取值范围为0-1之间，默认值为None（自动搜索），也支持用户自行配置。
+      qconfig:                             # 量化配置，为必填参数。
+        act:
+          scope: "per_token"
+          dtype: "int8"
+          symmetric: True
+          method: "minmax"
+        weight:
+          scope: "per_channel"
+          dtype: "int4"
+          symmetric: True
+          method: "ssz"
+          ext:
+            step: 10
+      enable_subgraph_type:                # 开启的子图类型。
         - 'norm-linear'
         - 'linear-linear'
         - 'ov'
@@ -42,13 +70,15 @@ spec:
       exclude: ["*self_attn*"]            # 排除的层模式，支持通配符。
 ```
 
-## YAML配置字段详解
+### YAML配置字段详解
 
 | 字段名 | 作用 | 说明 |
 |--------|------|------|
-| type | 处理器类型标识 | 固定值"flex_smooth_quant"，用于标识这是一个灵活平滑量化处理器。 |
+| type | 处理器类型标识 | 固定值"flex_awq_ssz"，用于标识这是一个灵活激活感知权重量化平滑处理器。 |
 | alpha | 激活缩放权重系数 | 0-1之间的浮点数，控制激活对缩放因子的影响程度，默认None（自动搜索）。 |
-| beta | 权重缩放权重系数 | 0-1之间的浮点数，控制权重对缩放因子的影响程度，默认None（自动搜索）。 |
+| qconfig | 量化配置 | 必填参数，包含激活值（act）和权重（weight）的量化配置，用于实际量化器评估。 |
+| qconfig.act | 激活值量化配置 | 包含scope、dtype、symmetric、method等字段，指定激活值的量化方式。 |
+| qconfig.weight | 权重量化配置 | 包含scope、dtype、symmetric、method、ext等字段，指定权重的量化方式，通常使用SSZ方法。 |
 | enable_subgraph_type | 开启的子图类型 | 支持的子图类型列表，包括"norm-linear"、"linear-linear"、"ov"、"up-down" 。|
 | include | 包含的层模式 | 支持通配符匹配。 |
 | exclude | 排除的层模式 | 支持通配符匹配。 |
@@ -57,21 +87,38 @@ spec:
 
 ### 原理
 
-Flex Smooth Quant算法使用以下公式计算平滑缩放因子：
+Flex AWQ SSZ算法使用以下公式计算平滑缩放因子：
 
 ```
 scales = (A_scale**alpha / W_scale**beta).clamp(min=1e-5)
 ```
 
 其中：
-- `A_scale`：激活值的缩放因子。
+- `A_scale`：激活值的缩放因子（使用均值计算：`mean(abs(act))`）。
 - `W_scale`：权重的缩放因子（取每列的最大值）。
-- `alpha`：激活缩放的系数，控制激活对缩放因子的影响程度（0-1之间）。
-- `beta`：权重缩放的系数，控制权重对缩放因子的影响程度（0-1之间）。
+- `alpha`：激活缩放的系数，控制激活对缩放因子的影响程度（0-1之间），可通过自动搜索或手动配置。
+- `beta`：权重缩放的系数，固定为0。
+
+**关键特性：**
+1. **实际量化器评估**：与Flex Smooth Quant不同，Flex AWQ SSZ使用真实的量化器（LinearQuantizer）来评估不同alpha参数下的量化误差，而不是简单的模拟量化。
+2. **激活尺度计算**：使用激活值的均值（mean）而非最大值（max）来计算激活尺度，更适合低bit量化场景。
+3. **Beta固定为0**：算法固定beta为0，简化参数搜索空间，专注于alpha参数的优化。
+4. **自动参数搜索**：如果未提供alpha参数，算法会在[0.0, 1.0]范围内以0.05为步长搜索最优alpha，选择使量化误差（MSE）最小的参数。
+
+### Alpha参数搜索流程
+
+1. **初始化**：创建FlexAWQSSZAlphaBetaSearcher，使用配置的qconfig。
+2. **网格搜索**：在[0.0, 1.0]范围内以0.05为步长遍历alpha值。
+3. **量化误差评估**：对每个alpha值：
+   - 计算缩放因子：`scale = max(abs(act)) ** alpha`
+   - 应用缩放：`scaled_act = act / scale`，`scaled_weight = weight * scale`
+   - 创建实际量化器（LinearQuantizer）并部署
+   - 计算量化结果与浮点结果的归一化MSE误差
+4. **选择最优参数**：选择使MSE误差最小的alpha值。
 
 ### 支持的子图类型
 
-Flex Smooth Quant算法支持与Iterative Smooth相同的四种标准子图类型：
+Flex AWQ SSZ算法支持与Flex Smooth Quant相同的四种标准子图类型：
 
 #### 1. NormLinearSubgraph（归一化-线性子图）
 
@@ -84,6 +131,7 @@ y = torch.cat([linear(x) for linear in linears], dim=-1)
 
 **处理方式：**
 - 计算所有线性层权重的列最大值作为权重缩放因子。
+- 使用激活值的均值计算激活缩放因子。
 - 对每个线性层应用正向缩放。
 - 对归一化层应用反向缩放（1/scales）。
 
@@ -97,6 +145,7 @@ y = linear2(linear1(x))
 
 **处理方式：**
 - 基于linear2的权重计算缩放因子。
+- 使用linear1输出的激活值均值计算激活缩放因子。
 - 对linear2应用正向缩放。
 - 对linear1应用反向缩放（1/scales）。
 
@@ -109,6 +158,7 @@ y = linear2(linear1(x))
 
 **处理方式：**
 - 基于o_proj权重计算缩放因子。
+- 使用v_proj输出的激活值均值计算激活缩放因子。
 - 对o_proj应用正向缩放。
 - 对v_proj应用反向缩放（1/scales）。
 
@@ -122,6 +172,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 **处理方式：**
 - 基于down_proj权重计算缩放因子。
+- 使用up_proj输出的激活值均值计算激活缩放因子。
 - 对down_proj应用正向缩放。
 - 对up_proj应用反向缩放（1/scales）。
 
@@ -139,7 +190,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - 为所有子图中的线性模块安装前向钩子（forward hook）。
 - 钩子在 `[batch, seq, hidden_dim]` 维度上收集激活值统计信息：
   - **激活张量数据**：收集完整的激活张量，用于后续平滑计算。
-  - **每通道绝对最大值**：计算激活值的每通道绝对最大值，作为平滑缩放因子的基础。
+  - **使用第一个linear的激活统计信息**：Flex AWQ SSZ使用子图targets中第一个线性层的激活统计信息。
 
 #### 2) 后处理阶段（postprocess）
 
@@ -148,15 +199,15 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - 每种子图类型调用相应的平滑处理方法。
 
 **子图平滑处理：**
-- **Norm-Linear子图**：对归一化层和后续线性层应用平滑。
+- **Norm-Linear子图**：对归一化层和后续线性层应用平滑，仅使用前两层线性层进行alpha搜索（如果线性层数量大于3）。
 - **Linear-Linear子图**：对两个线性层应用平滑，调整权重和偏置。
 - **OV子图**：处理注意力机制中的输出投影（Output projection）和值投影（Value projection）之间的连接关系，支持QKV融合模式。
 - **Up-Down子图**：处理MLP门控机制，对上下投影层应用平滑。
 
-**Flex Smooth Quant算法核心：**
-- 基于收集的激活统计信息计算每通道的缩放因子。
-- 使用 `flex_smooth_quant` 算法对子图进行灵活平滑量化优化。
-- 支持可配置的平滑参数：`alpha`（激活缩放系数）、`beta`（权重缩放系数），若用户不配置的话，采用二阶段网格搜索方法搜索最佳alpha和beta参数。
+**Flex AWQ SSZ算法核心：**
+- 使用激活值的均值（mean）计算激活缩放因子：`act_scales = mean(abs(act))`。
+- 使用实际量化器（LinearQuantizer）评估不同alpha参数下的量化误差。
+- 自动搜索或使用配置的alpha参数，beta固定为0。
 
 **资源清理：**
 - 清理所有安装的统计钩子。
@@ -166,6 +217,8 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 ## 模型适配
 
 ### 接口与数据结构
+
+Flex AWQ SSZ使用与Flex Smooth Quant相同的接口：
 
 ```python
 from dataclasses import dataclass, field
@@ -193,12 +246,12 @@ class AdapterConfig:
     mapping: Optional[MappingConfig] = None  # 模块映射关系
     fusion: FusionConfig = field(default_factory=lambda: FusionConfig())  # 融合配置
 
-# 模型适配Flex Smooth Quant算法接口
+# 模型适配Flex AWQ SSZ算法接口（与Flex Smooth Quant相同）
 class FlexSmoothQuantInterface(ABC):
     @abstractmethod
     def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
         """
-        返回模型中所有可进行Flex Smooth Quant处理的子图配置
+        返回模型中所有可进行Flex AWQ SSZ处理的子图配置
 
         Returns:
             List[AdapterConfig]: 子图配置列表，每个配置包含：
@@ -212,7 +265,7 @@ class FlexSmoothQuantInterface(ABC):
 ### 适配步骤
 
 **前置要求：**
-- 模型需要继承 `FlexSmoothQuantInterface` 接口。
+- 模型需要继承 `FlexSmoothQuantInterface` 接口（与Flex Smooth Quant相同）。
 - 模块名称必须与 `named_modules()` 返回的完整路径一致。
 - 支持的子图类型：`norm-linear`、`linear-linear`、`ov`、`up-down`。
 - 配置中的`subgraph_type`、`mapping` 是必要参数。
@@ -231,7 +284,7 @@ class FlexSmoothQuantInterface(ABC):
 
 ### 配置示例
 
-以下是一个典型的Transformer层配置示例：
+以下是一个典型的Transformer层配置示例（与Flex Smooth Quant相同）：
 
 ```python
 def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
@@ -292,8 +345,11 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 - **子图类型支持**：目前支持四种标准子图类型：`norm-linear`、`linear-linear`、`ov`、`up-down`。
 - **模块属性要求**：目标模块必须存在且具备可写的 `weight`，其他自定义模块暂不支持。
 - **模型结构假设**：算法基于标准的Transformer架构设计，对于非标准结构需要谨慎评估适用性。
+- **量化配置要求**：必须提供qconfig配置，包括激活和权重的量化方式，通常权重使用SSZ方法。
+
 
 ## 常见问题排查
+
 ### 1. 模块名不匹配
 **现象**: `include/exclude` 未命中时，日志提示未匹配模式。
 **解决方案**: 核对完整模块名是否与 `named_modules()` 返回的路径一致。
@@ -310,6 +366,11 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 **现象**: 配置的子图类型不被支持。
 **解决方案**: 确保配置的子图类型在 `ENABLE_SUBGRAPH_TYPES` 列表中。
 
+### 5. qconfig配置缺失
+**现象**: 报错提示qconfig为必填参数。
+**解决方案**: 在YAML配置中添加qconfig字段，包含act和weight的量化配置。
+
 ### 6. 映射关系错误
 **现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。
 **解决方案**: 检查 `MappingConfig` 中的 `source` 和 `targets` 是否指向正确的模块。
+

@@ -1,6 +1,6 @@
 # 量化精度调优指南
 
-## 文档概述
+## 概述
 
 本文档提供了一套系统化的量化精度调优方法论，遵循“确认精度问题可信→调整离群值抑制算法→调整量化策略→调整校准集→量化回退”的递进路径。
 
@@ -11,7 +11,7 @@
 
 文档详细介绍了各步骤的操作方法、算法对比和配置示例，帮助用户在可接受的精度损失内实现模型的高效量化部署。
 
-## 调优路径概览
+### 调优路径概览
 
 精度调优是一个系统性过程，遵循以下递进路径：
 
@@ -51,10 +51,10 @@
 
 | 算法 | 算法特点 | 适用场景与建议 | 配置示例链接 |
 |------|---------|---------------|-------------|
-| Smooth Quant | 仅对norm-linear子图做平滑处理，支持对称/非对称 | 在Qwen、DeepSeek等热门系列模型上精度较差，不建议使用 | [Smooth_Quant.md](../algorithms_instruction/Smooth_Quant.md) |
-| Iterative Smooth | 解决o_proj、down_proj等层因无相邻LayerNorm而无法转移scale的问题。支持对称/非对称 | **优先使用**。运行快，精度较高。超长序列校准集时优先使用。可调整 `alpha` 参数优化 | [Iterative_Smooth.md](../algorithms_instruction/Iterative_Smooth.md) |
-| Flex Smooth Quant | 通过二阶段网格搜索自动寻找最优alpha和beta参数，实现更精细的平衡 | 当Iterative Smooth不达标、对量化时间不敏感且显存充足时尝试。运行速度较慢 | [Flex_Smooth_Quant.md](../algorithms_instruction/Flex_Smooth_Quant.md) |
-| QuaRot | 通过对权重和激活进行旋转变换，将离群值"分散"到多个通道，平滑分布 | 可与其他算法叠加使用，作为进一步提升精度的备选方案。| [QuaRot.md](../algorithms_instruction/QuaRot.md) |
+| Smooth Quant | 仅对norm-linear子图做平滑处理，支持对称/非对称 | 在Qwen、DeepSeek等热门系列模型上精度较差，不建议使用 | [Smooth_Quant.md](../algorithms_instruction/smooth_quant.md) |
+| Iterative Smooth | 解决o_proj、down_proj等层因无相邻LayerNorm而无法转移scale的问题。支持对称/非对称 | **优先使用**。运行快，精度较高。超长序列校准集时优先使用。可调整 `alpha` 参数优化 | [Iterative_Smooth.md](../algorithms_instruction/iterative_smooth.md) |
+| Flex Smooth Quant | 通过二阶段网格搜索自动寻找最优alpha和beta参数，实现更精细的平衡 | 当Iterative Smooth不达标、对量化时间不敏感且显存充足时尝试。运行速度较慢 | [Flex_Smooth_Quant.md](../algorithms_instruction/flex_smooth_quant.md) |
+| QuaRot | 通过对权重和激活进行旋转变换，将离群值"分散"到多个通道，平滑分布 | 可与其他算法叠加使用，作为进一步提升精度的备选方案。| [QuaRot.md](../algorithms_instruction/quarot.md) |
 
 #### 总结建议
 

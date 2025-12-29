@@ -1,12 +1,16 @@
 # KVCache量化：缓存量化算法说明
 
-## 背景和作用
+## 简介
 
 - **简介**：KVCache量化机制。
 - **问题**：在大模型推理中，KVCache 存储的 Key/Value 状态占用大量显存，随序列长度线性增长，成为推理瓶颈。
 - **目标**：对写入 KVCache 的 `key_states` 和 `value_states` 进行量化，在保持生成质量的前提下显著降低缓存内存占用。
 
-## 使用方式
+## 使用前准备
+
+安装 msModelSlim 工具，详情请参见[安装指南](../install_guide.md)。
+
+## 功能介绍
 
 作为Processor使用
 
@@ -23,7 +27,7 @@
     - "model.layers.0.self_attn"
 ```
 
-## YAML配置示例
+### YAML配置示例
 
 ```yaml
 spec:
@@ -38,7 +42,7 @@ spec:
       exclude: [ "model.layers.0.self_attn" ] # 排除的注意力层模式。
 ```
 
-## YAML配置字段详解
+### YAML配置字段详解
 
 | 字段名 | 作用 | 数据类型 | 默认值 | 说明 |
 |--------|------|----------|--------|------|

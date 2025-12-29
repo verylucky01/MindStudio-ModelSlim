@@ -6,7 +6,7 @@
 - 方式1：适用于工具已经支持模型的一键量化且用户无特殊量化诉求场景，可通过指定 `quant_type` 参数，工具在最佳实践库中自动匹配最适合的量化配置进行量化。
 - 方式2：适用于工具尚未支持模型的一键量化或用户有特殊量化诉求场景，可通过指定 `config_path` 参数，工具直接使用用户指定的自定义量化配置进行量化。
 
-## 基础配置协议功能介绍
+## 功能介绍
 
 ### 功能说明
 
@@ -15,7 +15,7 @@
 - **apiversion**: 用于选择后端量化服务的版本。
 - **spec**: 具体的量化服务配置字段。
 
-### 配置参数说明
+### 参数说明
 
 | 参数           | 可选/必选 | 说明                                                                                                                                                                  | 作用                                |
 |--------------|-------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
@@ -67,7 +67,7 @@ modelslim_v1是量化工具推出的新一代量化处理框架，目前正在�
 - 支持逐层量化，大幅降低资源消耗。
 - 不依赖特定版本的CANN。
 
-### 配置字段说明
+### 参数说明
 
 V1量化服务的具体配置应当位于spec字段下。
 
@@ -110,23 +110,23 @@ V1量化服务的具体配置应当位于spec字段下。
 
 ##### 支持处理器表
 
-| 处理器               | 配置示例       | 配置字段详解       |
-| ------------------ | ------------- | ------------- |
-| linear_quant       | [linear_quant 配置示例](linear_quant.md/#yaml配置示例) | [linear_quant 配置字段详解](linear_quant.md/#yaml配置字段详解)
-| group       | [group 配置示例](group.md/#yaml配置示例) | [group 配置字段详解](group.md/#yaml配置字段详解)
-| SmoothQuant | [SmoothQuant 配置示例](../../algorithms_instruction/Smooth_Quant.md#yaml配置示例) | [配置字段详解](../../algorithms_instruction/Smooth_Quant.md#yaml配置字段详解)
-| Iterative Smooth | [Iterative Smooth 配置示例](../../algorithms_instruction/Iterative_Smooth.md#yaml配置示例) | [ 配置字段详解](../../algorithms_instruction/Iterative_Smooth.md#yaml配置字段详解)
-| Flex Smooth Quant | [Flex Smooth Quant 配置示例](../../algorithms_instruction/Flex_Smooth_Quant.md#yaml配置示例) | [ 配置字段详解](../../algorithms_instruction/Flex_Smooth_Quant.md#yaml配置字段详解)
-| KV Smooth | [KV Smooth 配置示例](../../algorithms_instruction/kv_smooth.md#yaml配置示例) | [KV Smooth 配置字段详解](../../algorithms_instruction/kv_smooth.md#yaml配置字段详解)
-| KVCache Quant | [KVCache Quant 配置示例](../../algorithms_instruction/KVCache_quant.md#yaml配置示例) | [KVCache Quant 配置字段详解](../../algorithms_instruction/KVCache_quant.md#yaml配置字段详解)
-| FA3 Quant | [FA3 Quant 配置示例](../../algorithms_instruction/FA3_quant.md#yaml配置示例) | [FA3 Quant 配置字段详解](../../algorithms_instruction/FA3_quant.md#yaml配置字段详解)
+| 处理器               | 配置示例                                                                                         | 配置字段详解       |
+| ------------------ |----------------------------------------------------------------------------------------------| ------------- |
+| linear_quant       | [linear_quant 配置示例](linear_quant.md/#yaml配置示例)                                               | [linear_quant 配置字段详解](linear_quant.md/#yaml配置字段详解)
+| group       | [group 配置示例](group.md/#yaml配置示例)                                                             | [group 配置字段详解](group.md/#yaml配置字段详解)
+| SmoothQuant | [SmoothQuant 配置示例](../../algorithms_instruction/smooth_quant.md#yaml配置示例)                    | [配置字段详解](../../algorithms_instruction/smooth_quant.md#yaml配置字段详解)
+| Iterative Smooth | [Iterative Smooth 配置示例](../../algorithms_instruction/iterative_smooth.md#yaml配置示例)           | [ 配置字段详解](../../algorithms_instruction/iterative_smooth.md#yaml配置字段详解)
+| Flex Smooth Quant | [Flex Smooth Quant 配置示例](../../algorithms_instruction/flex_smooth_quant.md#yaml配置示例)         | [ 配置字段详解](../../algorithms_instruction/flex_smooth_quant.md#yaml配置字段详解)
+| KV Smooth | [KV Smooth 配置示例](../../algorithms_instruction/kv_smooth.md#yaml配置示例)                         | [KV Smooth 配置字段详解](../../algorithms_instruction/kv_smooth.md#yaml配置字段详解)
+| KVCache Quant | [KVCache Quant 配置示例](../../algorithms_instruction/kvcache_quant.md#yaml配置示例)                 | [KVCache Quant 配置字段详解](../../algorithms_instruction/kvcache_quant.md#yaml配置字段详解)
+| FA3 Quant | [FA3 Quant 配置示例](../../algorithms_instruction/fa3_quant.md#yaml配置示例)                         | [FA3 Quant 配置字段详解](../../algorithms_instruction/fa3_quant.md#yaml配置字段详解)
 | Histogram     | [Histogram 配置示例](../../algorithms_instruction/histogram_activation_quantization.md#yaml配置示例) | [ 配置字段详解](../../algorithms_instruction/histogram_activation_quantization.md#yaml配置字段详解)
-| SSZ       | [SSZ 配置示例](../../algorithms_instruction/ssz.md#yaml配置示例) | [SSZ 配置字段详解](../../algorithms_instruction/ssz.md#yaml配置字段详解)
-| Float Sparse   | [Float Sparse 配置示例](../../algorithms_instruction/float_sparse.md#yaml配置示例) | [Float Sparse 配置字段详解](../../algorithms_instruction/float_sparse.md#yaml配置字段详解)
-| QuaRot       | [QuaRot 配置示例](../../algorithms_instruction/QuaRot.md#yaml配置示例) | [QuaRot 配置字段详解](../../algorithms_instruction/QuaRot.md#yaml配置字段详解)
-| AutoRound       | [AutoRound 配置示例](../../algorithms_instruction/AutoRound.md#作为processor使用) | [AutoRound 配置字段详解](../../algorithms_instruction/AutoRound.md#yaml配置字段详解)
-| LAOS       | [LAOS 配置示例](../../algorithms_instruction/LAOS.md#修改配置文件使用) | [LAOS 配置字段详解](../../algorithms_instruction/LAOS.md#yaml配置字段详解)
-| PDMIX       | [PDMIX 配置示例](../../algorithms_instruction/pdmix.md#使用方式) | [PDMIX 配置字段详解](../../algorithms_instruction/pdmix.md#使用方式)
+| SSZ       | [SSZ 配置示例](../../algorithms_instruction/ssz.md#yaml配置示例)                                     | [SSZ 配置字段详解](../../algorithms_instruction/ssz.md#yaml配置字段详解)
+| Float Sparse   | [Float Sparse 配置示例](../../algorithms_instruction/float_sparse.md#yaml配置示例)                   | [Float Sparse 配置字段详解](../../algorithms_instruction/float_sparse.md#yaml配置字段详解)
+| QuaRot       | [QuaRot 配置示例](../../algorithms_instruction/quarot.md#yaml配置示例)                               | [QuaRot 配置字段详解](../../algorithms_instruction/quarot.md#yaml配置字段详解)
+| AutoRound       | [AutoRound 配置示例](../../algorithms_instruction/autoround.md#作为processor使用)                    | [AutoRound 配置字段详解](../../algorithms_instruction/autoround.md#yaml配置字段详解)
+| LAOS       | [LAOS 配置示例](../../algorithms_instruction/laos.md#修改配置文件使用)                                   | [LAOS 配置字段详解](../../algorithms_instruction/laos.md#yaml配置字段详解)
+| PDMIX       | [PDMIX 配置示例](../../algorithms_instruction/pdmix.md#使用方式)                                     | [PDMIX 配置字段详解](../../algorithms_instruction/pdmix.md#使用方式)
 
 #### save - 保存器配置字段
 
@@ -184,7 +184,7 @@ multimodal_sd_modelslim_v1是专门为多模态生成模型（如Wan2.1等）设
 - 支持`dump_config`配置，用于校准数据的捕获和存储
 - 支持`model_config`配置，包含模型加载和推理的相关参数
 
-### 配置字段说明
+### 参数说明
 
 multimodal_sd_modelslim_v1量化服务的具体配置位于spec字段下。该服务基于modelslim_v1框架构建，处理器配置字段与modelslim_v1保持一致，以下仅说明有区别或特有的配置字段。
 
@@ -315,7 +315,7 @@ multimodal_vlm_modelslim_v1是专门为多模态视觉语言模型（VLM）设�
 - 默认使用layer_wise（逐层量化）模式，针对大规模多模态模型优化
 - 继承modelslim_v1的所有处理器和保存器配置
 
-### 配置字段说明
+### 配参数说明
 
 multimodal_vlm_modelslim_v1量化服务的具体配置位于spec字段下。该服务基于modelslim_v1框架构建，处理器配置字段与modelslim_v1保持一致，以下仅说明有区别或特有的配置字段。
 

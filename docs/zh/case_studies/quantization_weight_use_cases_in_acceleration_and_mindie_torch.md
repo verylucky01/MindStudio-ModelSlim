@@ -1,13 +1,14 @@
-### 一、加速库场景下W8A8量化权重的使用案例
+# 加速库场景下W8A8量化权重的使用案例
 
+## 概述
 量化工具与MindIE工具关系：msmodelslim作为量化工具提供量化能力，MindIE加速库可以调用量化权重进行推理。
 
-1.环境的安装与配置
+## 环境准备
 请参考《[MindIE安装指南](https://www.hiascend.com/document/detail/zh/mindie/10RC3/envdeployment/instg/mindie_instg_0001.html)》安装MindIE，并参考《MindIE安装指南》中“配置MindIE > [配置MindIE LLM](https://www.hiascend.com/document/detail/zh/mindie/10RC3/envdeployment/instg/mindie_instg_0028.html)”章节配置MindIE LLM。
 
 量化环境安装指南：[安装指南](../install_guide.md)
 
-2.量化权重生成
+## 量化权重生成
 
   此处以Llama2-13b-hf为例
 

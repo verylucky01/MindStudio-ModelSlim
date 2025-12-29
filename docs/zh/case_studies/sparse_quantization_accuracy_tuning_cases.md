@@ -1,12 +1,13 @@
 # 稀疏量化精度调试案例
 
+## 概述
 本文将会提供稀疏量化的示例代码，并介绍稀疏量化的调优策略。
 
-# 依赖安装
+## 环境准备
 
 - 代码示例中额外使用了`precision_tool`工具，可以参考该文档进行配置 ：[精度测试工具](../feature_guide/scripts_based_quantization_and_other_features/pytorch/fake_quantization_accuracy_testing_tool.md)
 
-# 代码示例
+## 代码示例
 
 ```
 import json

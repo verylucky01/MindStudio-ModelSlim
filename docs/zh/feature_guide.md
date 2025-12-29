@@ -1,28 +1,4 @@
-# msModelSlim 资料
-
-欢迎来到 msModelSlim 资料，此资料目录将为你提供有关 msModelSlim 快速入门、功能、算法、接口、FAQ等介绍，帮助你更快熟悉 msModelSlim 工具。
-
-msModelSlim 资料将在工具迭代更新中不断完善，有任何问题请联系我们，让我们一起构筑更易用的 msModelSlim 工具！
-
-## 安装指南
-
-具体安装步骤请查看[安装指南](install_guide.md)
-
-## 快速入门
-
-
-| 名称             | 文档                                                 |
-| ------------------ | ------------------------------------------------------ |
-| 一键量化快速入门 | [一键量化快速入门](quick_quantization_quick_start.md) |
-
-## 支持矩阵
-
-
-| 类别           | 文档                                  |
-| ---------------- | --------------------------------------- |
-| 大模型支持矩阵 | [大模型支持矩阵](foundation_model_support_matrix.md) |
-
-## 功能指南
+# 功能指南
 msModelSlim当前支持两种量化服务：V0量化服务与V1量化服务。
 
 msModelSlim V0量化服务基于旧版msModelSlim量化框架及其Python API 接口实现量化功能，将量化过程分为模型加载、离群值抑制和量化校准与保存三个阶段，可以在离群值抑制和量化校准阶段分别采用一种算法。
@@ -67,14 +43,14 @@ msModelSlim认为量化本质上是对模型局部结构的修改和替换，基
       <td rowspan="9">大模型量化算法</td>
       <td>异常值抑制算法<br>
       Flex Smooth Quant</td>
-      <td><a href="algorithms_instruction/Flex_Smooth_Quant.md">Flex Smooth Quant 算法说明</a></td>
+      <td><a href="algorithms_instruction/flex_smooth_quant.md">Flex Smooth Quant 算法说明</a></td>
       <td>
       -
       </td>
     </tr>
     <tr>
       <td>异常值抑制算法<br>Iterative Smooth</td>
-      <td><a href="algorithms_instruction/Iterative_Smooth.md">Iterative Smooth 算法说明</a></td>
+      <td><a href="algorithms_instruction/iterative_smooth.md">Iterative Smooth 算法说明</a></td>
       <td>-</td>
     </tr>
     <tr>
@@ -89,12 +65,12 @@ msModelSlim认为量化本质上是对模型局部结构的修改和替换，基
     </tr>
     <tr>
       <td>KVCache 量化算法</td>
-      <td><a href="algorithms_instruction/KVCache_quant.md">KVCache 量化算法说明</a></td>
+      <td><a href="algorithms_instruction/kvcache_quant.md">KVCache 量化算法说明</a></td>
       <td>-</td>
     </tr>
     <tr>
       <td>FA3 量化算法</td>
-      <td><a href="algorithms_instruction/FA3_quant.md">FA3 量化算法说明</a></td>
+      <td><a href="algorithms_instruction/fa3_quant.md">FA3 量化算法说明</a></td>
       <td>-</td>
     </tr>
     <tr>
@@ -436,56 +412,3 @@ msModelSlim认为量化本质上是对模型局部结构的修改和替换，基
 </table>
 
 </details>
-
-## 自主量化
-面向需要将自有模型接入 msModelSlim 的开发者，msModelSlim提供了[自主量化模型接入指南](custom_quantization/integrating_models.md)。
-
-## 案例集
-
-<table>
-  <thead>
-    <tr>
-      <th>案例分类</th>
-      <th>案例名称</th>
-      <th>说明</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td rowspan="2"><strong>量化精度调优</strong></td>
-      <td>w8a8精度调优策略</td>
-      <td><a href="case_studies/w8a8_accuracy_tuning_policy.md">w8a8精度调优策略指南</a></td>
-    </tr>
-    <tr>
-      <td>w8a16精度调优策略</td>
-      <td><a href="case_studies/w8a16_accuracy_tuning_policy.md">w8a16精度调优策略指南</a></td>
-    </tr>
-    <tr>
-      <td><strong>稀疏量化调试</strong></td>
-      <td>稀疏量化精度调试案例</td>
-      <td><a href="case_studies/sparse_quantization_accuracy_tuning_cases.md">稀疏量化精度调试方法和案例</a></td>
-    </tr>
-    <tr>
-      <td><strong>代码集成</strong></td>
-      <td>量化及稀疏量化场景导入代码样例</td>
-      <td><a href="case_studies/quantization_and_sparse_quantization_scenario_import_code_examples.md">量化和稀疏量化代码集成示例</a></td>
-    </tr>
-    <tr>
-      <td><strong>权重转换</strong></td>
-      <td>msModelSlim量化权重转AutoAWQ&AutoGPTQ使用指南</td>
-      <td><a href="case_studies/msmodelslim_quantized_weight_to_autoawq&autogptq.md">量化权重格式转换指南</a></td>
-    </tr>
-    <tr>
-      <td><strong>推理部署</strong></td>
-      <td>加速库&MindIE-Torch场景下的量化权重使用案例</td>
-      <td><a href="case_studies/quantization_weight_use_cases_in_acceleration_and_mindie_torch.md">推理加速库中量化权重使用方法</a></td>
-    </tr>
-  </tbody>
-</table>
-
-
-## FAQ
-
-FAQ 旨在帮助用户解决一些使用msModelSlim工具时遇到的常见问题，目前正在逐步完善中，msModelSlim将持续补充和更新。
-
-具体FAQ可查看[FAQ](FAQ.md)

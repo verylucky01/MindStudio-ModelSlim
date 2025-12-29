@@ -1,6 +1,18 @@
 # LAOS：w4a4量化方案说明
 
-## 硬件产品支持
+## 简介
+
+- **来源**：华为自研。
+- **背景**：在低比特量化（如W4A4）场景下，模型精度损失尤为显著，其核心难点在于权重和激活值中的极端离群值会显著扭曲量化区间，导致数值表示精度急剧下降，传统方法难以解决。
+- **核心思想**：核心思想是“协同优化”。通过 [QuaRot](quarot.md) 和 [Iterative Smooth](iterative_smooth.md) 技术对激活分布进行平滑处理，有效抑制离群值，为后续量化创造良好条件；再利用 [AutoRound](autoround.md) 自适应功能为不同权重确定最优舍入策略，从而提高大模型在低比特量化场景的精度。
+
+## 使用前准备
+
+安装 msModelSlim 工具，详情请参见[安装指南](../install_guide.md)。
+
+## 功能介绍
+
+## 昇腾AI处理器支持情况
 
 | 产品系列 | 支持 |
 |---------|------|
@@ -9,14 +21,6 @@
 | Atlas 推理系列产品 | ✗ |
 
 **注：算法实现包含训练过程，对NPU显存有一定的要求，仅支持NPU显存>=64G的设备。**
-
-## 背景和作用
-
-- **来源**：华为自研。
-- **背景**：在低比特量化（如W4A4）场景下，模型精度损失尤为显著，其核心难点在于权重和激活值中的极端离群值会显著扭曲量化区间，导致数值表示精度急剧下降，传统方法难以解决。
-- **核心思想**：核心思想是“协同优化”。通过 [QuaRot](QuaRot.md) 和 [Iterative Smooth](Iterative_Smooth.md) 技术对激活分布进行平滑处理，有效抑制离群值，为后续量化创造良好条件；再利用 [AutoRound](AutoRound.md) 自适应功能为不同权重确定最优舍入策略，从而提高大模型在低比特量化场景的精度。
-
-## 使用方式
 
 ### 修改配置文件使用
 
@@ -104,7 +108,7 @@ spec:
 
 ### YAML配置字段详解
 
-配置字段来自Iterative Smooth、QuaRot、AutoRound三者结合，详见[Iterative Smooth YAML配置字段详解](Iterative_Smooth.md#yaml配置字段详解)、[QuaRot YAML配置字段详解](QuaRot.md#yaml配置字段详解)、[AutoRound YAML配置字段详解](AutoRound.md#yaml配置字段详解)。
+配置字段来自Iterative Smooth、QuaRot、AutoRound三者结合，详见[Iterative Smooth YAML配置字段详解](iterative_smooth.md#yaml配置字段详解)、[QuaRot YAML配置字段详解](quarot.md#yaml配置字段详解)、[AutoRound YAML配置字段详解](autoround.md#yaml配置字段详解)。
 
 ## 模型适配
 
@@ -129,8 +133,8 @@ spec:
 - **计算资源**：需要额外的优化过程，计算成本高于简单量化方法。
 - **使用限制**：
   - 需要足够的校准数据或训练迭代次数来优化参数。
-  - 受限于QuaRot算法的接口实现，当前该方案仅支持Qwen3稠密系列模型（如Qwen3-8B/14B/32B），未具备泛化至其他系列模型的能力，具体限制请参考 [QuaRot适用范围与局限性](QuaRot.md#适用范围与局限性)。
-  - 若在QuaRot配置中启用了在线旋转，在使用推理引擎以TP并行的方式进行部署时，需要保证`tp_size`需要小于等于QuaRot的配置参数`max_tp_size`，否则必然导致精度异常，具体限制请参考 [QuaRot适用范围与局限性](QuaRot.md#适用范围与局限性)。
+  - 受限于QuaRot算法的接口实现，当前该方案仅支持Qwen3稠密系列模型（如Qwen3-8B/14B/32B），未具备泛化至其他系列模型的能力，具体限制请参考 [QuaRot适用范围与局限性](quarot.md#适用范围与局限性)。
+  - 若在QuaRot配置中启用了在线旋转，在使用推理引擎以TP并行的方式进行部署时，需要保证`tp_size`需要小于等于QuaRot的配置参数`max_tp_size`，否则必然导致精度异常，具体限制请参考 [QuaRot适用范围与局限性](quarot.md#适用范围与局限性)。
 
 ## 常见问题排查
 

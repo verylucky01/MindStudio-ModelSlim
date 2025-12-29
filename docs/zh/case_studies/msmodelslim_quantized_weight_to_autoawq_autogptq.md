@@ -1,5 +1,6 @@
+# msModelSlim量化权重转AutoAWQ&AutoGPTQ使用指南
 
-# 使用说明
+## 概述
 msModelSlim权重格式与开源工具AutoAWQ、AutoGPTQ的格式存在差异，因此本文的目的是提供一份指南，用于将msModelSlim量化后的权重转换为与如上的开源工具格式一致的权重，以实现qwen2-7b W4A16转换后的权重能直接以huggingface形式加载权重。
 本指南仅支持如下配置的权重转换：  
 W4A16 + per_group + AWQ  
@@ -15,12 +16,13 @@ AutoAWQ：GPU
 AutoGPTQ：GPU
 
 
-# 1.msModelSlim量化
-环境准备如下：  
+## msModelSlim量化
+
+### 环境准备 
 [安装指南](../install_guide.md)  
 [大模型量化工具依赖安装](../feature_guide/scripts_based_quantization_and_other_features/pytorch/foundation_model_post_training_quantization.md)  
 
-## 1.1 msModelSlim量化
+### 使用说明
 量化脚本跟正常的量化脚本一样，可以参考：[w8a8精度调优策略](w8a8_accuracy_tuning_policy.md) 。
 本文以W4A16量化方式示例进行说明。需要注意的地方有三处:  
 a.在离群值抑制配置（AntiOutlierConfig）中，a_bit和w_bit应根据量化方式进行设置。当anti_method被设置为"m3"时，代表使用AWQ算法；而对于GPTQ算法，则不需要使用离群值抑制模块，此时可以将相关配置注释掉。
@@ -60,7 +62,7 @@ calibrator.save(output_path, safetensors_name=None, json_name=None, save_type=No
 ```
 
 
-## 1.2 转换脚本使用
+### 转换脚本使用
 转换脚本路径位于：[ms_to_vllm.py](../../../example/ms_to_vllm.py)
 
 经过上一步1.1使用msModelSlim对权重进行量化，生成quant_model_description_w4a16.json和quant_model_weight_w4a16.safetensors，再使用转换脚本ms_to_vllm.py进行权重格式转换，生成转换后的safetensors文件，用法如下：
@@ -81,11 +83,12 @@ python ms_to_vllm.py --model ./quant_model_weight_w4a16.safetensors  --json ./qu
 
 ```
 
-# 2.开源工具AutoAWQ量化以及推理
-## 2.1环境准备
+## 开源工具AutoAWQ量化以及推理
+
+### 环境准备
 开源工具相关的环境配置、量化和推理参考github上的readme.md，链接：https://github.com/casper-hansen/AutoAWQ
 
-## 2.2量化
+### 使用说明
 AutoAWQ量化, 需要注意的是，Version使用GEMM，如果没有传入数据集可能会报错，需要传入数据集val.jsonl文件, 参考网址：https://github.com/casper-hansen/AutoAWQ/issues/506
 ，数据集获取地址：https://huggingface.co/datasets/mit-han-lab/pile-val-backup/blob/main/val.jsonl.zst 。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。     
 AutoAWQ量化脚本示例如下：
@@ -125,7 +128,7 @@ print(f'Model is quantized and saved at "{quant_path}"')
 
 ```
 
-## 2.3推理
+### 推理
 首先，修改AutoAWQ量化后权重路径的model.safetensors.index.json文件，请将文件中的weight_map中的权重文件名称修改为第1.2节中的转换脚本所生成的权重文件名，然后将权重文件替换为第1.2节中转换脚本所生成的权重文件，最后运行推理脚本。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。
 
 AutoAWQ推理脚本测试对话示例如下：
@@ -179,16 +182,16 @@ for idx, item in enumerate(res):
 
 
 
-# 3 开源工具AutoGPTQ量化以及推理
+## 开源工具AutoGPTQ量化以及推理
 
-## 3.1环境准备
+### 环境准备
 开源工具相关的环境配置、量化和推理参考github上的readme.md，链接如下：https://github.com/AutoGPTQ/AutoGPTQ  
 
-## 3.2量化
+### 使用说明
 msModelSlim转换为AutoGPTQ权重格式进行推理和AutoAWQ同理，首先去阅读AutoGPTQ的readme.md(链接如上第3.1节)，参考量化的示例，修改相关配置参数，然后进行量化，最后生成量化权重文件。  
 修改的配置包括路径和BaseQuantizeConfig接口，在BaseQuantizeConfig接口中，bits为量化的权重位数，对应msModelSlim中的w_bit；per_group场景下，group_size设置的值与msModelSlim一致，在per_channel场景下，group_size设置为-1。
 
-## 3.3推理
+### 推理
 将经过msModelSlim量化以及经过转换脚本转换后的res.safetensors文件传入GPU生成的量化权重目录，替换掉之前的量化权重文件，文件名保持一致，其他文件不需要修改。
 推理脚本示例如下：
 ```python
@@ -225,7 +228,7 @@ print(tokenizer.decode(model.generate(**tokenizer("auto_gptq is", return_tensors
 
 4.参考第3.3节推理脚本运行推理。
 
-# 4.总结
+## 总结
 经过上述步骤，成功完成msModelSlim在NPU上的量化，并且量化权重经过转换脚本转换后能够在AutoAWQ和AutoGPTQ推理成功。
 
 

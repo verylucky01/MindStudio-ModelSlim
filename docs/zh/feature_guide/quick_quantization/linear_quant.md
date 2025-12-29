@@ -5,6 +5,11 @@
 LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对模型的线性层进行量化处理。它支持灵活的量化配置，包括激活值量化和权重量化。
 
 ## 使用前准备
+
+安装 msModelSlim 工具，详情请参见[安装指南](../../install_guide.md)。
+
+## 功能介绍
+
 ### YAML配置示例
 
 #### W8A8静态量化配置
@@ -123,7 +128,7 @@ LinearQuantProcess是modelslim_v1量化服务中的核心处理器，用于对�
 
 #### 示例说明
 
-#### 示例1: 基础过滤
+##### 示例1: 基础过滤
 
 ```yaml
 include: [ "*" ]
@@ -132,7 +137,7 @@ exclude: [ "*down_proj*" ]
 
 - **结果**: 包含所有层，但排除包含"down_proj"的层。
 
-#### 示例2: 选择性包含
+##### 示例2: 选择性包含
 
 ```yaml
 include: [ "*self_attn*", "*mlp*" ]
@@ -141,7 +146,7 @@ exclude: [ ]
 
 - **结果**: 只包含包含"self_attn"或"mlp"的层。
 
-#### 示例3: 复杂过滤
+##### 示例3: 复杂过滤
 
 ```yaml
 include: [ "*attention*", "*mlp*" ]
@@ -150,7 +155,7 @@ exclude: [ "*down_proj*", "*gate*" ]
 
 - **结果**: 包含包含"attention"或"mlp"的层，但排除包含"down_proj"或"gate"的层。
 
-#### 示例4: 精确匹配
+##### 示例4: 精确匹配
 
 ```yaml
 include: [ "model.layers.*.self_attn.*" ]

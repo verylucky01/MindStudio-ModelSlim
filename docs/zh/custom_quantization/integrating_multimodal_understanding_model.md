@@ -1,5 +1,7 @@
 # 多模态理解模型接入指南
 
+## 简介
+
 本文档面向需要将自有多模态理解模型（Vision-Language Model, VLM）接入 msModelSlim 的开发者。
 
 多模态理解模型通常由视觉编码器、视觉特征投影层和语言模型组成，能够同时处理图像和文本输入。相比纯语言模型，多模态理解模型的量化接入需要额外考虑：
@@ -8,7 +10,7 @@
 - **视觉部分完整处理**：视觉部分一次性加载并处理，简化多模态融合逻辑
 - **语言模型逐层加载**：语言模型逐层加载和量化，避免对内存和显存的占用过大
 
-## 前置知识
+### 前置知识
 
 在开始之前，建议先阅读[《模型接入指南》](integrating_models.md)，了解基础的接口概念和模型适配器设计。
 
@@ -704,7 +706,7 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,
         return adapter_config
 ```
 
-详见：[Iterative Smooth 适配](../algorithms_instruction/Iterative_Smooth.md#模型适配)
+详见：[Iterative Smooth 适配](../algorithms_instruction/iterative_smooth.md#模型适配)
 
 ### 支持QuaRot旋转离群值抑制算法
 
@@ -739,7 +741,7 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,
         pass
 ```
 
-详见：[QuaRot 适配](../algorithms_instruction/QuaRot.md#模型适配)
+详见：[QuaRot 适配](../algorithms_instruction/quarot.md#模型适配)
 
 ## 参考资料
 - [模型接入指南](integrating_models.md)：大模型基础接入指导
