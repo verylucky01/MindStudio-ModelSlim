@@ -1,8 +1,9 @@
 # Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-import os
 import json
+import os
 from configparser import ConfigParser
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -16,6 +17,7 @@ KEY_REPO_URL = 'repository_url'
 KEY_QUESTION_AND_ANSWER_URL = 'question_and_answer_url'
 
 ENV_VAR_LOG_LEVEL = 'MSMODELSLIM_LOG_LEVEL'
+ENV_VAR_CUSTOM_PRACTICE_REPO = 'MSMODELSLIM_CUSTOM_PRACTICE_REPO'
 
 VALID_LOG_LEVELS = ['info', 'debug']
 
@@ -32,6 +34,7 @@ class URLs(BaseModel):
 
 class EnvVars(BaseModel):
     log_level: str
+    custom_practice_repo: Optional[str] = None
 
 
 class ModelSlimConfig(BaseModel):
@@ -96,12 +99,17 @@ def init_config():
         raise EnvVarError(f"Invalid log level: {logger_level}, must be in {VALID_LOG_LEVELS}",
                           action=f'Please check the environment variable {ENV_VAR_LOG_LEVEL}')
 
+    custom_practice_repo = os.getenv(ENV_VAR_CUSTOM_PRACTICE_REPO)
+
     modelslim_config = ModelSlimConfig(
         urls=URLs(
             repository=file_config.get(SECTION_URL, KEY_REPO_URL),
             question_and_answer=file_config.get(SECTION_URL, KEY_QUESTION_AND_ANSWER_URL)
         ),
-        env_vars=EnvVars(log_level=logger_level),
+        env_vars=EnvVars(
+            log_level=logger_level,
+            custom_practice_repo=custom_practice_repo
+        ),
         model_adapter_dependencies=load_model_adapter_dependencies(file_config),
     )
     return modelslim_config

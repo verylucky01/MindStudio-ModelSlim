@@ -1,11 +1,14 @@
 # Copyright Huawei Technologies Co., Ltd. 2025. All rights reserved.
 import re
 from pathlib import Path
-from typing import Callable, Optional, List, Tuple
+from typing import Optional, List
+
 import torch
 
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.const import QuantType
+from msmodelslim.core.practice.interface import PracticeConfig
+from msmodelslim.core.quant_service import IQuantService
 from msmodelslim.model import IModelFactory, IModel
 from msmodelslim.utils.exception import SchemaValidateError, ToDoError, UnsupportedError
 from msmodelslim.utils.exception_decorator import exception_catcher
@@ -19,8 +22,6 @@ from msmodelslim.utils.validation.conversion import (
 from msmodelslim.utils.validation.value import validate_str_length
 from .model_info_interface import ModelInfoInterface
 from .practice_manager_infra import PracticeManagerInfra
-from ..practice.interface import PracticeConfig
-from ..quant_service import IQuantService
 
 DEFAULT_PEDIGREE = 'default'
 DEFAULT_CONFIG_ID = 'default'
@@ -125,7 +126,7 @@ class NaiveQuantizationApplication:
         # Handle explicit config path
         if config_path is not None:
             config_dict = yaml_safe_load(str(config_path))
-            config = PracticeConfig.from_dict(config_dict)
+            config = PracticeConfig.model_validate(config_dict)
             get_logger().info(f"Naive Quant apply config_path: {config_path}")
             return config
 

@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import yaml
 import shutil
 import stat
 import sys
@@ -20,7 +21,10 @@ MAX_READ_FILE_SIZE_512G = 549755813888  # 512G, 512 * 1024 * 1024 * 1024
 WRITE_FILE_NOT_PERMITTED_STAT = stat.S_IWGRP | stat.S_IWOTH | stat.S_IROTH | stat.S_IXOTH
 # group not writable, others not writable, max stat is 755
 READ_FILE_NOT_PERMITTED_STAT = stat.S_IWGRP | stat.S_IWOTH
-
+yaml.SafeDumper.add_multi_representer(
+    str,
+    yaml.representer.SafeRepresenter.represent_str
+)
 
 def is_endswith_extensions(path, extensions):
     result = False

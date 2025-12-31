@@ -24,8 +24,8 @@ from msmodelslim.core.base.protocol import ProcessRequest, BatchProcessRequest, 
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.runner.base import BaseRunner
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
-from msmodelslim.quant.processor import AutoProcessorConfig
-from msmodelslim.quant.processor.base import AutoSessionProcessor
+from msmodelslim.processor import AutoProcessorConfig
+from msmodelslim.processor.base import AutoSessionProcessor
 from msmodelslim.utils.cache import to_device
 from msmodelslim.utils.cache.memory import load_cached
 from msmodelslim.utils.exception import ToDoError, UnsupportedError, InvalidDatasetError, SecurityError

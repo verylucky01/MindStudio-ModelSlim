@@ -122,8 +122,8 @@ class DitCacheSearchConfig:
 
         if not isinstance(self.cache_ratio, (int, float)):
             raise ValueError("cache_ratio must be a number")
-        if not (1.0 <= self.cache_ratio <= 2.0):
-            raise ValueError("cache_ratio should be in the range of [1.0, 2.0]")
+        if not (1.0 < self.cache_ratio <= 2.0):
+            raise ValueError("cache_ratio should be in the range of (1.0, 2.0]")
 
         if self.dit_block_num is not None:
             if not isinstance(self.dit_block_num, int):

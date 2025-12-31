@@ -117,6 +117,7 @@ class AclInference:
             self.context, ret = acl.rt.create_context(device_id)
             _check_ret("acl.rt.create_context", ret)
             logger.info(f"end to create_context")
+
         except Exception as e:
             logger.error("Failed to create ACL runtime context: %s", e)
             self.release_resource()
@@ -139,6 +140,7 @@ class AclInference:
                 raise ValueError("model with ascend_mbatch_shape_data currently not supported")
             if any([ii.shape is None for ii in self.outputs]):
                 raise ValueError("model dynamic input or output currently not supported")
+
 
         except Exception as e:
             # -------------------------- 异常时提示，由finally释放已分配资源 --------------------------

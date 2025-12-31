@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Union, Optional, Tuple, Dict
 
-from msmodelslim.app.quant_service import DatasetLoaderInfra
+from msmodelslim.core.quant_service import DatasetLoaderInfra
 from msmodelslim.utils.exception import InvalidDatasetError
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.utils.security import get_valid_read_path

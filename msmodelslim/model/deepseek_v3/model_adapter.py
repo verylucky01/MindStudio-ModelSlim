@@ -15,13 +15,13 @@ from safetensors import safe_open
 from torch import distributed as dist
 from tqdm import tqdm
 
+from msmodelslim import ir as qir
 from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.graph import AdapterConfig, MappingConfig, FusionConfig
 from msmodelslim.model.common.layer_wise_forward import generated_decoder_layer_visit_func, \
     TransformersForwardBreak
 from msmodelslim.model.common.transformers import TransformersModel
-from msmodelslim.quant import ir as qir
 from msmodelslim.utils.exception import InvalidModelError
 from msmodelslim.utils.logging import logger_setter, get_logger
 from msmodelslim.utils.security import json_safe_load, json_safe_dump, get_valid_read_path, MAX_READ_FILE_SIZE_32G
@@ -156,8 +156,8 @@ class DeepSeekV3ModelAdapter(TransformersModel,
 
             return auto_module
 
-        hidden_states = args[0]
-        hidden_states = model.model.norm(hidden_states)
+        pre_hidden_states = args[0]
+        hidden_states = model.model.norm(pre_hidden_states)
         logits = wrap_device(model.lm_head)(hidden_states)
         logits = logits.float()
 
@@ -176,7 +176,7 @@ class DeepSeekV3ModelAdapter(TransformersModel,
 
         input_embeds_mtp = wrap_device(mtp_decoder.embed_tokens)(input_ids_mtp)
         input_embeds_mtp = wrap_device(mtp_decoder.enorm)(input_embeds_mtp)
-        hidden_states_mtp = wrap_device(mtp_decoder.hnorm)(hidden_states)
+        hidden_states_mtp = wrap_device(mtp_decoder.hnorm)(pre_hidden_states)
         hidden_states_mtp = torch.cat([input_embeds_mtp, hidden_states_mtp], dim=-1)
         hidden_states_mtp = wrap_device(mtp_decoder.eh_proj)(hidden_states_mtp)
 

@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel
 
-from msmodelslim.app.practice import PracticeConfig
-from msmodelslim.app.tune_strategy.interface import EvaluateResult
+from msmodelslim.core.practice import PracticeConfig
+from msmodelslim.core.tune_strategy import EvaluateResult
 
 
 class TuningHistory(BaseModel):

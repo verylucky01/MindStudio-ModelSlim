@@ -3,6 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import List
 
+from msmodelslim.core.analysis_service import BaseAnalysisService, PipelineInterface
 from msmodelslim.core.const import DeviceType
 from msmodelslim.model import IModelFactory
 from msmodelslim.utils.exception import SchemaValidateError, UnsupportedError
@@ -12,8 +13,6 @@ from msmodelslim.utils.validation.conversion import (
     convert_to_readable_dir
 )
 from msmodelslim.utils.validation.value import validate_str_length
-from ..analysis_service import BaseAnalysisService
-from ..analysis_service.pipeline_interface import PipelineInterface
 
 
 class AnalysisMetrics(str, Enum):

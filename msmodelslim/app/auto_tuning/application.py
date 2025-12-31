@@ -1,11 +1,10 @@
 # Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 import datetime
-from copy import deepcopy
 from pathlib import Path
 from typing import Optional, Union, List
 
-from msmodelslim.app.quant_service import IQuantService
-from msmodelslim.app.tune_strategy import ITuningStrategyFactory
+from msmodelslim.core.quant_service import IQuantService
+from msmodelslim.core.tune_strategy import ITuningStrategyFactory
 from msmodelslim.core.const import DeviceType
 from msmodelslim.model import IModelFactory, IModel
 from msmodelslim.utils.logging import logger_setter, get_logger

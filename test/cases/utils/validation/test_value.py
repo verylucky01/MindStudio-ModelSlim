@@ -23,6 +23,7 @@ from msmodelslim.utils.validation.value import (
     validate_normalized_value,
     is_boolean,
     is_string_list,
+    non_empty_string,
 )
 
 
@@ -53,7 +54,7 @@ def test_greater_than_zero(input_val: float, expect_return: float, should_raise:
         with pytest.raises(SchemaValidateError) as exc_info:
             greater_than_zero(input_val)
         assert "value must be greater than 0" in str(exc_info.value)
-        assert exc_info.value.action == "Please check the float value"
+        assert exc_info.value.action == "Please check the numeric value"
     else:
         # 验证正常返回值
         result = greater_than_zero(input_val)
@@ -217,3 +218,44 @@ def test_is_string_list(
         # 验证列表元素全为 str（非空列表时）
         if len(result) > 0:
             assert all(isinstance(item, str) for item in result)
+
+
+# ------------------------------ 测试 non_empty_string ------------------------------
+@pytest.mark.parametrize(
+    "input_val, field_name, expect_return, should_raise, msg_keyword, action_keyword",
+    [
+        ("hello", "value", "hello", False, "", ""),
+        ("  spaced  ", "prompt", "  spaced  ", False, "", ""),
+        (None, "prompt", None, True, "prompt must not be null",
+         "Please provide a non-empty string for prompt"),
+        ("", "value", None, True, "value must be a non-empty string",
+         "Please provide a non-empty string for value"),
+        ("   ", "name", None, True, "name must be a non-empty string",
+         "Please provide a non-empty string for name"),
+    ],
+    ids=[
+        "normal_string",
+        "string_with_spaces_but_not_empty",
+        "none_value",
+        "empty_string",
+        "whitespace_only",
+    ],
+)
+def test_non_empty_string_validation(
+    input_val: Any,
+    field_name: str,
+    expect_return: Any,
+    should_raise: bool,
+    msg_keyword: str,
+    action_keyword: str,
+):
+    """测试 non_empty_string：验证字符串非 None 且去除空白后非空。"""
+    if should_raise:
+        with pytest.raises(SchemaValidateError) as exc_info:
+            non_empty_string(input_val, field_name=field_name)
+        assert msg_keyword in str(exc_info.value)
+        assert exc_info.value.action == action_keyword
+    else:
+        result = non_empty_string(input_val, field_name=field_name)
+        # 函数应返回原始字符串（不对内容进行 strip）
+        assert result == expect_return

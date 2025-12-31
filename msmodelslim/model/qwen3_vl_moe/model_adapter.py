@@ -41,7 +41,7 @@ from msmodelslim.model.interface_hub import (
     FlexSmoothQuantInterface,
     ModelSlimPipelineInterfaceV1
 )
-from msmodelslim.quant.processor.quarot import QuaRotInterface
+from msmodelslim.processor.quarot import QuaRotInterface
 from msmodelslim.model.common.vlm_base import VLMBaseModelAdapter
 from msmodelslim.infra.vlm_dataset_loader import VlmCalibSample
 from msmodelslim.utils.exception import InvalidModelError, UnsupportedError

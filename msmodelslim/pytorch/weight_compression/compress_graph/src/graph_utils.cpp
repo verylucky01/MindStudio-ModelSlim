@@ -24,9 +24,8 @@ using namespace std;
 namespace GraphUtils {
 int CheckShape(vector<int64_t> &shape)
 {
-    static constexpr uint64_t MAX_SHAPE = 50000;
     for (auto const &val : shape) {
-        if (val > MAX_SHAPE) {
+        if (val > 50000) {
             return GraphUtils::FAILED;
         }
     }
@@ -59,7 +58,6 @@ bool GetDataFromBin(string input_path, vector<int64_t> shapes, uint8_t *&data, i
         inFile.close();
         return false;
     }
-
     std::string buffer;
     buffer.resize(dataLen);
     inFile.read(&buffer[0], dataLen);
@@ -78,6 +76,7 @@ bool GetDataFromBin(string input_path, vector<int64_t> shapes, uint8_t *&data, i
     }
 
     inFile.close();
+
 
     uint8_t* heapData = new (std::nothrow) uint8_t[dataLen];
     if (!heapData) {

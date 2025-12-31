@@ -1,0 +1,22 @@
+apiversion: modelslim_v0
+metadata:
+  config_id: qwen1.5-110b-w8a16
+  score: 90
+  verified_model_types:
+    - Qwen1.5-110B
+  label:
+    w_bit: 8
+    a_bit: 16
+    is_sparse: False
+    kv_cache: False
+spec:
+  calib_cfg:
+    w_bit: 8
+    a_bit: 16
+    mm_tensor: False
+  calib_save_params:
+    part_file_size: 4
+
+
+
+

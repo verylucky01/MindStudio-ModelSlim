@@ -82,6 +82,7 @@ def mock_init_config():
     mock_config = MagicMock()
     mock_config.urls.repository = "mocked_url"
     mock_config.env_vars.log_level = "info"
+    mock_config.env_vars.custom_practice_repo = None
 
     # Mock the init_config function to return the mock config
     config_mock.init_config.return_value = mock_config

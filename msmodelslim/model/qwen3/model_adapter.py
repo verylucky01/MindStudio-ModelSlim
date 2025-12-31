@@ -7,8 +7,8 @@ from torch import nn
 from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.graph.adapter_types import AdapterConfig, MappingConfig
-from msmodelslim.quant.processor.kv_smooth import KVSmoothFusedType, KVSmoothFusedUnit
-from msmodelslim.quant.processor.quarot import (
+from msmodelslim.processor.kv_smooth import KVSmoothFusedType, KVSmoothFusedUnit
+from msmodelslim.processor.quarot import (
     QuaRotInterface,
     QuaRotOnlineInterface
 )

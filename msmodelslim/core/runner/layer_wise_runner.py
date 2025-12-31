@@ -22,7 +22,7 @@ from msmodelslim.core.base.protocol import DataUnit
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.runner.generated_runner import GeneratedRunner, get_input_datas
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
-from msmodelslim.quant.processor import LoadProcessorConfig, AutoProcessorConfig
+from msmodelslim.processor import LoadProcessorConfig, AutoProcessorConfig
 from msmodelslim.utils.logging import logger_setter, get_logger
 
 

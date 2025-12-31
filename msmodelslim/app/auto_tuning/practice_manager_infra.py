@@ -1,7 +1,7 @@
 # Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 from abc import ABC, abstractmethod
 
-from msmodelslim.app.practice import PracticeConfig
+from msmodelslim.core.practice import PracticeConfig
 
 
 class PracticeManagerInfra(ABC):

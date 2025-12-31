@@ -19,7 +19,7 @@ from typing import Union, List, Dict, Any, Callable, Optional
 import torch
 from safetensors.torch import safe_open
 
-from msmodelslim.quant.ir import W8A8StaticFakeQuantLinear, W8A8DynamicPerChannelFakeQuantLinear, \
+from msmodelslim.ir import W8A8StaticFakeQuantLinear, W8A8DynamicPerChannelFakeQuantLinear, \
     W8A8DynamicPerGroupFakeQuantLinear, W4A4DynamicPerGroupFakeQuantLinear, W4A4DynamicPerChannelFakeQuantLinear, \
     W4A4MXDynamicPerBlockFakeQuantLinear, W8A8MXDynamicPerBlockFakeQuantLinear, W4A8MXDynamicPerBlockFakeQuantLinear
 
@@ -216,7 +216,7 @@ def check_w4a8_mx_dynamic_per_block_export(module: W4A8MXDynamicPerBlockFakeQuan
     weight_tensor = all_tensors[weight_key]
 
     assert weight_tensor.dtype == torch.float8_e4m3fn, \
-        f"Weight tensor {weight_key} should be float8_e4m3fn, got {weight_tensor.dtype}"        # torch.int8
+        f"Weight tensor {weight_key} should be float8_e4m3fn, got {weight_tensor.dtype}"  # torch.int8
     assert weight_tensor.shape == module.weight.shape, \
         f"Weight tensor {weight_key} shape mismatch: expected {module.weight.shape}, got {weight_tensor.shape}"
     weight_float32 = weight_tensor.to(dtype=torch.float32)
@@ -271,7 +271,7 @@ def check_w4a4_mx_dynamic_per_block_export(module: W4A4MXDynamicPerBlockFakeQuan
         f"Weight tensor {weight_key} min value should be greater than -448.0, got {min_val}"
 
     # 验证权重缩放因子tensor必须存在
-    assert weight_scale_key in all_tensors,  \
+    assert weight_scale_key in all_tensors, \
         f"Weight scale tensor {weight_scale_key} must exist in safetensors file"
     weight_scale_tensor = all_tensors[weight_scale_key]
     assert weight_scale_tensor.dtype == torch.uint8, \

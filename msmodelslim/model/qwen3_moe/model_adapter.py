@@ -7,7 +7,7 @@ from torch import nn
 from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.graph import AdapterConfig, MappingConfig
-from msmodelslim.quant.processor.quarot import QuaRotInterface
+from msmodelslim.processor.quarot import QuaRotInterface
 from msmodelslim.utils.logging import logger_setter
 from ..common.layer_wise_forward import generated_decoder_layer_visit_func, transformers_generated_forward_func
 from ..common.transformers import TransformersModel

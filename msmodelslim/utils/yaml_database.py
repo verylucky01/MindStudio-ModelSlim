@@ -1,6 +1,8 @@
 # Copyright Huawei Technologies Co., Ltd. 2025. All rights reserved.
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from msmodelslim.utils.exception import SchemaValidateError, SecurityError, UnsupportedError
 from msmodelslim.utils.security import (
     yaml_safe_dump,
@@ -45,6 +47,9 @@ class YamlDatabase:
         if not isinstance(key, str):
             raise SchemaValidateError(f"yaml database key must be a string, but got {type(key)}",
                                       action='Please make sure the key is a string')
+
+        if isinstance(value, BaseModel):
+            value = value.model_dump()
 
         value_file = self.config_dir / f"{key}.yaml"
         yaml_safe_dump(value, str(value_file))

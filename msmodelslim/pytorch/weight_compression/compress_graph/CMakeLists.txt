@@ -21,7 +21,7 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
 endif()
 
 set(ASCEND_PATH $ENV{ASCEND_HOME_PATH})
-set(TOOLS_PATH ../../../tools/)
+set(TOOLS_PATH ../)
 include_directories(
         ${ASCEND_PATH}/opp/built-in/op_proto/inc
         ${ASCEND_PATH}/include/graph

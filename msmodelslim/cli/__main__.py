@@ -71,14 +71,38 @@ def main():
     analysis_parser.add_argument('--trust_remote_code', type=convert_to_bool, default=False,
                                  help="Trust custom code (bool type, must be True or False). "
                                       "Please ensure the security of the loaded custom code file.")
-    args = parser.parse_args()
 
+    # auto tuning command
+    tuning_parser = subparsers.add_parser('tune', help='Model quantization auto tuning tool')
+    tuning_parser.add_argument('--model_type', type=str, default='default',
+                                 help="Type of model to quantize (e.g. 'Qwen2.5-7B-Instruct', 'Qwen-QwQ-32B')")
+    tuning_parser.add_argument('--model_path', required=True, type=str,
+                                 help="Path to the original model")
+    tuning_parser.add_argument('--save_path', required=True, type=str,
+                              help="Path to save tuning results")
+    tuning_parser.add_argument('--config', required=True, type=str,
+                              help="Path to tuning config file")
+    tuning_parser.add_argument('--device', type=str, default='npu',
+                              help="Target device specification for quantization. "
+                                   "Format: 'device_type' or 'device_type:index1,index2,...' "
+                                   "(e.g., 'npu', 'npu:0,1,2,3', 'cpu'). "
+                                   "Default: 'npu' (single device)")
+    tuning_parser.add_argument('--timeout', type=str, default=None,
+                               help='Timeout for tuning, e.g. 1D, 2H, 3D4H')
+    tuning_parser.add_argument('--trust_remote_code', type=convert_to_bool, default=False,
+                                 help="Trust custom code (bool type, must be True or False). "
+                                      "Please ensure the security of the loaded custom code file.")
+
+    args = parser.parse_args()
     if args.command == 'quant':
         from msmodelslim.cli.naive_quantization.__main__ import main as quant_main
         quant_main(args)
     elif args.command == 'analyze':
         from msmodelslim.cli.analysis.__main__ import main as analysis_main
         analysis_main(args)
+    elif args.command == 'tune':
+        from msmodelslim.cli.auto_tuning.__main__ import main as tuning_main
+        tuning_main(args)
     else:
         # 可扩展其他组件
         parser.print_help()

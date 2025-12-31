@@ -4,6 +4,7 @@
 
 
 ## 最新消息
+- [2025.12.25] 支持 DeepSeek-V3.2 W8A8 量化，单卡64G显存，100G内存即可执行。
 - [2025.12.10] 支持 DeepSeek-V3.2-Exp W4A8 量化，单卡64G显存，100G内存即可执行。
 - [2025.12.05] 支持 Qwen3-VL-235B-A22B W8A8量化。
 - [2025.10.16] 支持 Qwen3-235B-A22B W4A8、Qwen3-30B-A3B W4A8 量化。vLLM Ascend已支持量化模型推理部署 [部署指导](https://vllm-ascend.readthedocs.io/en/latest/user_guide/feature_guide/quantization.html#)

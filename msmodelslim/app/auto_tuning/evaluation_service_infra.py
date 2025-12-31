@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from msmodelslim.app.tune_strategy.interface import EvaluateResult
+from msmodelslim.core.tune_strategy import EvaluateResult
 from msmodelslim.core.const import DeviceType
 from msmodelslim.utils.plugin import TypedConfig
 

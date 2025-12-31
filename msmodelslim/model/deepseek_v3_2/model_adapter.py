@@ -28,7 +28,7 @@ from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.graph import AdapterConfig, MappingConfig, FusionConfig
 from msmodelslim.model.deepseek_v3.quarot import get_ln_fuse_map, get_rotate_map
-from msmodelslim.quant.processor.quarot import QuaRotInterface
+from msmodelslim.processor.quarot import QuaRotInterface
 from msmodelslim.utils.exception import InvalidModelError
 from msmodelslim.utils.logging import logger_setter, get_logger
 from msmodelslim.utils.security import get_valid_read_path, json_safe_load, MAX_READ_FILE_SIZE_32G
@@ -136,8 +136,8 @@ class DeepSeekV32ModelAdapter(TransformersModel,
 
             return auto_module
 
-        hidden_states, residual = args
-        hidden_states = model.model.norm(hidden_states)
+        pre_hidden_states, residual = args
+        hidden_states = model.model.norm(pre_hidden_states)
         logits = wrap_device(model.lm_head)(hidden_states)
         logits = logits.float()
 
@@ -156,7 +156,7 @@ class DeepSeekV32ModelAdapter(TransformersModel,
 
         input_embeds_mtp = wrap_device(mtp_decoder.embed_tokens)(input_ids_mtp)
         input_embeds_mtp = wrap_device(mtp_decoder.enorm)(input_embeds_mtp)
-        hidden_states_mtp = wrap_device(mtp_decoder.hnorm)(hidden_states)
+        hidden_states_mtp = wrap_device(mtp_decoder.hnorm)(pre_hidden_states)
         hidden_states_mtp = torch.cat([input_embeds_mtp, hidden_states_mtp], dim=-1)
         hidden_states_mtp = wrap_device(mtp_decoder.eh_proj)(hidden_states_mtp)
 

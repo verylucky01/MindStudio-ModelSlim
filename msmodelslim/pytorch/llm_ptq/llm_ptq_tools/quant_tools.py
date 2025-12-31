@@ -417,7 +417,7 @@ class Calibrator(object):
                 quant_name_set.add(name)
             elif isinstance(module, nn.Conv2d):
                 conv_name_list.append(name)
-                quant_name_set.add(name)
+                conv_name_set.add(name)
             elif is_attn_module_and_then_check_quantizer(module, name):
                 attn_name_list.append(name)
                 attn_name_set.add(name)

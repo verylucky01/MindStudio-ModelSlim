@@ -20,7 +20,7 @@ import tempfile
 import pytest
 import torch
 
-from msmodelslim.quant.ir import W8A8StaticFakeQuantLinear, W8A8DynamicPerChannelFakeQuantLinear, \
+from msmodelslim.ir import W8A8StaticFakeQuantLinear, W8A8DynamicPerChannelFakeQuantLinear, \
     W8A8DynamicPerGroupFakeQuantLinear, W8A8PDMixFakeQuantLinear, W8A8MXDynamicPerBlockFakeQuantLinear
 from .base import FakeLlamaModelAdapter, is_npu_available, invoke_test
 from .utils import run_fake_quantization_test, check_w8a8_static_export, check_w8a8_dynamic_per_channel_export, \

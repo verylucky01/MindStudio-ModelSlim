@@ -22,8 +22,8 @@ import torch.multiprocessing as mp
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.runner.layer_wise_runner import LayerWiseRunner
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
-from msmodelslim.quant.processor import AutoProcessorConfig
-from msmodelslim.quant.processor.base import AutoSessionProcessor
+from msmodelslim.processor import AutoProcessorConfig
+from msmodelslim.processor.base import AutoSessionProcessor
 from msmodelslim.utils.distributed import find_free_port, setup_distributed
 from msmodelslim.utils.logging import logger_setter, get_logger
 from msmodelslim.core.runner.generated_runner import get_input_datas
@@ -67,8 +67,8 @@ class DPLayerWiseRunner(LayerWiseRunner):
         Returns:
             Converted processor configuration (or original if no conversion needed)
         """
-        from msmodelslim.app.quant_service.modelslim_v1.save.ascendv1 import AscendV1Config
-        from msmodelslim.app.quant_service.modelslim_v1.save.ascendv1_distributed import DistributedAscendV1Config
+        from msmodelslim.core.quant_service.modelslim_v1.save.ascendv1 import AscendV1Config
+        from msmodelslim.core.quant_service.modelslim_v1.save.ascendv1_distributed import DistributedAscendV1Config
         if isinstance(processor_cfg, AscendV1Config) and not isinstance(processor_cfg, DistributedAscendV1Config):
             # Convert to DistributedAscendV1Config
             distributed_cfg = DistributedAscendV1Config(

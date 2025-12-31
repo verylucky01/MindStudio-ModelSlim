@@ -172,7 +172,12 @@ class DitCacheSearcher:
             use_cache=True,
         )
         video_paths = self.generate_videos(config, self.pipeline)
-        return self.cal_videos_mse(baseline_paths, video_paths)
+        mean_mse = [None]
+        if get_local_rank() == 0:
+            mean_mse[0] = self.cal_videos_mse(baseline_paths, video_paths)
+        if dist.is_initialized():
+            dist.broadcast_object_list(mean_mse, src=0)
+        return mean_mse[0]
 
     def search(self):
         # 主进度条
@@ -191,17 +196,20 @@ class DitCacheSearcher:
         if avail_step <= 0:
             raise ValueError(
                 f"Cache ratio not possible with cache start step list: {cache_start_step_list}. "
-                f"Cache ratio may be too large, num sampling steps may be too small, or cache step interval may be too"
-                f"small."
+                f"Num sampling steps is too small!"
             )
         min_l = int((
                             self.config.dit_block_num * start +
-                            self.config.dit_block_num * avail_step // self.config.cache_step_interval +
-                            self.config.dit_block_num * avail_step // self.config.cache_step_interval -
+                            2 * self.config.dit_block_num * avail_step // self.config.cache_step_interval -
                             self.config.dit_block_num * self.config.num_sampling_steps * ratio) / (
                             avail_step // self.config.cache_step_interval)) - 1
-
         logger_debug(f"min_l: {min_l}")
+        if min_l > self.config.dit_block_num:
+            raise ValueError(
+                f"Cache ratio not possible with cache start step list: {cache_start_step_list}. "
+                f"Cache ratio may be too large, num sampling steps may be too small, or cache step interval may be too "
+                f"small."
+            )
 
         # 3. 在最小cache情况下（生成质量最高），选择质量前三的block start
         ## 第一阶段进度条

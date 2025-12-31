@@ -19,7 +19,7 @@ from typing import Optional, List, Any
 from torch import nn
 
 from msmodelslim.core.const import DeviceType
-from msmodelslim.quant.processor import AutoProcessorConfig
+from msmodelslim.processor import AutoProcessorConfig
 
 
 class BaseRunner:

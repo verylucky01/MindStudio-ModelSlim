@@ -19,3 +19,17 @@ from .path import (
     SafeWriteUmask,
     set_file_stat
 )
+from .shell import (
+    validate_safe_identifier,
+    sanitize_extra_args,
+    build_safe_command,
+    build_safe_command_with_options,
+    ShellRunner,
+    AsyncProcess
+)
+from .request import (
+    validate_safe_host,
+    validate_safe_endpoint,
+    build_safe_url,
+    safe_get
+)

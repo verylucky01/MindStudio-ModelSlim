@@ -20,7 +20,7 @@ from collections import namedtuple
 import pytest
 import torch
 
-from msmodelslim.quant.ir import W4A4DynamicPerGroupFakeQuantLinear, W4A4DynamicPerChannelFakeQuantLinear, \
+from msmodelslim.ir import W4A4DynamicPerGroupFakeQuantLinear, W4A4DynamicPerChannelFakeQuantLinear, \
                                  W8A8DynamicPerChannelFakeQuantLinear, W4A4MXDynamicPerBlockFakeQuantLinear
 from .base import FakeLlamaModelAdapter, invoke_test, is_npu_available
 from .utils import run_fake_quantization_test, check_w4a4_dynamic_per_group_export, \

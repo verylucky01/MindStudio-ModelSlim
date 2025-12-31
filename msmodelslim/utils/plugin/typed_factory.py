@@ -4,8 +4,8 @@
 
 使用示例:
     from msmodelslim.utils.plugin.typed_factory import TypedFactory
-    from msmodelslim.app.quant_service.interface import QuantServiceConfig
-    from msmodelslim.app.quant_service import IQuantService
+    from msmodelslim.core.quant_service.interface import QuantServiceConfig
+    from msmodelslim.core.quant_service import IQuantService
     
     # 创建工厂实例（使用泛型指定返回类型）
     factory = TypedFactory[IQuantService](
@@ -34,8 +34,8 @@ class TypedFactory(Generic[T]):
     
     使用示例:
         from msmodelslim.utils.plugin.typed_factory import TypedFactory
-        from msmodelslim.app.quant_service.interface import QuantServiceConfig
-        from msmodelslim.app.quant_service import IQuantService
+        from msmodelslim.core.quant_service.interface import QuantServiceConfig
+        from msmodelslim.core.quant_service import IQuantService
         
         # 创建工厂实例（使用泛型指定返回类型）
         factory = TypedFactory[IQuantService](

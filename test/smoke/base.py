@@ -26,7 +26,7 @@ from transformers import PretrainedConfig, PreTrainedTokenizerBase
 
 from msmodelslim.core.const import DeviceType
 from msmodelslim.model.qwen3.model_adapter import Qwen3ModelAdapter
-from msmodelslim.quant.processor.kv_smooth import KVSmoothFusedUnit, KVSmoothFusedType
+from msmodelslim.processor.kv_smooth import KVSmoothFusedUnit, KVSmoothFusedType
 
 
 @lru_cache(maxsize=1)
@@ -109,7 +109,7 @@ def invoke_test(config_name: str, model_save_path: str, device: str = 'cpu', off
         with (patch(
                 "msmodelslim.model.plugin_factory.entry_points"
         ) as mock_entry_points, patch(
-                "msmodelslim.app.quant_service.modelslim_v1.save.ascendv1.copy_files"
+                "msmodelslim.core.quant_service.modelslim_v1.save.ascendv1.copy_files"
         ) as mock_copy_files, patch(
                 "msmodelslim.model.plugin_factory.DependencyChecker.check_plugin"
         ) as mock_check_plugin):
@@ -118,7 +118,7 @@ def invoke_test(config_name: str, model_save_path: str, device: str = 'cpu', off
             mock_check_plugin.return_value = None
 
             # 获取原始的quantize方法
-            from msmodelslim.app.quant_service.proxy import QuantServiceProxy
+            from msmodelslim.core.quant_service.proxy import QuantServiceProxy
             original_quantize = QuantServiceProxy.quantize
 
             # 创建包装函数来捕获model_adapter但不影响原始流程

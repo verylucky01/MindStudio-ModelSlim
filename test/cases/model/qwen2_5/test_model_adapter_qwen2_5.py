@@ -7,7 +7,7 @@ import torch.nn as nn
 
 from msmodelslim.core.const import DeviceType
 from msmodelslim.model.qwen2_5.model_adapter import Qwen25ModelAdapter
-from msmodelslim.quant.processor.kv_smooth import KVSmoothFusedType, KVSmoothFusedUnit
+from msmodelslim.processor.kv_smooth import KVSmoothFusedType, KVSmoothFusedUnit
 from msmodelslim.utils.exception import InvalidModelError
 
 

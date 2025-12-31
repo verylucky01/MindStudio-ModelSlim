@@ -44,5 +44,7 @@ spec:
       - 'model.layers.26.mlp.down_proj'
       - 'model.layers.27.mlp.down_proj'
   calib_dataset: boolq.jsonl
+  calib_save_params:
+    part_file_size: 4
 
     

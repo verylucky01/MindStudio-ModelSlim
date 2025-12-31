@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Generator
 
-from msmodelslim.app.practice.interface import PracticeConfig
+from msmodelslim.core.practice import PracticeConfig
 
 
 class PracticeManagerInfra(ABC):

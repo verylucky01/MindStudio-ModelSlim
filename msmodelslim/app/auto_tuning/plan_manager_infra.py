@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel, SerializeAsAny
 
-from msmodelslim.app.tune_strategy import StrategyConfig
+from msmodelslim.core.tune_strategy import StrategyConfig
 from .evaluation_service_infra import EvaluateServiceConfig
 
 
