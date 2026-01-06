@@ -34,14 +34,14 @@ spec:
         - type: "linear_quant"
           qconfig: *default_w8a8_dynamic
           include: ["*self_attn*"]
+          exclude: ["*self_attn.o_proj*"]
         - type: "linear_quant"
           qconfig: *default_w8a8_dynamic
-          include: ["*mlp*"]
-          exclude: ["*mlp.shared_expert_gate*", "*mlp.gate*"]
+          include: ["*mlp.experts*"]
         - type: "linear_quant"
           qconfig: *default_w8a8_dynamic
-          include: ["*linear_attn.in_proj_ba*", "*linear_attn.in_proj_qkvz*", "*linear_attn.out_proj*"]
-  calib_dataset: calib_prompt.jsonl
+          include: ["*linear_attn.in_proj_qkvz*"]
+
   save:
     - type: "ascendv1_saver"
       part_file_size: 4
