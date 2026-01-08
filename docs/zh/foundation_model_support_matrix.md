@@ -678,6 +678,14 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
   </thead>
   <tbody>
     <tr>
+        <td rowspan="1"><strong><a href="../../example/multimodal_vlm/Qwen3-VL/README.md">Qwen3-VL系列</a></strong></td>
+        <td>Qwen3-VL-8B-Instruct</td>
+        <td>transformers==4.57.1</td>
+        <td>-</td>
+        <td>-</td>
+        <td>√</td>
+      </tr>
+    <tr>
       <td rowspan="1"><strong><a href="../../example/multimodal_vlm/Qwen3-VL-MoE/README.md">Qwen3-VL-MoE系列</a></strong></td>
       <td>Qwen3-VL-235B-A22B</td>
       <td>transformers==4.57.1, flax</td>
