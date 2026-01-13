@@ -128,6 +128,7 @@ QuaRot算法目前支持以下模型系列：
 | **Qwen3 Dense系列**    | Qwen3-8B<br>Qwen3-14B<br>Qwen3-32B                                                                       | ✓    | ✓    | 支持完整的QuaRot功能，包括基础旋转和在线旋转 |
 | **Qwen3 MOE系列**      | Qwen3-30B<br>Qwen3-235B                                                                                  | ✓    | ✗    | 支持基础旋转功能                  |
 | **DeepSeek-V3/R1系列** | DeepSeek-V3<br>DeepSeek-V3-0324<br>DeepSeek-R1<br>DeepSeek-R1-0528<br>DeepSeek-V3.1<br>DeepSeek-V3.2-Exp | ✓    | ✗    | 支持基础旋转功能                  |
+| **Qwen3-VL系列** | Qwen3-VL-32B | ✓    | ✗    | 支持基础旋转功能                  |
 | **Qwen3-VL-MoE系列** | Qwen3-VL-235B-A22B<br>Qwen3-VL-30B-A3B | ✓    | ✗    | 支持基础旋转功能                  |
 
 **说明**：

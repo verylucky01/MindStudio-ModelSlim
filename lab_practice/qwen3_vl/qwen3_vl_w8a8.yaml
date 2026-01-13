@@ -1,7 +1,7 @@
 # Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 apiversion: multimodal_vlm_modelslim_v1
 metadata:
-  config_id: qwen3_vl_moe_w8a8
+  config_id: qwen3_vl_w8a8
   score: 90
   verified_model_types:
     - Qwen3-VL-32B-Instruct

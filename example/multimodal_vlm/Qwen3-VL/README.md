@@ -2,12 +2,12 @@
 
 ## 模型介绍
 
-- [Qwen3-VL](https://github.com/QwenLM/Qwen3-VL) 是Qwen推出的视觉-语言模型，这一代在各个方面都进行了全面升级：更优秀的文本理解和生成、更深入的视觉感知和推理、扩展的上下文长度、增强的空间和视频动态理解能力，以及更强的代理交互能力。
+  [Qwen3-VL](https://github.com/QwenLM/Qwen3-VL) 是Qwen推出的视觉-语言模型，这一代在各个方面都进行了全面升级：更优秀的文本理解和生成、更深入的视觉感知和推理、扩展的上下文长度、增强的空间和视频动态理解能力，以及更强的代理交互能力。
 
 
 ## 环境配置
 
-- 基础环境配置请参考[安装指南](../../../docs/安装指南.md)，注意：由于高版本transformers的特殊性，PyTorch及torch_npu需要配置安装为≥2.2版本
+- 基础环境配置请参考[安装指南](../../../docs/zh/install_guide.md)，注意：由于高版本transformers的特殊性，PyTorch及torch_npu需要配置安装为≥2.2版本。
 - 针对 Qwen3-VL，transformers 版本需要 4.57.1：
   ```bash
   pip install transformers==4.57.1
@@ -18,10 +18,10 @@
 | 模型       | 原始浮点权重 | 量化方式 | 推理框架支持情况| 量化命令 |
 |------------|-------------|---------|----------------|---------|
 | Qwen3-VL-8B-Instruct | [Qwen3-VL-8B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct) | W8A8SC量化 | MindIE 预计3.0.RC1版本支持<br>vLLM Ascend 当前不支持 | [W8A8SC量化](#qwen3-vl-w8a8sc) |
+| Qwen3-VL-32B-Instruct | [Qwen3-VL-32B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct) | W8A8量化 | MindIE 预计3.0.RC1版本支持<br>vLLM Ascend v0.13.0及之后版本支持 | [W8A8量化](#qwen3-vl-w8a8) |
 
-## 生成量化权重
-
-- 量化权重统一使用[quant_qwen3vl.py](./quant_qwen3vl.py)脚本生成，以下提供Qwen3-VL-8B-Instruct模型量化权重生成快速启动命令。
+**说明：**
+  点击量化命令列中的链接可跳转到对应的具体量化命令。
 
 ### 使用案例
 - 如果需要使用NPU多卡量化，请先配置多卡环境变量（Atlas 300I Duo 系列产品不支持多卡量化）：
@@ -29,7 +29,7 @@
   export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
   export PYTORCH_NPU_ALLOC_CONF=expandable_segments:False
   ```
-- 若加载自定义模型，调用`from_pretrained`函数时要指定`trust_remote_code=True`，让修改后的自定义代码文件能够正确地被加载。（请确保加载的自定义代码文件的安全性）
+- 若加载自定义模型，调用`from_pretrained`函数时要指定`trust_remote_code=True`，让修改后的自定义代码文件能够正确地被加载（请确保加载的自定义代码文件的安全性）。
   
 
 #### 1. Qwen3-VL系列
@@ -57,8 +57,7 @@ Atlas 300I DUO 使用以下方法稀疏量化
   ```
 - 权重压缩
 
-  **注意**：权重压缩需要先安装MindIE
-  - 参考[MindIE-LLM安装指南](https://gitcode.com/Ascend/MindIE-LLM/blob/master/docs/zh/user_guide/installation_guide.md)
+  **注意**：权重压缩需要先安装MindIE，具体可参见[《MindIE-LLM安装指南》](https://gitcode.com/Ascend/MindIE-LLM/blob/master/docs/zh/user_guide/installation_guide.md)
   ```shell
   # TP数为tensor parallel并行个数
   export IGNORE_INFER_ERROR=1
@@ -87,5 +86,19 @@ Atlas 300I DUO 使用以下方法稀疏量化
 | sigma_factor | sigma功能中sigma的系数 | 3.0 | 数据类型为float，默认值为3.0，取值范围为[1.0, 3.0]。<br>说明：仅当use_sigma为True时生效。 |
 | torch_dtype | 设置加载权重的数据类型 | bf16 | 可选值：['bf16', 'fp16']。默认值为bf16。 |
 
-- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/QuantConfig.md)
-  以及量化参数配置类 [Calibrator](../../../docs/接口说明/Python-API接口说明/大模型压缩接口/大模型量化接口/PyTorch/Calibrator.md)
+- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
+  以及量化参数配置类 [Calibrator](../../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)。
+
+##### <span id="qwen3-vl-w8a8">1.2 Qwen3-VL-32B-Instruct W8A8量化</span>
+
+该模型的量化已经集成至[一键量化](../../../docs/zh/feature_guide/quick_quantization/usage.md#参数说明)。
+
+```shell
+msmodelslim quant \
+    --model_path /path/to/qwen3_vl_float_weights \
+    --save_path /path/to/qwen3_vl_quantized_weights \
+    --device npu \
+    --model_type Qwen3-VL-32B-Instruct \
+    --quant_type w8a8 \
+    --trust_remote_code True
+```
