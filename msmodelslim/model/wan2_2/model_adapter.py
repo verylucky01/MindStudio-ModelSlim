@@ -27,7 +27,8 @@ import random
 import sys
 import time
 from pathlib import Path
-from typing import Optional, Dict, Any, Tuple, Generator, List
+from typing import Optional, Dict, Any, Tuple, Generator, List, Callable
+from importlib import import_module
 
 import torch
 from torch import nn, distributed as dist
@@ -40,8 +41,9 @@ from msmodelslim.model.common.layer_wise_forward import TransformersForwardBreak
     generated_decoder_layer_visit_func_with_keyword
 from msmodelslim.utils.cache import to_device
 from msmodelslim.utils.exception import InvalidModelError, SchemaValidateError, UnsupportedError
-from msmodelslim.utils.logging import logger_setter
-from ..interface_hub import ModelInfoInterface, MultimodalSDPipelineInterface
+from msmodelslim.utils.logging import logger_setter, get_logger
+from msmodelslim.processor.quant.fa3.interface import FA3QuantAdapterInterface, FA3QuantPlaceHolder
+from ..interface_hub import ModelInfoInterface, MultimodalSDPipelineInterface, OnlineQuaRotInterface
 
 MAX_RECURSION_DEPTH = 20
 
@@ -79,6 +81,8 @@ TASK_CONFIGS = {
 class Wan2Point2Adapter(BaseModelAdapter,
                         ModelInfoInterface,
                         MultimodalSDPipelineInterface,
+                        FA3QuantAdapterInterface,
+                        OnlineQuaRotInterface,
                         ):
     def __init__(self,
                  model_type: str,
@@ -104,11 +108,11 @@ class Wan2Point2Adapter(BaseModelAdapter,
 
     def init_model(self, device: DeviceType = DeviceType.NPU) -> Dict[str, nn.Module]:
         if "ti2v" in self.model_args.task:
-            return {'quant_weights_anti': self.transformer}
+            return {'': self.transformer}
         else:
             return {
-                'quant_weights_anti_low': self.low_noise_model,
-                'quant_weights_anti_high': self.high_noise_model
+                'low_noise_model': self.low_noise_model,
+                'high_noise_model': self.high_noise_model
             }
 
     def generate_model_forward(self, model: torch.nn.Module,
@@ -559,19 +563,9 @@ class Wan2Point2Adapter(BaseModelAdapter,
             default=False,
             help="Whether to convert model paramerters dtype.")
         parser.add_argument(
-            "--quant_mode",
-            type=int,
-            default=0,
-            choices=[0, 1, 2, 3],
-            help="Quantization mode: "
-                 "0: Do not use quantized model for inference, "
-                 "1: Export calibration data, "
-                 "2: Export quantized model, "
-                 "3: Use quantized model for inference.")
-        parser.add_argument(
-            "--quant_data_dir",
+            "--quant_dit_path",
             type=str,
-            default="./output/quant_data",
+            default=None,
             help="Path for calibration data or weight export.")
         parser = self._add_attentioncache_args(parser)
         parser = self._add_rainfusion_args(parser)
@@ -691,7 +685,7 @@ class Wan2Point2Adapter(BaseModelAdapter,
             self.wan_t2v = wan.WanT2V(
                 config=cfg,
                 checkpoint_dir=args.ckpt_dir,
-                quant_data_dir=args.quant_data_dir,
+                quant_dit_path=args.quant_dit_path,
                 device_id=device,
                 rank=rank,
                 t5_fsdp=args.t5_fsdp,
@@ -699,8 +693,7 @@ class Wan2Point2Adapter(BaseModelAdapter,
                 use_sp=(args.ulysses_size > 1 or args.ring_size > 1),
                 t5_cpu=args.t5_cpu,
                 convert_model_dtype=args.convert_model_dtype,
-                use_vae_parallel=args.vae_parallel,
-                quant_mode=args.quant_mode
+                use_vae_parallel=args.vae_parallel
             )
 
             transformer_low = self.wan_t2v.low_noise_model
@@ -760,7 +753,7 @@ class Wan2Point2Adapter(BaseModelAdapter,
             self.wan_ti2v = wan.WanTI2V(
                 config=cfg,
                 checkpoint_dir=args.ckpt_dir,
-                quant_data_dir=args.quant_data_dir,
+                quant_dit_path=args.quant_dit_path,
                 device_id=device,
                 rank=rank,
                 t5_fsdp=args.t5_fsdp,
@@ -768,8 +761,7 @@ class Wan2Point2Adapter(BaseModelAdapter,
                 use_sp=(args.ulysses_size > 1),
                 t5_cpu=args.t5_cpu,
                 convert_model_dtype=args.convert_model_dtype,
-                use_vae_parallel=args.vae_parallel,
-                quant_mode=args.quant_mode
+                use_vae_parallel=args.vae_parallel
             )
 
             transformer = self.wan_ti2v.model
@@ -812,7 +804,7 @@ class Wan2Point2Adapter(BaseModelAdapter,
             self.wan_i2v = wan.WanI2V(
                 config=cfg,
                 checkpoint_dir=args.ckpt_dir,
-                quant_data_dir=args.quant_data_dir,
+                quant_dit_path=args.quant_dit_path,
                 device_id=device,
                 rank=rank,
                 t5_fsdp=args.t5_fsdp,
@@ -820,8 +812,7 @@ class Wan2Point2Adapter(BaseModelAdapter,
                 use_sp=(args.ulysses_size > 1 or args.ring_size > 1),
                 t5_cpu=args.t5_cpu,
                 convert_model_dtype=args.convert_model_dtype,
-                use_vae_parallel=args.vae_parallel,
-                quant_mode=args.quant_mode
+                use_vae_parallel=args.vae_parallel
             )
 
             transformer_low = self.wan_i2v.low_noise_model
@@ -875,3 +866,279 @@ class Wan2Point2Adapter(BaseModelAdapter,
 
             self.low_noise_model = self.wan_i2v.low_noise_model
             self.high_noise_model = self.wan_i2v.high_noise_model
+
+    # ===== OnlineQuaRotInterface =====
+    def get_online_rotation_configs(self, model: Optional[nn.Module] = None):
+        """
+        返回在线旋转配置，配置 q_rot 和 k_rot 为旋转矩阵替换。
+        
+        如果提供了 model，会在此方法中直接给 WanSelfAttention 和 WanCrossAttention 挂载 q_rot 和 k_rot Identity 模块。
+        
+        Args:
+            model: 可选的模型实例，如果提供，会在此方法中挂载 Identity 模块
+        
+        Returns:
+            Dict[str, RotationConfig]: 模块名到旋转配置的映射
+        """
+        configs = {}
+        
+        # 如果提供了 model，直接挂载 Identity 模块
+        if model is not None:
+            for name, module in model.named_modules():
+                module_type = module.__class__.__name__
+                
+                # 只处理目标模块类型
+                if module_type not in ["WanSelfAttention", "WanCrossAttention"]:
+                    continue
+                
+                try:
+                    # 创建并挂载 q_rot 和 k_rot Identity 模块
+                    if not hasattr(module, 'q_rot'):
+                        module.register_module('q_rot', nn.Identity())
+                    if not hasattr(module, 'k_rot'):
+                        module.register_module('k_rot', nn.Identity())
+                    get_logger().debug(f"Registered q_rot and k_rot Identity modules for {name}")
+                except Exception as e:
+                    get_logger().warning(f"Failed to register rotation modules for {name}: {str(e)}")
+        
+        # 配置旋转，q_rot 和 k_rot 使用相同的随机数种子，确保生成相同的旋转矩阵
+        shared_seed = 1234  # q_rot 和 k_rot 共享的随机数种子
+        
+        # 遍历模型找到所有目标模块并配置旋转
+        target_model = model if model is not None else getattr(self, 'transformer', None)
+        if target_model is None:
+            # 尝试从其他可能的模型获取
+            if hasattr(self, 'low_noise_model') and self.low_noise_model is not None:
+                target_model = self.low_noise_model
+            elif hasattr(self, 'high_noise_model') and self.high_noise_model is not None:
+                target_model = self.high_noise_model
+        
+        if target_model is None:
+            get_logger().warning("No model provided and transformer not available, returning empty rotation configs")
+            return configs
+        
+        # 获取 head_dim - 从第一个 attention 模块获取
+        head_dim = None
+        for name, module in target_model.named_modules():
+            if module.__class__.__name__ in ["WanSelfAttention", "WanCrossAttention"]:
+                if hasattr(module, 'head_dim'):
+                    head_dim = module.head_dim
+                    break
+        
+        if head_dim is None:
+            # 尝试从 transformer 配置获取
+            if hasattr(target_model, 'dim') and hasattr(target_model, 'num_heads'):
+                head_dim = target_model.dim // target_model.num_heads
+            else:
+                get_logger().warning("Could not determine head_dim, returning empty rotation configs")
+                return configs
+
+        # 使用全局 head_dim 为所有目标模块配置旋转
+        for name, module in target_model.named_modules():
+            module_type = module.__class__.__name__
+            
+            # 只处理目标模块类型
+            if module_type not in ["WanSelfAttention", "WanCrossAttention"]:
+                continue
+            
+            # 配置 q_rot
+            q_rot_path = f"{name}.q_rot" if name else "q_rot"
+            configs[q_rot_path] = OnlineQuaRotInterface.RotationConfig(
+                rotation_type="replace",
+                rotation_size=head_dim,
+                rotation_mode=OnlineQuaRotInterface.QuaRotMode.HADAMARD,
+                block_size=-1,
+                seed=shared_seed
+            )
+            
+            # 配置 k_rot（使用相同的种子，确保与 q_rot 使用相同的旋转矩阵）
+            k_rot_path = f"{name}.k_rot" if name else "k_rot"
+            configs[k_rot_path] = OnlineQuaRotInterface.RotationConfig(
+                rotation_type="replace",
+                rotation_size=head_dim,
+                rotation_mode=OnlineQuaRotInterface.QuaRotMode.HADAMARD,
+                block_size=-1,
+                seed=shared_seed
+            )
+        
+        return configs
+
+    # ===== FA3QuantAdapterInterface =====
+    def inject_fa3_placeholders(self, root_name: str, root_module: nn.Module, should_inject: Callable[[str], bool]) -> None:
+        """为 Wan 模型的 WanSelfAttention 和 WanCrossAttention 安装 FA3 占位，并包裹 forward 调用这些占位。
+
+        - 在每个目标模块下注入子模块：fa3_q, fa3_k, fa3_v
+        - 包裹其 forward 方法，在计算 Q、K、V 后，依次调用占位：
+            q = self.fa3_q(q)
+            k = self.fa3_k(k)
+            v = self.fa3_v(v)
+        """
+
+        def _wrap_self_attention_forward(module: nn.Module):
+            """包裹 WanSelfAttention 的 forward 方法"""
+            original_forward = module.forward
+            
+            # 动态导入必要的函数
+            # rope_apply 在 wan.modules.model 中定义
+            wan_model_module = import_module(original_forward.__module__)
+            rope_apply = getattr(wan_model_module, 'rope_apply', None)
+            if rope_apply is None:
+                raise ImportError(f"Could not find rope_apply in {original_forward.__module__}")
+            
+            # attention 从 wan.modules.attention 导入（相对导入 .attention）
+            module_parts = original_forward.__module__.rsplit('.', 1)
+            if len(module_parts) == 2:
+                base_module_path = module_parts[0]
+                attention_module_path = base_module_path + '.attention'
+                try:
+                    wan_attention_module = import_module(attention_module_path)
+                    attention = getattr(wan_attention_module, 'attention', None)
+                    if attention is None:
+                        raise AttributeError(f"attention not found in {attention_module_path}")
+                except (ImportError, AttributeError) as e:
+                    raise ImportError(f"Could not import attention from {attention_module_path}: {e}")
+            else:
+                raise ImportError(f"Could not determine attention module path from {original_forward.__module__}")
+
+            def new_forward(
+                    self,
+                    x,
+                    seq_lens,
+                    grid_sizes,
+                    freqs,
+                    args=None,
+                    rainfusion_config=None,
+                    t_idx=None,
+                ):
+                b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
+
+                # query, key, value function
+                def qkv_fn(x):
+                    q = self.norm_q(self.q(x)).view(b, s, n, d)
+                    k = self.norm_k(self.k(x)).view(b, s, n, d)
+                    v = self.v(x).view(b, s, n, d)
+                    return q, k, v
+
+                q, k, v = qkv_fn(x)
+
+                # ===== 应用在线旋转（在 FA3 量化之前）=====
+                if hasattr(self, 'q_rot'):
+                    q = self.q_rot(q)
+                if hasattr(self, 'k_rot'):
+                    k = self.k_rot(k)
+                # ==========================================
+
+                # ===== 插入 FA3 占位 =====
+                if hasattr(self, 'fa3_q'):
+                    q = self.fa3_q(q)
+                if hasattr(self, 'fa3_k'):
+                    k = self.fa3_k(k)
+                if hasattr(self, 'fa3_v'):
+                    v = self.fa3_v(v)
+                # ========================
+
+                x = attention(
+                    q=rope_apply(q, grid_sizes, freqs),
+                    k=rope_apply(k, grid_sizes, freqs),
+                    v=v,
+                    k_lens=seq_lens,
+                    window_size=self.window_size,
+                    rainfusion_config=rainfusion_config,
+                    t_idx=t_idx,
+                )
+
+                # output
+                x = x.flatten(2)
+                x = self.o(x)
+                return x
+
+            module.forward = new_forward.__get__(module, module.__class__)
+
+        def _wrap_cross_attention_forward(module: nn.Module):
+            """包裹 WanCrossAttention 的 forward 方法"""
+            original_forward = module.forward
+            
+            # 动态导入必要的函数
+            # attention 从 wan.modules.attention 导入（相对导入 .attention）
+            module_parts = original_forward.__module__.rsplit('.', 1)
+            if len(module_parts) == 2:
+                base_module_path = module_parts[0]
+                attention_module_path = base_module_path + '.attention'
+                try:
+                    wan_attention_module = import_module(attention_module_path)
+                    attention = getattr(wan_attention_module, 'attention', None)
+                    if attention is None:
+                        raise AttributeError(f"attention not found in {attention_module_path}")
+                except (ImportError, AttributeError) as e:
+                    raise ImportError(f"Could not import attention from {attention_module_path}: {e}")
+            else:
+                raise ImportError(f"Could not determine attention module path from {original_forward.__module__}")
+
+            def new_forward(
+                    self,
+                    x,
+                    context,
+                    context_lens,
+                ):
+                b, n, d = x.size(0), self.num_heads, self.head_dim
+
+                # compute query, key, value
+                q = self.norm_q(self.q(x)).view(b, -1, n, d)
+                k = self.norm_k(self.k(context)).view(b, -1, n, d)
+                v = self.v(context).view(b, -1, n, d)
+
+                # ===== 应用在线旋转（在 FA3 量化之前）=====
+                if hasattr(self, 'q_rot'):
+                    q = self.q_rot(q)
+                if hasattr(self, 'k_rot'):
+                    k = self.k_rot(k)
+                # ==========================================
+
+                # ===== 插入 FA3 占位 =====
+                if hasattr(self, 'fa3_q'):
+                    q = self.fa3_q(q)
+                if hasattr(self, 'fa3_k'):
+                    k = self.fa3_k(k)
+                if hasattr(self, 'fa3_v'):
+                    v = self.fa3_v(v)
+                # ========================
+
+                # compute attention
+                x = attention(q, k, v, k_lens=context_lens)
+
+                # output
+                x = x.flatten(2)
+                x = self.o(x)
+                return x
+
+            module.forward = new_forward.__get__(module, module.__class__)
+
+        # 遍历并注入占位符
+        for name, module in root_module.named_modules():
+            module_type = module.__class__.__name__
+            
+            # 检查是否是目标模块类型
+            if module_type not in ["WanSelfAttention", "WanCrossAttention"]:
+                continue
+            
+            full_name = f"{root_name}.{name}" if root_name else name
+            if not should_inject(full_name):
+                continue
+            
+            if name == "":
+                prefix = ""
+            else:
+                prefix = f"{name}."
+            
+            # 为该模块注入占位符
+            root_module.set_submodule(f"{prefix}fa3_q", FA3QuantPlaceHolder(ratio=0.9999))
+            root_module.set_submodule(f"{prefix}fa3_k", FA3QuantPlaceHolder(ratio=0.9999))
+            root_module.set_submodule(f"{prefix}fa3_v", FA3QuantPlaceHolder(ratio=1.0))
+            
+            # 包裹对应的 forward 方法
+            if module_type == "WanSelfAttention":
+                _wrap_self_attention_forward(module)
+            elif module_type == "WanCrossAttention":
+                _wrap_cross_attention_forward(module)
+            
+            get_logger().info(f"Injected FA3 placeholders for {full_name}")

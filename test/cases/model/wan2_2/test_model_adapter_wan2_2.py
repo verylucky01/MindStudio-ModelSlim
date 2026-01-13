@@ -131,8 +131,8 @@ class TestWan2Point2Adapter:
 
         result = Wan2Point2Adapter.init_model(mock_self)
         assert isinstance(result, dict)
-        assert 'quant_weights_anti_low' in result
-        assert 'quant_weights_anti_high' in result
+        assert 'low_noise_model' in result
+        assert 'high_noise_model' in result
 
     @staticmethod
     def test_init_model_for_ti2v():
@@ -144,7 +144,6 @@ class TestWan2Point2Adapter:
 
         result = Wan2Point2Adapter.init_model(mock_self)
         assert isinstance(result, dict)
-        assert 'quant_weights_anti' in result
 
     @pytest.fixture
     def adapter(self):

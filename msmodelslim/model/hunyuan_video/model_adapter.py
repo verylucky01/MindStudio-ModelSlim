@@ -26,8 +26,9 @@ import re
 import random
 import sys
 import time
+from importlib import import_module
 from pathlib import Path
-from typing import Optional, Dict, Any, Tuple, Generator, List
+from typing import Optional, Dict, Any, Tuple, Generator, List, Callable
 
 import torch
 from torch import nn, distributed as dist
@@ -40,8 +41,9 @@ from msmodelslim.model.common.layer_wise_forward import TransformersForwardBreak
     generated_decoder_layer_visit_func_with_keyword
 from msmodelslim.utils.cache import to_device
 from msmodelslim.utils.exception import InvalidModelError, SchemaValidateError, UnsupportedError
-from msmodelslim.utils.logging import logger_setter
-from ..interface_hub import ModelInfoInterface, MultimodalSDPipelineInterface
+from msmodelslim.utils.logging import logger_setter, get_logger
+from ..interface_hub import ModelInfoInterface, MultimodalSDPipelineInterface, FA3QuantAdapterInterface, FA3QuantPlaceHolder, \
+    OnlineQuaRotInterface
 
 SUPPORTED_TASKS = ['hunyuan_video']
 
@@ -50,6 +52,8 @@ SUPPORTED_TASKS = ['hunyuan_video']
 class HunyuanVideoModelAdapter(BaseModelAdapter,
                           ModelInfoInterface,
                           MultimodalSDPipelineInterface,
+                          FA3QuantAdapterInterface,
+                          OnlineQuaRotInterface,
                           ):
     def __init__(self,
                  model_type: str,
@@ -855,3 +859,402 @@ class HunyuanVideoModelAdapter(BaseModelAdapter,
                 f"Latent channels ({args.latent_channels}) must match the VAE channels ({vae_channels})."
             )
         return args
+
+    # ===== OnlineQuaRotInterface =====
+    def get_online_rotation_configs(self, model: Optional[nn.Module] = None):
+        """
+        返回在线旋转配置，配置 q_rot 和 k_rot 为旋转矩阵替换。
+        
+        如果提供了 model，会在此方法中直接给 MMDoubleStreamBlock 和 MMSingleStreamBlock 挂载 q_rot 和 k_rot Identity 模块。
+        
+        Args:
+            model: 可选的模型实例，如果提供，会在此方法中挂载 Identity 模块
+        
+        Returns:
+            Dict[str, RotationConfig]: 模块名到旋转配置的映射
+        """
+        configs = {}
+        
+        # 如果提供了 model，直接挂载 Identity 模块
+        if model is not None:
+            for name, module in model.named_modules():
+                module_type = module.__class__.__name__
+                
+                # 只处理目标模块类型
+                if module_type not in ["MMDoubleStreamBlock", "MMSingleStreamBlock"]:
+                    continue
+                
+                try:
+                    # 创建并挂载 q_rot 和 k_rot Identity 模块
+                    if not hasattr(module, 'q_rot'):
+                        module.register_module('q_rot', nn.Identity())
+                    if not hasattr(module, 'k_rot'):
+                        module.register_module('k_rot', nn.Identity())
+                    get_logger().debug(f"Registered q_rot and k_rot Identity modules for {name}")
+                except Exception as e:
+                    get_logger().warning(f"Failed to register rotation modules for {name}: {str(e)}")
+        
+        # 配置旋转，q_rot 和 k_rot 使用相同的随机数种子，确保生成相同的旋转矩阵
+        shared_seed = 1234  # q_rot 和 k_rot 共享的随机数种子
+        
+        # 遍历模型找到所有目标模块并配置旋转
+        target_model = model if model is not None else getattr(self, 'transformer', None)
+        if target_model is None:
+            get_logger().warning("No model provided and transformer not available, returning empty rotation configs")
+            return configs
+        
+        # 获取全局 head_dim - 从 transformer 直接获取
+        if not hasattr(target_model, 'hidden_size') or not hasattr(target_model, 'heads_num'):
+            get_logger().warning("Could not determine head_dim from transformer, returning empty rotation configs")
+            return configs
+        
+        head_dim = target_model.hidden_size // target_model.heads_num
+
+        # 使用全局 head_dim 为所有目标模块配置旋转
+        for name, module in target_model.named_modules():
+            module_type = module.__class__.__name__
+            
+            # 只处理目标模块类型
+            if module_type not in ["MMDoubleStreamBlock", "MMSingleStreamBlock"]:
+                continue
+            
+            # 配置 q_rot
+            q_rot_path = f"{name}.q_rot" if name else "q_rot"
+            configs[q_rot_path] = OnlineQuaRotInterface.RotationConfig(
+                rotation_type="replace",
+                rotation_size=head_dim,
+                rotation_mode=OnlineQuaRotInterface.QuaRotMode.HADAMARD,
+                block_size=-1,
+                seed=shared_seed
+            )
+            
+            # 配置 k_rot（使用相同的种子，确保与 q_rot 使用相同的旋转矩阵）
+            k_rot_path = f"{name}.k_rot" if name else "k_rot"
+            configs[k_rot_path] = OnlineQuaRotInterface.RotationConfig(
+                rotation_type="replace",
+                rotation_size=head_dim,
+                rotation_mode=OnlineQuaRotInterface.QuaRotMode.HADAMARD,
+                block_size=-1,
+                seed=shared_seed
+            )
+        
+        return configs
+
+    # ===== FA3QuantAdapterInterface =====
+    def inject_fa3_placeholders(self, root_name: str, root_module: nn.Module, should_inject: Callable[[str], bool]) -> None:
+        """为 HunyuanVideo 模型的 MMDoubleStreamBlock 和 MMSingleStreamBlock 安装 FA3 占位，并包裹 forward 调用这些占位。
+
+        - 在每个目标模块下注入子模块：fa3_q, fa3_k, fa3_v
+        - 包裹其 forward 方法，在计算 Q、K、V 并 cat 后，依次调用占位：
+            q = self.fa3_q(q)
+            k = self.fa3_k(k)
+            v = self.fa3_v(v)
+        """
+
+        def _wrap_double_forward(module: nn.Module):
+            """包裹 MMDoubleStreamBlock 的 forward 方法"""
+            original_forward = module.forward
+            
+            # 动态导入必要的函数
+            hyvideo_double_module = import_module(original_forward.__module__)
+            modulate = hyvideo_double_module.modulate
+            apply_gate = hyvideo_double_module.apply_gate
+            rearrange = hyvideo_double_module.rearrange
+            apply_rotary_emb = hyvideo_double_module.apply_rotary_emb
+            attention = hyvideo_double_module.attention
+            parallel_attention = hyvideo_double_module.parallel_attention
+
+            def new_forward(
+                    self,
+                    img: torch.Tensor,
+                    txt: torch.Tensor,
+                    vec: torch.Tensor,
+                    cu_seqlens_q: Optional[torch.Tensor] = None,
+                    cu_seqlens_kv: Optional[torch.Tensor] = None,
+                    max_seqlen_q: Optional[int] = None,
+                    max_seqlen_kv: Optional[int] = None,
+                    freqs_cis: tuple = None,
+                ) -> Tuple[torch.Tensor, torch.Tensor]:
+                # 从 vec 中提取 modulation 参数
+                (
+                    img_mod1_shift,
+                    img_mod1_scale,
+                    img_mod1_gate,
+                    img_mod2_shift,
+                    img_mod2_scale,
+                    img_mod2_gate,
+                ) = self.img_mod(vec).chunk(6, dim=-1)
+                (
+                    txt_mod1_shift,
+                    txt_mod1_scale,
+                    txt_mod1_gate,
+                    txt_mod2_shift,
+                    txt_mod2_scale,
+                    txt_mod2_gate,
+                ) = self.txt_mod(vec).chunk(6, dim=-1)
+                # Prepare image for attention.
+                img_modulated = self.img_norm1(img)
+                img_modulated = modulate(
+                    img_modulated, shift=img_mod1_shift, scale=img_mod1_scale
+                )
+                img_qkv = self.img_attn_qkv(img_modulated)
+                img_q, img_k, img_v = rearrange(
+                    img_qkv, "B L (K H D) -> K B L H D", K=3, H=self.heads_num
+                )
+                # Apply QK-Norm if needed
+                img_q = self.img_attn_q_norm(img_q).to(img_v)
+                img_k = self.img_attn_k_norm(img_k).to(img_v)
+
+                # Apply RoPE if needed.
+                if freqs_cis is not None:
+                    img_qq, img_kk = apply_rotary_emb(img_q, img_k, freqs_cis, head_first=False)
+                    if not (img_qq.shape == img_q.shape and img_kk.shape == img_k.shape):
+                        raise ValueError(
+                            f"Rotary embedding output shape mismatch. "
+                            f"img_qq shape: {img_qq.shape}, img_q shape: {img_q.shape}, "
+                            f"img_kk shape: {img_kk.shape}, img_k shape: {img_k.shape}"
+                        )
+                    img_q, img_k = img_qq, img_kk
+
+                # Prepare txt for attention.
+                txt_modulated = self.txt_norm1(txt)
+                txt_modulated = modulate(
+                    txt_modulated, shift=txt_mod1_shift, scale=txt_mod1_scale
+                )
+                txt_qkv = self.txt_attn_qkv(txt_modulated)
+                txt_q, txt_k, txt_v = rearrange(
+                    txt_qkv, "B L (K H D) -> K B L H D", K=3, H=self.heads_num
+                )
+                # Apply QK-Norm if needed.
+                txt_q = self.txt_attn_q_norm(txt_q).to(txt_v)
+                txt_k = self.txt_attn_k_norm(txt_k).to(txt_v)
+
+                # Run actual attention.
+                q = torch.cat((img_q, txt_q), dim=1)
+                k = torch.cat((img_k, txt_k), dim=1)
+                v = torch.cat((img_v, txt_v), dim=1)
+                expected_cu_seqlens_q_length = 2 * img.shape[0] + 1
+                if cu_seqlens_q.shape[0] != expected_cu_seqlens_q_length:
+                    raise ValueError(
+                        f"cu_seqlens_q shape mismatch: "
+                        f"cu_seqlens_q.shape:{cu_seqlens_q.shape}, img.shape[0]:{img.shape[0]}"
+                        f"expected first dimension length: {expected_cu_seqlens_q_length}"
+                    )
+
+                # ===== 应用在线旋转（在 FA3 量化之前）=====
+                if hasattr(self, 'q_rot'):
+                    q = self.q_rot(q)
+                if hasattr(self, 'k_rot'):
+                    k = self.k_rot(k)
+                # ==========================================
+
+                # ===== 插入 FA3 占位 =====
+                if hasattr(self, 'fa3_q'):
+                    q = self.fa3_q(q)
+                if hasattr(self, 'fa3_k'):
+                    k = self.fa3_k(k)
+                if hasattr(self, 'fa3_v'):
+                    v = self.fa3_v(v)
+                # ========================
+
+                # attention computation start
+                if not self.hybrid_seq_parallel_attn:
+                    attn = attention(
+                        q,
+                        k,
+                        v,
+                        mode="torch",
+                        cu_seqlens_q=cu_seqlens_q,
+                        cu_seqlens_kv=cu_seqlens_kv,
+                        max_seqlen_q=max_seqlen_q,
+                        max_seqlen_kv=max_seqlen_kv,
+                        batch_size=img_k.shape[0],
+                    )
+                else:
+                    attn = parallel_attention(
+                        self.hybrid_seq_parallel_attn,
+                        q,
+                        k,
+                        v,
+                        img_q_len=img_q.shape[1],
+                        img_kv_len=img_k.shape[1],
+                        cu_seqlens_q=cu_seqlens_q,
+                        cu_seqlens_kv=cu_seqlens_kv
+                    )
+                
+                # attention computation end
+
+                img_attn, txt_attn = attn[:, : img.shape[1]], attn[:, img.shape[1] :]
+
+                # Calculate the img blocks.
+                img = img + apply_gate(self.img_attn_proj(img_attn), gate=img_mod1_gate)
+                img = img + apply_gate(
+                    self.img_mlp(
+                        modulate(
+                            self.img_norm2(img), shift=img_mod2_shift, scale=img_mod2_scale
+                        )
+                    ),
+                    gate=img_mod2_gate,
+                )
+
+                # Calculate the txt blocks.
+                txt = txt + apply_gate(self.txt_attn_proj(txt_attn), gate=txt_mod1_gate)
+                txt = txt + apply_gate(
+                    self.txt_mlp(
+                        modulate(
+                            self.txt_norm2(txt), shift=txt_mod2_shift, scale=txt_mod2_scale
+                        )
+                    ),
+                    gate=txt_mod2_gate,
+                )
+
+                return img, txt
+
+            module.forward = new_forward.__get__(module, module.__class__)
+
+        def _wrap_single_forward(module: nn.Module):
+            """包裹 MMSingleStreamBlock 的 forward 方法"""
+            original_forward = module.forward
+            
+            # 动态导入必要的函数
+            hyvideo_single_module = import_module(original_forward.__module__)
+            modulate = hyvideo_single_module.modulate
+            apply_gate = hyvideo_single_module.apply_gate
+            rearrange = hyvideo_single_module.rearrange
+            apply_rotary_emb = hyvideo_single_module.apply_rotary_emb
+            attention = hyvideo_single_module.attention
+            parallel_attention = hyvideo_single_module.parallel_attention
+
+            def new_forward(
+                    self,
+                    x: torch.Tensor,
+                    vec: torch.Tensor,
+                    txt_len: int,
+                    cu_seqlens_q: Optional[torch.Tensor] = None,
+                    cu_seqlens_kv: Optional[torch.Tensor] = None,
+                    max_seqlen_q: Optional[int] = None,
+                    max_seqlen_kv: Optional[int] = None,
+                    freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+                ) -> torch.Tensor:
+                mod_shift, mod_scale, mod_gate = self.modulation(vec).chunk(3, dim=-1)
+                x_mod = modulate(self.pre_norm(x), shift=mod_shift, scale=mod_scale)
+                qkv, mlp = torch.split(
+                    self.linear1(x_mod), [3 * self.hidden_size, self.mlp_hidden_dim], dim=-1
+                )
+                
+                q, k, v = rearrange(qkv, "B L (K H D) -> K B L H D", K=3, H=self.heads_num)
+
+                # Apply QK-Norm if needed.
+                q = self.q_norm(q).to(v)
+                k = self.k_norm(k).to(v)
+
+                # Apply RoPE if needed.
+                if freqs_cis is not None:
+                    img_q, txt_q = q[:, :-txt_len, :, :], q[:, -txt_len:, :, :]
+                    img_k, txt_k = k[:, :-txt_len, :, :], k[:, -txt_len:, :, :]
+                    img_qq, img_kk = apply_rotary_emb(img_q, img_k, freqs_cis, head_first=False)
+                    if not (img_qq.shape == img_q.shape and img_kk.shape == img_k.shape):
+                        raise ValueError(
+                            f"Rotary embedding output shape mismatch. "
+                            f"img_qq shape: {img_qq.shape}, img_q shape: {img_q.shape}, "
+                            f"img_kk shape: {img_kk.shape}, img_k shape: {img_k.shape}"
+                        )
+                    img_q, img_k = img_qq, img_kk
+                    q = torch.cat((img_q, txt_q), dim=1)
+                    k = torch.cat((img_k, txt_k), dim=1)
+                else:
+                    # 如果 freqs_cis 为 None，需要计算 img_q_len 和 img_kv_len 用于 parallel_attention
+                    img_q_len = q.shape[1] - txt_len
+                    img_kv_len = k.shape[1] - txt_len
+
+                # Compute attention.
+                expected_cu_seqlens_q_length = 2 * x.shape[0] + 1
+                if cu_seqlens_q.shape[0] != expected_cu_seqlens_q_length:
+                    raise ValueError(
+                        f"cu_seqlens_q shape mismatch. "
+                        f"cu_seqlens_q.shape: {cu_seqlens_q.shape}, x.shape[0]: {x.shape[0]}, "
+                        f"expected first dimension length: {expected_cu_seqlens_q_length}"
+                    )
+
+                # ===== 应用在线旋转（在 FA3 量化之前）=====
+                if hasattr(self, 'q_rot'):
+                    q = self.q_rot(q)
+                if hasattr(self, 'k_rot'):
+                    k = self.k_rot(k)
+                # ==========================================
+
+                # ===== 插入 FA3 占位 =====
+                if hasattr(self, 'fa3_q'):
+                    q = self.fa3_q(q)
+                if hasattr(self, 'fa3_k'):
+                    k = self.fa3_k(k)
+                if hasattr(self, 'fa3_v'):
+                    v = self.fa3_v(v)
+                # ========================
+
+                # attention computation start
+                if not self.hybrid_seq_parallel_attn:
+                    attn = attention(
+                        q,
+                        k,
+                        v,
+                        mode="torch",
+                        cu_seqlens_q=cu_seqlens_q,
+                        cu_seqlens_kv=cu_seqlens_kv,
+                        max_seqlen_q=max_seqlen_q,
+                        max_seqlen_kv=max_seqlen_kv,
+                        batch_size=x.shape[0],
+                    )
+                else:
+                    # 如果 freqs_cis 不为 None，使用 img_q 和 img_k 的长度；否则使用计算出的长度
+                    if freqs_cis is not None:
+                        img_q_len_val = img_q.shape[1]
+                        img_kv_len_val = img_k.shape[1]
+                    else:
+                        img_q_len_val = img_q_len
+                        img_kv_len_val = img_kv_len
+                    attn = parallel_attention(
+                        self.hybrid_seq_parallel_attn,
+                        q,
+                        k,
+                        v,
+                        img_q_len=img_q_len_val,
+                        img_kv_len=img_kv_len_val,
+                        cu_seqlens_q=cu_seqlens_q,
+                        cu_seqlens_kv=cu_seqlens_kv
+                    )
+                # attention computation end
+
+                # Compute activation in mlp stream, cat again and run second linear layer.
+                output = self.linear2(torch.cat((attn, self.mlp_act(mlp)), 2))
+                return x + apply_gate(output, gate=mod_gate)
+
+            module.forward = new_forward.__get__(module, module.__class__)
+
+        # 遍历并注入占位符
+        for name, module in root_module.named_modules():
+            module_type = module.__class__.__name__
+            
+            # 检查是否是目标模块类型
+            if module_type not in ["MMDoubleStreamBlock", "MMSingleStreamBlock"]:
+                continue
+            
+            full_name = f"{root_name}.{name}" if root_name else name
+            if not should_inject(full_name):
+                continue
+            if name == "":
+                prefix = ""
+            else:
+                prefix = f"{name}."
+            # 为该模块注入占位符
+            root_module.set_submodule(f"{prefix}fa3_q", FA3QuantPlaceHolder(ratio=0.9999))
+            root_module.set_submodule(f"{prefix}fa3_k", FA3QuantPlaceHolder(ratio=0.9999))
+            root_module.set_submodule(f"{prefix}fa3_v", FA3QuantPlaceHolder(ratio=1.0))
+            
+            # 包裹对应的 forward 方法
+            if module_type == "MMDoubleStreamBlock":
+                _wrap_double_forward(module)
+            elif module_type == "MMSingleStreamBlock":
+                _wrap_single_forward(module)
+            
+            get_logger().info(f"Injected FA3 placeholders for {full_name}")
