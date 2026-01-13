@@ -427,6 +427,20 @@ class AscendV1Saver(AutoSaverProcessor):
         self.write_tensor(prefix + ".offset", "FAQuant", offset)
         self.json_append['fa_quant_type'] = "FAKQuant"
 
+    def on_activation_per_token(self, prefix: str, module: qir.FakeQuantActivationPerToken):
+        # 对于FP8 per-token动态量化，保存quant_type标签
+        from msmodelslim.ir.qal import QDType, QScope
+        if (module.x_q_scheme.dtype == QDType.FP8_E4M3 and 
+            module.x_q_scheme.scope == QScope.PER_TOKEN):
+            # 保存格式为 self_attn.quant_type，而不是 fa3_q.quant_type
+            # 提取父路径，例如 model.layers.0.self_attn.fa3_q -> model.layers.0.self_attn
+            parent_prefix = prefix.rsplit('.', 1)[0]
+            quant_type_key = parent_prefix + ".quant_type"
+
+            self.json_writer.write(quant_type_key, "FP8_DYNAMIC")
+        else:
+            raise SchemaValidateError(f"FakeQuantActivationPerToken Unsupported dtype: {module.x_q_scheme.dtype}")
+
     def on_rotation_wrapper(self, prefix: str, module: qir.QuarotOnlineHeadRotationWrapper):
         """
         处理RotationWrapper类型的模块。

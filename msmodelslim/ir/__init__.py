@@ -44,6 +44,7 @@ __all__ = [
     "QuarotKroneckerRotationHookIR",
     "W16A16sLinear",
     "FakeQuantActivationPerHead",
+    "FakeQuantActivationPerToken",
 
     "int8_per_tensor_sym",
     "int8_per_channel_sym",
@@ -68,6 +69,7 @@ __all__ = [
 ]
 
 from .activation import FakeQuantActivationPerHead
+from .activation_dynamic import FakeQuantActivationPerToken
 from .api.api_main import *
 from .attention import FakeQuantDynamicCache
 from .auto import AutoFakeQuantLinear, AutoFakeQuantActivation, AutoFakeQuantDynamicCache
