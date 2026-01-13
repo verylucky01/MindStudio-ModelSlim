@@ -22,10 +22,11 @@ See the Mulan PSL v2 for more details.
 from typing import List, Any, Optional, Tuple, Dict
 from enum import Enum
 import math
+import random
 import torch
 from torch import nn
 from msmodelslim.utils.exception import UnsupportedError
-
+from msmodelslim.utils.seed import seed_all
 from .hadamard import random_hadamard_matrix
 
 
@@ -62,10 +63,27 @@ def create_rot(mode: QuaRotMode,
                size: int, 
                block_size: int = -1, 
                rot_step: int = 1,
-               eye_step: tuple = (-1,)) -> torch.Tensor:
-    shift = 16
+               eye_step: tuple = (-1,),
+               seed: int = 1234,
+               dtype: torch.dtype = torch.float32) -> torch.Tensor:
+    """
+    创建旋转矩阵。
+    
+    Args:
+        mode: 旋转模式
+        size: 旋转矩阵尺寸
+        block_size: 块大小，默认为-1
+        rot_step: 旋转步数，默认为1
+        eye_step: eye步数，默认为(-1,)
+        seed: 随机数种子，默认为1234
+    
+    Returns:
+        旋转矩阵
+    """
+    # 设置随机数种子
+    seed_all(seed)
     device = torch.device("cpu")
-    dtype = torch.float32
+    shift = 16
 
     if mode == QuaRotMode.HADAMARD:
         if block_size == -1:

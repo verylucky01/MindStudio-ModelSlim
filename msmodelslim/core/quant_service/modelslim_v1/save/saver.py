@@ -114,6 +114,7 @@ class AutoSaverProcessor(AutoSessionProcessor):
             qir.W16A16sLinear: self.on_w16a16s,
             qir.QuarotOnlineHeadRotationWrapper: self.on_rotation_wrapper,
             qir.QuarotOnlineKroneckerRotationWrapper: self.on_kronecker_rotation_wrapper,
+            qir.OnlineRotationWrapper: self.on_online_rotation_wrapper,
             qir.WFP8AFP8DynamicPerChannelFakeQuantLinear: self.on_wfp8afp8_dynamic_per_channel,
         }
 
@@ -288,6 +289,20 @@ class AutoSaverProcessor(AutoSessionProcessor):
 
     def on_w16a16s(self, prefix: str, module: qir.W16A16sLinear):
         raise NotImplementedError(f"You should implement the on_w16a16s method for {self.__class__.__name__}")
+
+    def on_online_rotation_wrapper(self, prefix: str, module: qir.OnlineRotationWrapper):
+        """
+        处理OnlineRotationWrapper类型的模块。
+        
+        OnlineRotationWrapper使用旋转矩阵替换模块，在保存时需要保存旋转矩阵。
+        
+        Args:
+            prefix: 模块名称前缀
+            module: OnlineRotationWrapper模块实例
+        """
+        raise NotImplementedError(
+            f"You should implement the on_online_rotation_wrapper method for {self.__class__.__name__}"
+        )
 
     def _process_module(self, prefix: str, module: nn.Module):
         """

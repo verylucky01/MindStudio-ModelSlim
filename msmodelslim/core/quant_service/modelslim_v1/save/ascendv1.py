@@ -468,6 +468,14 @@ class AscendV1Saver(AutoSaverProcessor):
         self.safetensors_writer.write(f"{prefix}.kronecker_rotation_m", self.quarot_info.kronecker_rotation_m.clone())
         self.safetensors_writer.write(f"{prefix}.kronecker_rotation_n", self.quarot_info.kronecker_rotation_n.clone())
 
+    def on_online_rotation_wrapper(self, prefix: str, module: qir.OnlineRotationWrapper):
+        """
+        处理OnlineRotationWrapper类型的模块。
+        """
+        rotation_matrix = module.rotation_info.rotation_matrix
+        # 保存旋转矩阵，标签为 FLOAT
+        self.write_tensor(f"{prefix}", "FLOAT", rotation_matrix.clone())
+
     def update_quant_type(self, quant_type: str):
         if quant_type not in self.QUANT_TYPE_PRIORITY:
             return

@@ -25,7 +25,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 import torch
 
-from .quarot_utils import QuaRotMode, create_rot
+from ..common.quarot_utils import QuaRotMode, create_rot
 
 
 class RotSide(Enum):
@@ -121,7 +121,7 @@ class QuaRotInterface:
         return [], []
 
 
-class QuaRotOnlineInterface:
+class LAOSOnlineRotationInterface:
     @abstractmethod
     def get_head_dim(self):
         pass

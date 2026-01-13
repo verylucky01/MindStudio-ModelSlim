@@ -29,11 +29,11 @@
 
 ### 实现
 
-算法在 `msmodelslim/processor/quarot/quarot.py` 中实现，处理流程如下：
+算法在 `msmodelslim/processor/quarot/offline_quarot/quarot.py` 中实现，处理流程如下：
 
 **处理流程时序图**
 
-以下时序图展示了QuaRot算法的完整处理流程，包括Runner、QuaRotProcessor、ModelAdapter和QuaRotOnlineProcessor之间的交互：
+以下时序图展示了QuaRot算法的完整处理流程，包括Runner、QuaRotProcessor、ModelAdapter和LAOSOnlineRotationProcessor之间的交互：
 
 ![QuaRot处理流程时序图](figures/quarot_processing_sequence_diagram.png)
 
@@ -134,7 +134,7 @@ QuaRot算法目前支持以下模型系列：
 **说明**：
 
 - **基础旋转**：所有支持的模型都实现了`QuaRotInterface`接口，支持基础旋转功能。
-- **在线旋转**：目前仅Qwen3 Dense系列模型实现了`QuaRotOnlineInterface`接口，支持在线旋转功能。如需使用在线旋转，请配置
+- **在线旋转**：目前仅Qwen3 Dense系列模型实现了`LAOSOnlineRotationInterface`接口，支持在线旋转功能。如需使用在线旋转，请配置
   `online: True`。
 - 对于未实现在线旋转接口的模型，配置`online: True`会导致错误。
 
@@ -180,7 +180,7 @@ spec:
 ### 接口与数据结构
 
 该接口组用于使能模型自主适配QuaRot算法。QuaRot算法包含两个模型适配接口：`QuaRotInterface`（基础旋转接口）和
-`QuaRotOnlineInterface`（在线旋转接口）。如果只需要基础旋转功能，只需实现`QuaRotInterface`；如果需要在线旋转功能，需要同时实现两个接口。
+`LAOSOnlineRotationInterface`（在线旋转接口）。如果只需要基础旋转功能，只需实现`QuaRotInterface`；如果需要在线旋转功能，需要同时实现两个接口。
 
 #### 数据结构
 
@@ -288,11 +288,11 @@ class QuaRotInterface:
         ...
 ```
 
-#### QuaRotOnlineInterface（在线旋转接口）
+#### LAOSOnlineRotationInterface（在线旋转接口）
 
 ```python
 
-class QuaRotOnlineInterface:
+class LAOSOnlineRotationInterface:
     """QuaRot在线旋转接口，用于模型适配在线旋转功能"""
 
     @abstractmethod
@@ -357,8 +357,8 @@ class QuaRotOnlineInterface:
         - 实现`get_rotate_map(block_size)`：返回旋转映射对，包括pre_run和preprocess阶段的旋转配置。
         - 可参考`msmodelslim/model/qwen3/model_adapter.py`或`msmodelslim/model/deepseek_v3/model_adapter.py`的实现。
 
-    2. **实现QuaRotOnlineInterface（可选，仅当需要在线旋转时）**：
-        - 如果配置中`online: True`，需要同时实现`QuaRotOnlineInterface`接口。
+    2. **实现LAOSOnlineRotationInterface（可选，仅当需要在线旋转时）**：
+        - 如果配置中`online: True`，需要同时实现`LAOSOnlineRotationInterface`接口。
         - 实现`get_head_dim()`：返回注意力头的维度。
         - 实现`get_num_attention_heads()`：返回注意力头的数量。
         - 实现`get_layer_wise_ov_pair(decoder_module)`：返回o_proj和v_proj的映射对。
@@ -396,5 +396,5 @@ class QuaRotOnlineInterface:
 - **原因**：模型结构不兼容或适配器实现不完整。
 - **解决方案**：
     - 确保模型基于Transformer decoder架构。
-    - 检查适配器是否正确实现了所有`QuaRotInterface`接口方法（如果启用在线旋转，还需实现`QuaRotOnlineInterface`）。
+    - 检查适配器是否正确实现了所有`QuaRotInterface`接口方法（如果启用在线旋转，还需实现`LAOSOnlineRotationInterface`）。
     - 参考 `msmodelslim/model/qwen3/model_adapter.py` 或 `msmodelslim/model/deepseek_v3/model_adapter.py` 的实现示例。

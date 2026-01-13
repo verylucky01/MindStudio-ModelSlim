@@ -33,8 +33,8 @@ from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.utils.logging import get_logger
 from .quarot_interface import QuaRotInterface, RotSide, get_rotate_command
-from .quarot_online import QuaRotOnlineProcessor
-from .quarot_utils import fuse_ln_linear, rotate_linear, is_power_of_two, bake_mean_into_linear
+from .laos_online import LAOSOnlineRotationProcessor
+from ..common.quarot_utils import fuse_ln_linear, rotate_linear, is_power_of_two, bake_mean_into_linear
 
 
 class QuaRotProcessorConfig(AutoProcessorConfig):
@@ -78,7 +78,7 @@ class QuaRotProcessor(AutoSessionProcessor):
                                    action='Please provide a valid model adapter '
                                           'which implements QuaRotInterface')
         if self.config.online:
-            self.online_processor = QuaRotOnlineProcessor(model, config, adapter)
+            self.online_processor = LAOSOnlineRotationProcessor(model, config, adapter)
 
     def support_distributed(self) -> bool:
         return True

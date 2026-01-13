@@ -29,8 +29,8 @@ import msmodelslim.ir as qir
 from msmodelslim.core.base.protocol import BatchProcessRequest
 from msmodelslim.utils.exception import SchemaValidateError, UnsupportedError
 from msmodelslim.utils.logging import get_logger
-from .quarot_interface import QuaRotOnlineInterface
-from .quarot_utils import get_decompose_dim, online_rotate_o_proj_input, online_rotate_down_proj, QuaRotMode, create_rot
+from .quarot_interface import LAOSOnlineRotationInterface
+from ..common.quarot_utils import get_decompose_dim, online_rotate_o_proj_input, online_rotate_down_proj, QuaRotMode, create_rot
 
 
 def _get_available_device(index: int = 0) -> torch.device:
@@ -87,12 +87,12 @@ def _convert_hookir_to_wrapper(module: nn.Module) -> None:
                     get_logger().info(f"Converted {type(hook)} to wrapper for module: {name}")
 
 
-class QuaRotOnlineProcessor:
-    def __init__(self, model: nn.Module, config, adapter: QuaRotOnlineInterface, **kwargs) -> None:
-        if not isinstance(adapter, QuaRotOnlineInterface):
-            raise UnsupportedError(f'{adapter.__class__.__name__} does not support QuaRotOnlineInterface',
+class LAOSOnlineRotationProcessor:
+    def __init__(self, model: nn.Module, config, adapter: LAOSOnlineRotationInterface, **kwargs) -> None:
+        if not isinstance(adapter, LAOSOnlineRotationInterface):
+            raise UnsupportedError(f'{adapter.__class__.__name__} does not support LAOSOnlineRotationInterface',
                                    action='Please provide a valid model adapter '
-                                          'which implements QuaRotOnlineInterface')
+                                          'which implements LAOSOnlineRotationInterface')
         self.config = config
         self.model = model
         self.adapter = adapter

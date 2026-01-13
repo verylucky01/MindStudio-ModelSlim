@@ -24,12 +24,18 @@ __all__ = [
     'QuaRotProcessor',
     'QuaRotProcessorConfig',
     'QuaRotInterface',
-    'QuaRotOnlineInterface',
+    'LAOSOnlineRotationInterface',
     'RotatePair',
     'create_rot',
     'QuaRotMode',
+    'OnlineQuaRotProcessor',
+    'OnlineQuaRotProcessorConfig',
+    'OnlineQuaRotInterface',
+    'RotationConfig',
 ]
 
-from .quarot import QuaRotProcessor, QuaRotProcessorConfig
-from .quarot_interface import QuaRotInterface, QuaRotOnlineInterface, RotatePair
-from .quarot_utils import create_rot, QuaRotMode
+from .offline_quarot.quarot import QuaRotProcessor, QuaRotProcessorConfig
+from .offline_quarot.quarot_interface import QuaRotInterface, LAOSOnlineRotationInterface, RotatePair
+from .common.quarot_utils import create_rot, QuaRotMode
+from .online_quarot.online_quarot import OnlineQuaRotProcessor, OnlineQuaRotProcessorConfig
+from .online_quarot.online_quarot_interface import OnlineQuaRotInterface, RotationConfig

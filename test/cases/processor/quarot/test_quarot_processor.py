@@ -30,9 +30,9 @@ from resources.fake.qwen3_dense import FakeQwen3Creator
 
 from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.core.base.protocol import BatchProcessRequest
-from msmodelslim.processor.quarot.hadamard import random_hadamard_matrix, walsh_matrix
-from msmodelslim.processor.quarot.quarot import QuaRotProcessorConfig, QuaRotProcessor
-from msmodelslim.processor.quarot.quarot_interface import QuaRotInterface, RotatePair
+from msmodelslim.processor.quarot.common.hadamard import random_hadamard_matrix, walsh_matrix
+from msmodelslim.processor.quarot.offline_quarot.quarot import QuaRotProcessorConfig, QuaRotProcessor
+from msmodelslim.processor.quarot.offline_quarot.quarot_interface import QuaRotInterface, RotatePair
 
 
 @pytest.fixture

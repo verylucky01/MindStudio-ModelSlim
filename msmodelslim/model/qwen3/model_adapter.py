@@ -29,7 +29,7 @@ from msmodelslim.core.graph.adapter_types import AdapterConfig, MappingConfig
 from msmodelslim.processor.kv_smooth import KVSmoothFusedType, KVSmoothFusedUnit
 from msmodelslim.processor.quarot import (
     QuaRotInterface,
-    QuaRotOnlineInterface
+    LAOSOnlineRotationInterface
 )
 from msmodelslim.utils.exception import InvalidModelError
 from msmodelslim.utils.logging import logger_setter, get_logger
@@ -51,7 +51,7 @@ class Qwen3ModelAdapter(TransformersModel,
                         IterSmoothInterface,
                         FlexSmoothQuantInterface,
                         QuaRotInterface,
-                        QuaRotOnlineInterface
+                        LAOSOnlineRotationInterface
                         ):
     def get_model_type(self) -> str:
         return self.model_type

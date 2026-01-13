@@ -304,6 +304,14 @@ class MindIEFormatSaver(AutoSaverProcessor):
             self.json_append[ValidJsonExt.JSON_APPEND] = dict()
         self.json_append[ValidJsonExt.JSON_APPEND]['model_quant_type'] = "W8A8_MXFP8"
 
+    def on_online_rotation_wrapper(self, prefix: str, module: qir.OnlineRotationWrapper):
+        """
+        处理OnlineRotationWrapper类型的模块。
+        """
+        rotation_matrix = module.rotation_info.rotation_matrix
+        # 保存旋转矩阵，标签为 FLOAT
+        self.write_tensor(f"{prefix}", "FLOAT", rotation_matrix.clone())
+
     @save_this_rank_only()
     def on_float_linear(self, prefix: str, module: nn.Linear):
         return self.on_float_module(prefix, module)

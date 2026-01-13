@@ -25,7 +25,7 @@ Test validation logic for QuaRotProcessorConfig
 
 import pytest
 
-from msmodelslim.processor.quarot.quarot import QuaRotProcessorConfig
+from msmodelslim.processor.quarot.offline_quarot.quarot import QuaRotProcessorConfig
 from msmodelslim.utils.exception import SchemaValidateError
 
 

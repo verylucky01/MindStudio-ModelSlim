@@ -53,7 +53,8 @@ __all__ = [
 
     # QuaRot interface
     'QuaRotInterface',  # For QuaRot.
-    'QuaRotOnlineInterface',  # For QuaRotOnline.
+    'LAOSOnlineRotationInterface',  # For LAOS online rotation.
+    'OnlineQuaRotInterface',  # For QuaRotOnline.
 
     # save interface
     'AscendV1SaveInterface',  # For AscendV1 save.
@@ -75,7 +76,7 @@ from msmodelslim.processor.anti_outlier.iter_smooth.interface import IterSmoothI
 from msmodelslim.processor.anti_outlier.smooth_quant.interface import SmoothQuantInterface
 from msmodelslim.processor.kv_smooth import KVSmoothFusedInterface
 from msmodelslim.processor.quant.fa3.interface import FA3QuantPlaceHolder, FA3QuantAdapterInterface
-from msmodelslim.processor.quarot.quarot_interface import QuaRotInterface, QuaRotOnlineInterface
+from msmodelslim.processor.quarot import QuaRotInterface, LAOSOnlineRotationInterface, OnlineQuaRotInterface
 
 
 class AnalyzePipelineInterface(aspi, shpi):
