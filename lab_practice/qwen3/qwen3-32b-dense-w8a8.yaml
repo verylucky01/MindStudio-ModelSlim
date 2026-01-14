@@ -20,6 +20,7 @@ spec:
     disable_names:
       - 'lm_head'
       - 'model.layers.1.mlp.down_proj'
+      - 'model.layers.2.mlp.gate_proj'
       - 'model.layers.2.mlp.down_proj'
       - 'model.layers.6.mlp.down_proj'
       - 'model.layers.7.mlp.down_proj'
