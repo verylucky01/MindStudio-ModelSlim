@@ -200,9 +200,7 @@ class FLUX1ModelAdapter(BaseModelAdapter,
 
     def apply_quantization(self, process_model_func):
         from contextlib import contextmanager
-
-        if hasattr(torch, 'npu') and torch.npu.is_available():
-            import torch.npu.amp as amp
+        import torch.cuda.amp as amp
 
         @contextmanager
         def noop_no_sync():
