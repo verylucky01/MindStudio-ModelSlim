@@ -232,3 +232,64 @@ def safe_get(
         **kwargs
     )
 
+
+def safe_post(
+    url: str,
+    json: dict = None,
+    timeout: float = 10.0,
+    allow_redirects: bool = False,
+    verify: bool = True,
+    **kwargs
+) -> requests.Response:
+    """
+    执行安全的 POST 请求，防止 SSRF 和其他网络攻击。
+    
+    此函数会：
+    - 验证 URL 的安全性（scheme、hostname）
+    - 使用安全配置（禁用重定向、验证 SSL、设置超时）
+    - 提供详细的错误处理
+    
+    Args:
+        url: 请求的 URL（应该已经通过 build_safe_url 构建）
+        json: 要发送的 JSON 数据
+        timeout: 请求超时时间（秒），默认 10.0
+        allow_redirects: 是否允许重定向，默认 False（防止重定向攻击）
+        verify: 是否验证 SSL 证书，默认 True
+        **kwargs: 其他 requests.post() 的参数
+        
+    Returns:
+        requests.Response 对象
+        
+    Raises:
+        SecurityError: 如果 URL 不安全
+        requests.RequestException: 请求相关的异常
+    """
+    # 验证 URL 的基本安全性
+    parsed = urlparse(url)
+    
+    # 验证 scheme
+    if parsed.scheme not in ('http', 'https'):
+        raise SecurityError(
+            f"Invalid URL scheme: {parsed.scheme}",
+            action="Only http and https schemes are allowed."
+        )
+    
+    # 验证 hostname（如果 URL 不是通过 build_safe_url 构建的）
+    if parsed.hostname:
+        try:
+            validate_safe_host(parsed.hostname, field_name="URL hostname")
+        except SecurityError as e:
+            raise SecurityError(
+                f"URL hostname '{parsed.hostname}' is not safe: {e}",
+                action="Please use build_safe_url() to construct URLs."
+            ) from e
+    
+    # 执行请求，使用安全配置
+    return requests.post(
+        url,
+        json=json,
+        timeout=timeout,
+        allow_redirects=allow_redirects,
+        verify=verify,
+        **kwargs
+    )

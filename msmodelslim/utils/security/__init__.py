@@ -50,5 +50,6 @@ from .request import (
     validate_safe_host,
     validate_safe_endpoint,
     build_safe_url,
-    safe_get
+    safe_get,
+    safe_post
 )

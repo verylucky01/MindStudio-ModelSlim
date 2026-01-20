@@ -24,13 +24,14 @@ import re
 import shlex
 import time
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any, Union
 from typing import Dict, Literal, List, Optional
 
-from pydantic import BaseModel, Field, AfterValidator
+from pydantic import BaseModel, Field, AfterValidator, field_validator
 
 from msmodelslim.app.auto_tuning.evaluation_service_infra import EvaluateContext
 from msmodelslim.core.tune_strategy import EvaluateAccuracy
+from msmodelslim.infra.evaluation.precheck import model_output_precheck
 from msmodelslim.utils.exception import SpecError
 from msmodelslim.utils.logging import get_logger
 from msmodelslim.utils.plugin import TypedConfig
@@ -106,6 +107,47 @@ class AisbenchServerConfig(BaseModel):
     host: Annotated[str, AfterValidator(is_safe_host)] = "localhost"
     port: Annotated[int, AfterValidator(is_port)] = 1234
     served_model_name: str = Field(default='served_model_name', description="已部署的模型名称")
+    precheck: Optional[List[Dict[str, Any]]] = Field(
+        default_factory=list, 
+        description="模型预检配置列表，每个元素是一个字典，包含 'type' 字段（'garbled_text' 或 'expected_answer'）"
+    )
+    
+    @field_validator('precheck', mode='before')
+    @classmethod
+    def parse_precheck(cls, v: Any) -> List[Dict[str, Any]]:
+        """
+        解析预检查配置。
+        
+        支持列表格式，每个元素是一个字典，包含 'type' 字段。
+        如果传入单个字典（包含 'type' 字段），会自动转换为列表。
+        类型验证由 TypedConfig 的验证机制自动处理，如果类型不存在会抛出异常。
+        """
+        if v is None:
+            return []
+        
+        config_list = []
+        
+        # 如果是列表，验证每个元素
+        if isinstance(v, list):
+            config_list = v
+        # 如果是字典且包含 'type' 字段，转换为列表
+        elif isinstance(v, dict) and 'type' in v:
+            config_list = [v]
+        else:
+            # 其他情况，返回空列表
+            get_logger().warning(
+                f"Invalid precheck config format: {type(v)}. "
+                "Expected a list of dicts with 'type' field or a single dict with 'type' field. "
+                "Using empty list."
+            )
+            return []
+        
+        # 验证每个配置项的基本格式
+        for config_dict in config_list:
+            if not isinstance(config_dict, dict):
+                raise ValueError(f"Invalid precheck config item: expected dict, got {type(config_dict)}")
+        
+        return config_list
 
 
 class AisBenchServer:
@@ -139,6 +181,7 @@ class AisBenchServer:
         self.model_config_name: str = ""
         self.model_config_path: Path = Path()
 
+    @model_output_precheck
     def run(self) -> List[EvaluateAccuracy]:
         results: List[EvaluateAccuracy] = []
         if not self.datasets:

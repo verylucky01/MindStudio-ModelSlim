@@ -26,7 +26,7 @@ from pydantic import AfterValidator, BaseModel
 from msmodelslim.app.auto_tuning import EvaluateServiceInfra, EvaluateServiceConfig
 from msmodelslim.app.auto_tuning.evaluation_service_infra import EvaluateContext
 from msmodelslim.core.tune_strategy import EvaluateResult, EvaluateAccuracy, AccuracyExpectation
-from msmodelslim.infra.aisbench_server import AisBenchServer, AisbenchServerConfig
+from msmodelslim.infra.evaluation.aisbench_server import AisBenchServer, AisbenchServerConfig
 from msmodelslim.infra.vllm_ascend_server import VllmAscendServer, VllmAscendConfig
 from msmodelslim.utils.exception import SpecError
 from msmodelslim.utils.logging import logger_setter

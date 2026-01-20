@@ -104,5 +104,13 @@ setup(
         "msmodelslim.evaluate_config.plugins": [
             "service_oriented=msmodelslim.infra.service_oriented_evaluate_service:ServiceOrientedEvaluateServiceConfig",
         ],
+        "msmodelslim.precheck_config.plugins": [
+            "garbled_text=msmodelslim.infra.evaluation.precheck.garbled_text_rule:GarbledTextPrecheckConfig",
+            "expected_answer=msmodelslim.infra.evaluation.precheck.expected_answer_rule:ExpectedAnswerPrecheckConfig",
+        ],
+        "msmodelslim.precheck_rule.plugins": [
+            "garbled_text=msmodelslim.infra.evaluation.precheck.garbled_text_rule:GarbledTextRule",
+            "expected_answer=msmodelslim.infra.evaluation.precheck.expected_answer_rule:ExpectedAnswerRule",
+        ],
     },
 )

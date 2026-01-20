@@ -44,6 +44,13 @@ evaluation:
       - dataset: gsm8k # replace with your own dataset, equal to datasets in evaluation.aisbench.datasets
         target: 83 # replace with your own target, according to your model's performance on the dataset
         tolerance: 2 # replace with your own tolerance
+  precheck: # optional, pre-validation configuration before formal evaluation
+    - type: expected_answer # rule type identifier
+      test_cases: # English only, must be non-empty strings
+        - "What is 2+2?": ["4", "four"] # check if response contains "4" or "four"
+        - "What is the capital of China?": "Beijing" # check if response contains "Beijing"
+      max_tokens: 256 # optional, default 512
+      timeout: 60.0 # optional, default 60.0 seconds
   evaluation:
     type: aisbench
     aisbench:
