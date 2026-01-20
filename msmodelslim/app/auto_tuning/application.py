@@ -20,10 +20,10 @@ See the Mulan PSL v2 for more details.
 """
 import datetime
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple, Generator, Any
 
 from msmodelslim.core.quant_service import IQuantService
-from msmodelslim.core.tune_strategy import ITuningStrategyFactory
+from msmodelslim.core.tune_strategy import ITuningStrategyFactory, ITuningStrategy
 from msmodelslim.core.const import DeviceType
 from msmodelslim.model import IModelFactory, IModel
 from msmodelslim.utils.logging import logger_setter, get_logger
@@ -34,7 +34,7 @@ from msmodelslim.utils.validation.type import check_element_type, check_type
 from .evaluation_service_infra import EvaluateServiceInfra, EvaluateContext
 from .model_info_interface import ModelInfoInterface
 from .plan_manager_infra import TuningPlanManagerInfra
-from .practice_history_infra import TuningHistory, TuningHistoryManagerInfra
+from .practice_history_infra import TuningHistoryManagerInfra
 from .practice_manager_infra import PracticeManagerInfra
 
 MAX_ITERATION = 30
@@ -129,17 +129,33 @@ class AutoTuningApplication:
         get_logger().info("===========CREATE TUNING STRATEGY===========")
         strategy = self.strategy_factory.create_strategy(strategy_config=plan.strategy)
         get_logger().info("Using strategy %r.", plan.strategy.type)
-
+ 
         # start tuning
         get_logger().info("===========START TUNING===========")
         datetime_start = datetime.datetime.now()
         allowed_end_time = datetime_start + timeout if timeout is not None else None
         get_logger().info("Start time: %s, timeout: %s", datetime_start, timeout)
 
+        # Check if history exists and can be resumed
+        get_logger().info("===========CHECK HISTORY===========")
+        history_path = str(save_path / "history")
+        history = self.tuning_history_manager.load_history(history_path)
+        
+        # Clear history records
+        history.clear_records()
+        
+        accuracy_count = history.get_accuracy_count()
+        if accuracy_count > 0:
+            get_logger().info("Detected existing accuracy cache in %s with %d accuracy records. Will attempt to resume from history.", 
+                            history_path, accuracy_count)
+        else:
+            get_logger().info("No existing accuracy cache found in %s. Starting fresh tuning.", history_path)
+
         # create quant config generator
         practice_generator = strategy.generate_practice(model=model_adapter)
         evaluate_result = None
         practice = None
+        
         # start tuning
         for count in range(MAX_ITERATION):
             # check timeout
@@ -158,41 +174,48 @@ class AutoTuningApplication:
                 get_logger().debug("Practice: %r", practice)
                 get_logger().info("Generate practice success")
 
-                quant_model_path = save_path / f"quant_model"
+                evaluate_result = None  # reset evaluate_result
+                # Path 1: Try to get accuracy from history records
+                evaluate_result = history.get_accuracy(practice)
+                if evaluate_result is not None:
+                    get_logger().info("Got accuracy from history for iteration %d", count)
+                    for accuracy_unit in evaluate_result.accuracies:
+                        get_logger().info("Accuracy from history of %r: %r",
+                                          accuracy_unit.dataset, accuracy_unit.accuracy)
+                
+                # Path 2: If not found in history, quantize and evaluate
+                if evaluate_result is None:
+                    quant_model_path = save_path / f"quant_model"
 
-                # quantize model
-                self.quantization_service.quantize(
-                    practice.model_copy(deep=True),
-                    model_adapter=model_adapter,
-                    save_path=quant_model_path,
-                    device=device,
-                    device_indices=device_indices
-                )
-                get_logger().info("Quantize model success")
-
-                # evaluate model
-                evaluate_result = self.evaluation_service.evaluate(
-                    context=EvaluateContext(
-                        evaluate_id=str(count),
+                    # quantize model
+                    self.quantization_service.quantize(
+                        practice.model_copy(deep=True),
+                        model_adapter=model_adapter,
+                        save_path=quant_model_path,
                         device=device,
-                        device_indices=device_indices,
-                        working_dir=save_path,
-                    ),
-                    evaluate_config=plan.evaluation,
-                    model_path=quant_model_path,
-                )
-                get_logger().info("Evaluate model success")
-                for accuracy_unit in evaluate_result.accuracies:
-                    get_logger().info("Evaluate Accuracy of %r: %r",
-                                      accuracy_unit.dataset, accuracy_unit.accuracy)
+                        device_indices=device_indices
+                    )
+                    get_logger().info("Quantize model success")
 
-                # save history
-                history = TuningHistory(
-                    practice=practice,
-                    evaluation=evaluate_result,
-                )
-                self.tuning_history_manager.append_history(str(save_path / "history"), history)
-                get_logger().info("Save history success")
+                    # evaluate model
+                    evaluate_result = self.evaluation_service.evaluate(
+                        context=EvaluateContext(
+                            evaluate_id=str(count),
+                            device=device,
+                            device_indices=device_indices,
+                            working_dir=save_path,
+                        ),
+                        evaluate_config=plan.evaluation,
+                        model_path=quant_model_path,
+                    )
+                    get_logger().info("Evaluate model success")
+                    for accuracy_unit in evaluate_result.accuracies:
+                        get_logger().info("Evaluate Accuracy of %r: %r",
+                                          accuracy_unit.dataset, accuracy_unit.accuracy)
+                
+                # Append history record (this will also save accuracy data)
+                history.append_history(practice, evaluate_result)
+                get_logger().info("Append history success")
             except StopIteration:
                 get_logger().info("Strategy stop iterating")
                 self._save_practice_to_custom_repo(model_adapter, practice)
@@ -200,6 +223,7 @@ class AutoTuningApplication:
                 break
         else:
             get_logger().warning("===========EXCEED MAX TUNING ITERATION: %r===========", MAX_ITERATION)
+
 
     def _save_practice_to_custom_repo(self, model_adapter: IModel, practice):
         if not self.practice_manager.is_saving_supported():
