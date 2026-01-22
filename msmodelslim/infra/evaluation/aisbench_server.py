@@ -435,10 +435,13 @@ class AisBenchServer:
         results_dir = exp_folder / "results" / abbr
 
         if not results_dir.exists():
-            get_logger().warning(
-                f"[AISBench] Results directory not found: {results_dir} for {dataset_alias}. Defaulting to 0.0."
+            error_msg = (
+                f"[AISBench] Results directory not found: {results_dir} for {dataset_alias}. "
+                f"AISBench evaluation may have failed. Please check if the configuration is correct. "
+                f"Please check the AISBench logs in directory: {exp_folder}"
             )
-            return 0.0
+            get_logger().error(error_msg)
+            raise SpecError(error_msg)
 
         # 3. 查找 JSON 文件（通常只有一个 JSON 文件）
         json_files = list(results_dir.glob("*.json"))
