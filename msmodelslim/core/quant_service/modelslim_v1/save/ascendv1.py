@@ -142,7 +142,7 @@ class AscendV1Saver(AutoSaverProcessor):
     """
     # W4A8_DYNAMIC is hidden.
     QUANT_TYPE_PRIORITY = [
-        'FLOAT', 'W16A16S', 'W8A8', 'W8A8_DYNAMIC', 'W8A8_MIX', 
+        'FLOAT', 'W16A16S', 'W8A8', 'W8A8_DYNAMIC', 'W8A8_MIX', 'W8A16',
         'W4A4_DYNAMIC', 'WFP8AFP8_DYNAMIC', 'W8A8_MXFP8', 'W4A8_MXFP', 'W4A4_MXFP4'
     ]
 
@@ -236,6 +236,32 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".deq_scale", "W8A8", deq_scale.to(torch.float32))
             if module.bias is not None:
                 self.write_tensor(prefix + ".bias", "W8A8", module.bias.to(torch.float32))
+
+    def on_w8a16_static_per_channel(self, prefix: str, module: qir.W8A16StaticPerChannelFakeQuantLinear):
+        self.update_quant_type("W8A16")
+
+        with torch.device(module.weight.device):
+            weight_scale = module.weight_scale.unsqueeze(-1) if module.weight_scale.ndim == 1 else module.weight_scale
+            weight_offset = module.weight_offset.unsqueeze(-1) if module.weight_offset.ndim == 1 else module.weight_offset
+            self.write_tensor(prefix + ".weight", "W8A16", module.weight.to(torch.int8))
+            self.write_tensor(prefix + ".weight_scale", "W8A16", weight_scale.to(torch.float32))
+            self.write_tensor(prefix + ".weight_offset", "W8A16", weight_offset.to(torch.float32))
+            if module.bias is not None:
+                self.write_tensor(prefix + ".bias", "W8A16", module.bias.to(torch.float32))
+
+
+    def on_w8a16_static_per_group(self, prefix: str, module: qir.W8A16StaticPerGroupFakeQuantLinear):
+        self.update_quant_type("W8A16")
+        self.group_size = module.group_size
+
+        with torch.device(module.weight.device):
+            weight_scale = module.weight_scale.unsqueeze(-1) if module.weight_scale.ndim == 1 else module.weight_scale
+            weight_offset = module.weight_offset.unsqueeze(-1) if module.weight_offset.ndim == 1 else module.weight_offset
+            self.write_tensor(prefix + ".weight", "W8A16", module.weight.to(torch.int8))
+            self.write_tensor(prefix + ".weight_scale", "W8A16", weight_scale.to(torch.float32))
+            self.write_tensor(prefix + ".weight_offset", "W8A16", weight_offset.to(torch.float32))
+            if module.bias is not None:
+                self.write_tensor(prefix + ".bias", "W8A16", module.bias.to(torch.float32))
 
     def on_w8a8_dynamic_per_channel(self, prefix: str, module: qir.W8A8DynamicPerChannelFakeQuantLinear):
         self.update_quant_type("W8A8_DYNAMIC")

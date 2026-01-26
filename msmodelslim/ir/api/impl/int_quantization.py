@@ -109,9 +109,9 @@ def int_per_group_param(
         symmetric: bool,
         **kwargs
 ) -> QParam:
-    group_size = min_val.shape[-1]
     q_param = calculate_int_qparam(min_val, max_val, q_dtype, q_scope, symmetric, **kwargs)
-    q_param.ext['group_size'] = group_size
+    # 此处无法获取group_size，需要在外层填充group_size值
+    q_param.ext['group_size'] = -1
     return q_param
 
 
@@ -190,18 +190,20 @@ def int8_per_group_quantize(tensor: QStorage, q_param: QParam) -> QStorage:
     if group_size < 0:
         raise SchemaValidateError(f"group quantize group_size must be greater than 0 but got group_size = {group_size}",
                                   action=f"Please make sure group_size is greater than 0")
-    org_shape = tensor.value.shape
-    tensor_reshaped = tensor.value.reshape(-1, group_size)
+    tmp_tensor = tensor.value.t()
+    org_shape = tmp_tensor.shape
+    tensor_reshaped = tmp_tensor.reshape(-1, group_size)
     q_param_reshaped = QParam(
         scheme=q_param.scheme,
         ext={
             "scale": q_param.ext["scale"].view(-1, 1),
             "offset": q_param.ext["offset"].view(-1, 1),
-            "group_size": q_param.ext["scale"].view(-1, 1)
+            "group_size": group_size
         }
     )
     tensor_q = int_quantize(tensor.same_like(tensor_reshaped), q_param_reshaped)
     tensor_q.value = tensor_q.value.reshape(org_shape)
+    tensor_q.value = tensor_q.value.t()
     return tensor_q
 
 
@@ -214,18 +216,20 @@ def int_per_group_dequantize(tensor: QStorage, q_param: QParam) -> QStorage:
     if group_size < 0:
         raise SchemaValidateError(f"group quantize group_size must be greater than 0 but got group_size = {group_size}",
                                   action=f"Please make sure group_size is greater than 0")
-    org_shape = tensor.value.shape
-    tensor_reshaped = tensor.value.reshape(-1, group_size)
+    tmp_tensor = tensor.value.t()
+    org_shape = tmp_tensor.shape
+    tensor_reshaped = tmp_tensor.reshape(-1, group_size)
     q_param_reshaped = QParam(
         scheme=q_param.scheme,
         ext={
             "scale": q_param.ext["scale"].view(-1, 1),
             "offset": q_param.ext["offset"].view(-1, 1),
-            "group_size": q_param.ext["scale"].view(-1, 1)
+            "group_size": group_size
         }
     )
     tensor_q = int_dequantize(tensor.same_like(tensor_reshaped), q_param_reshaped)
     tensor_q.value = tensor_q.value.reshape(org_shape)
+    tensor_q.value = tensor_q.value.t()
     return tensor_q
 
 

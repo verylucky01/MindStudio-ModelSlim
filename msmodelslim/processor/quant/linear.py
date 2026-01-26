@@ -69,15 +69,14 @@ class LinearQuantProcessor(AutoSessionProcessor):
         self.dist_helper = None
 
     def is_data_free(self) -> bool:
-        if self.config.qconfig.act.scope == QScope.PER_TOKEN:
-            return True
-        elif (
-            self.config.qconfig.act.dtype in [QDType.MXFP8, QDType.MXFP4]
-            and self.config.qconfig.act.scope == QScope.PER_BLOCK
-        ):
-            return True
-        else:
-            return False 
+        """
+        判断是否是data free场景
+        通过检查 LinearQuantizer 是否data free场景
+        
+        Returns:
+            bool: 是否data free场景
+        """
+        return LinearQuantizer(self.config.qconfig).is_data_free()
 
     def support_distributed(self) -> bool:
         """

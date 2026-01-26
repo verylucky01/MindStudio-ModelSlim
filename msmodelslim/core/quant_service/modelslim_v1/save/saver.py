@@ -97,6 +97,8 @@ class AutoSaverProcessor(AutoSessionProcessor):
         self.processed_modules: Set[nn.Module] = set()
         self.process_map: Dict[Type[nn.Module], Callable[[str, nn.Module], None]] = {
             qir.W8A8StaticFakeQuantLinear: self.on_w8a8_static,
+            qir.W8A16StaticPerChannelFakeQuantLinear: self.on_w8a16_static_per_channel,
+            qir.W8A16StaticPerGroupFakeQuantLinear: self.on_w8a16_static_per_group,
             qir.W8A8DynamicPerChannelFakeQuantLinear: self.on_w8a8_dynamic_per_channel,
             qir.W8A8PDMixFakeQuantLinear: self.on_w8a8_pd_mix,
             qir.W8A8DynamicPerGroupFakeQuantLinear: self.on_w8a8_dynamic_per_group,
@@ -173,6 +175,12 @@ class AutoSaverProcessor(AutoSessionProcessor):
 
     def on_w8a8_static(self, prefix: str, module: qir.W8A8StaticFakeQuantLinear):
         raise NotImplementedError(f"You should implement the on_w8a8_static method for {self.__class__.__name__}")
+
+    def on_w8a16_static_per_channel(self, prefix: str, module: qir.W8A16StaticPerChannelFakeQuantLinear):
+        raise NotImplementedError(f"You should implement the on_w8a16_static_per_channel method for {self.__class__.__name__}")
+
+    def on_w8a16_static_per_group(self, prefix: str, module: qir.W8A16StaticPerGroupFakeQuantLinear):
+        raise NotImplementedError(f"You should implement the on_w8a16_static_per_group method for {self.__class__.__name__}")
 
     def on_w8a8_dynamic_per_channel(self, prefix: str, module: qir.W8A8DynamicPerChannelFakeQuantLinear):
         raise NotImplementedError(

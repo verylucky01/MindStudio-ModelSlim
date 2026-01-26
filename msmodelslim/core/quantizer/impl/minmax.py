@@ -104,6 +104,12 @@ class ActPerTokenMinmax(AutoActQuantizer):
         )
         return fake_quantize(QStorage(dtype=QDType.FLOAT, value=x), self.q_param).value.reshape(x_shape)
 
+    def is_data_free(self) -> bool:
+        """
+        激活值按照per_token量化时返回True
+        """
+        return True
+
     def get_q_param(self) -> QParam:
         if self.q_param is None:
             return QParam(scheme=self.config.to_scheme())
@@ -200,7 +206,6 @@ class ActPDMixMinmax(AutoActQuantizer):
 @QABCRegistry.multi_register(
     dispatch_key=[
         (qir.int8_per_channel_sym, "minmax"),
-        (qir.int4_per_channel_sym, "minmax"),
         (qir.int4_per_channel_sym, "minmax"),
         (qir.fp8_e4m3_per_channel_sym, "minmax"),
     ],
@@ -354,3 +359,9 @@ class MXActPerBlockMinmax(AutoActQuantizer):
         if self.q_param is None:
             return QParam(scheme=self.config.to_scheme())
         return self.q_param
+    
+    def is_data_free(self) -> bool:
+        """
+        mxfp8、mxfp4的per_block量化为data free场景
+        """
+        return True

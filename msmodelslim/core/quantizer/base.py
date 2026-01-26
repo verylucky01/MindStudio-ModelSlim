@@ -80,6 +80,15 @@ class AutoActQuantizer(nn.Module):
         """
         return True
 
+    def is_data_free(self) -> bool:
+        """
+        判断是否data free场景
+        
+        Returns:
+            bool: 是否是否data free场景，默认为False
+        """
+        return False
+
     def enable_sync(self):
         """
         启用同步操作
@@ -153,6 +162,15 @@ class AutoWeightQuantizer(nn.Module):
         
         Returns:
             bool: 是否支持分布式，默认为True
+        """
+        return True
+
+    def is_data_free(self) -> bool:
+        """
+        判断是否data free场景
+        
+        Returns:
+            bool: 是否是否data free场景，默认为True
         """
         return True
 

@@ -30,11 +30,16 @@ from torch import nn
 import msmodelslim.ir as qir
 from msmodelslim.ir.qal import QDType, QStorage
 from msmodelslim.utils.logging import logger_setter
-from .base import AutoActQuantizer, AutoWeightQuantizer, QConfig
+from .base import AutoActQuantizer, AutoWeightQuantizer, QConfig, QScope
 
 
 class LinearQConfig(BaseModel):
-    act: QConfig
+    act: QConfig = QConfig(
+        dtype=QDType.FLOAT,
+        scope=QScope.PER_TENSOR,
+        symmetric=True,
+        method="none"
+    )
     weight: QConfig
 
     model_config = ConfigDict(extra="forbid")
@@ -102,3 +107,13 @@ class LinearQuantizer(nn.Module):
         input_support = self.input_quantizer.support_distributed()
         weight_support = self.weight_quantizer.support_distributed()
         return input_support and weight_support
+    
+    def is_data_free(self) -> bool:
+        """
+        判断是否是data free场景
+        通过检查 input_quantizer 和 weight_quantizer 是否都支持data free来判断
+        
+        Returns:
+            bool: 是否是data free场景
+        """
+        return self.input_quantizer.is_data_free() and self.weight_quantizer.is_data_free()

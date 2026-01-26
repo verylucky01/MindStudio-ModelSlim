@@ -26,6 +26,8 @@ __all__ = [
     "AutoFakeQuantActivation",
     "AutoFakeQuantDynamicCache",
     "W8A8StaticFakeQuantLinear",
+    "W8A16StaticPerChannelFakeQuantLinear",
+    "W8A16StaticPerGroupFakeQuantLinear",
     "W8A8DynamicPerChannelFakeQuantLinear",
     "W8A8MXDynamicPerBlockFakeQuantLinear",
     "W4A4MXDynamicPerBlockFakeQuantLinear",
@@ -57,6 +59,7 @@ __all__ = [
     "int8_per_channel_asym",
     "int8_per_token_sym",
     "int8_per_group_sym",
+    "int8_per_group_asym",
     "int8_per_tensor_asym",
     "int8_per_token_asym",
     "int8_pd_mix_asym",
@@ -71,6 +74,7 @@ __all__ = [
     "int4_per_token_asym",
     "mxfp4_per_block_sym",
     "mxfp8_per_block_sym",
+    "float_per_tensor_sym",
     "PDMixState",
 ]
 
@@ -80,11 +84,11 @@ from .api.api_main import *
 from .attention import FakeQuantDynamicCache
 from .auto import AutoFakeQuantLinear, AutoFakeQuantActivation, AutoFakeQuantDynamicCache
 from .const import int8_per_tensor_sym, int8_per_channel_sym, int8_per_token_sym, int8_per_group_sym, \
-    int8_per_tensor_asym, int8_per_token_asym, int8_per_channel_asym, int4_per_channel_sym, \
+    int8_per_group_asym, int8_per_tensor_asym, int8_per_token_asym, int8_per_channel_asym, int4_per_channel_sym, \
     int8_per_tensor_asym, int8_per_token_asym, int8_per_channel_asym, int4_per_tensor_sym, int4_per_channel_sym, \
     int4_per_channel_asym, int4_per_token_sym, int4_per_group_sym, int4_per_group_asym, int4_per_tensor_asym, \
     int4_per_token_asym, int8_pd_mix_asym, mxfp4_per_block_sym, mxfp8_per_block_sym, \
-    fp8_e4m3_per_token_sym, fp8_e4m3_per_tensor_sym, fp8_e4m3_per_channel_sym, \
+    fp8_e4m3_per_token_sym, fp8_e4m3_per_tensor_sym, fp8_e4m3_per_channel_sym, float_per_tensor_sym, \
     int8_per_head_sym
 from .quarot import QuarotOnlineRotationInfo, QuarotOnlineHeadRotationWrapper, QuarotOnlineKroneckerRotationWrapper, \
     QuarotHeadsRotationHookIR, QuarotKroneckerRotationHookIR, OnlineRotationInfo, OnlineRotationWrapper, \
@@ -100,4 +104,5 @@ from .w8a8_fp_dynamic import WFP8AFP8DynamicPerChannelFakeQuantLinear
 from .w8a8_mx_dynamic import W8A8MXDynamicPerBlockFakeQuantLinear
 from .w8a8_pdmix import W8A8PDMixFakeQuantLinear, PDMixState
 from .w8a8_static import W8A8StaticFakeQuantLinear
+from .w8a16_static import W8A16StaticPerChannelFakeQuantLinear, W8A16StaticPerGroupFakeQuantLinear
 from .wrapper import WrapperIR, HookIR
