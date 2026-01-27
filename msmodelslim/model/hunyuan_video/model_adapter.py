@@ -326,7 +326,7 @@ class HunyuanVideoModelAdapter(BaseModelAdapter,
                 "Failed to import required components from mindiesd. "
             ) from e
         args = self.model_args
-        if args.use_cache:
+        if args.use_cache and len(self.transformer.single_blocks) > 0:
             # single
             config_single = CacheConfig(
                 method="dit_block_cache",
@@ -340,7 +340,7 @@ class HunyuanVideoModelAdapter(BaseModelAdapter,
             )
             cache_single = CacheAgent(config_single)
             self.transformer.cache_single = cache_single
-        if args.use_cache_double:
+        if args.use_cache_double and len(self.transformer.double_blocks) > 0:
             # double
             config_double = CacheConfig(
                 method="dit_block_cache",
@@ -356,39 +356,45 @@ class HunyuanVideoModelAdapter(BaseModelAdapter,
             self.transformer.cache_dual = cache_dual
 
         if args.use_attentioncache:
-            config_double = CacheConfig(
-                method="attention_cache",
-                blocks_count=len(self.transformer.double_blocks),
-                steps_count=args.infer_steps,
-                step_start=args.start_step,
-                step_interval=args.attentioncache_interval,
-                step_end=args.end_step
-            )
-            config_single = CacheConfig(
-                method="attention_cache",
-                blocks_count=len(self.transformer.single_blocks),
-                steps_count=args.infer_steps,
-                step_start=args.start_step,
-                step_interval=args.attentioncache_interval,
-                step_end=args.end_step
-            )
+            if len(self.transformer.double_blocks) > 0:
+                config_double = CacheConfig(
+                    method="attention_cache",
+                    blocks_count=len(self.transformer.double_blocks),
+                    steps_count=args.infer_steps,
+                    step_start=args.start_step,
+                    step_interval=args.attentioncache_interval,
+                    step_end=args.end_step
+                )
+            if len(self.transformer.single_blocks) > 0:
+                config_single = CacheConfig(
+                    method="attention_cache",
+                    blocks_count=len(self.transformer.single_blocks),
+                    steps_count=args.infer_steps,
+                    step_start=args.start_step,
+                    step_interval=args.attentioncache_interval,
+                    step_end=args.end_step
+                )
         else:
-            config_double = CacheConfig(
-                method="attention_cache",
-                blocks_count=len(self.transformer.double_blocks),
-                steps_count=args.infer_steps
-            )
-            config_single = CacheConfig(
-                method="attention_cache",
-                blocks_count=len(self.transformer.single_blocks),
-                steps_count=args.infer_steps
-            )
-        cache_double = CacheAgent(config_double)
-        cache_single = CacheAgent(config_single)
-        for block in self.transformer.double_blocks:
-            block.cache = cache_double
-        for block in self.transformer.single_blocks:
-            block.cache = cache_single
+            if len(self.transformer.double_blocks) > 0:
+                config_double = CacheConfig(
+                    method="attention_cache",
+                    blocks_count=len(self.transformer.double_blocks),
+                    steps_count=args.infer_steps
+                )
+            if len(self.transformer.single_blocks) > 0:
+                config_single = CacheConfig(
+                    method="attention_cache",
+                    blocks_count=len(self.transformer.single_blocks),
+                    steps_count=args.infer_steps
+                )
+        if len(self.transformer.double_blocks) > 0:
+            cache_double = CacheAgent(config_double)
+            for block in self.transformer.double_blocks:
+                block.cache = cache_double
+        if len(self.transformer.single_blocks) > 0:
+            cache_single = CacheAgent(config_single)
+            for block in self.transformer.single_blocks:
+                block.cache = cache_single
 
     def _load_pipeline(self):
         self._check_import_dependency()
