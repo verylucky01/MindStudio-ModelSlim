@@ -89,6 +89,9 @@ class DeepSeekV3ModelAdapter(TransformersModel,
             origin_layers = self.config.num_hidden_layers
             get_logger().info(f"Model with {origin_layers} layers totally")
 
+            if dist.is_initialized():
+                self.config.ep_size = dist.get_world_size()
+
             # 临时设置为1层进行初始化
             self.config.num_hidden_layers = 1
 
