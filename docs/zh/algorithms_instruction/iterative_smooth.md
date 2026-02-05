@@ -79,6 +79,22 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - 对down_proj应用正向缩放
 - 对up_proj应用反向缩放（1/scales）
 
+#### 5. NonFusionSubgraph（非融合子图）
+
+适用于**仅对若干线性层做平滑、且不融合到前置层**的场景。当映射中 `source` 为 `None`、仅提供 `targets` 时，处理器会走非融合分支，将 `targets` 中的线性层组成非融合子图进行平滑。
+
+**典型场景：**
+- 没有可融合的前置归一化/线性层，仅需对若干独立线性层做离群值抑制
+- 结构特殊，无法归类为 norm-linear / linear-linear / ov / up-down，但仍希望对这些线性层做平滑
+
+**处理方式：**
+- 将 `targets` 中的多个线性层视为一组，基于其权重的列最大值与激活统计计算统一的每通道缩放因子
+- 对每个线性层的权重应用正向缩放
+- 在每个线性层上注册前向 pre-hook，在推理时对**输入**施加对应的反向缩放（1/scales），从而在数值上等价于“先对输入除以 scale 再乘回”，与权重缩放配合保持数值一致
+- **不支持 shift**（偏置平移）；若配置了 shift，非融合路径会忽略并打日志提示
+
+**配置方式：** 在 `get_adapter_config_for_subgraph()` 中返回的 `AdapterConfig` 中，将 `mapping` 设为 `MappingConfig(source=None, targets=[...])`，`targets` 为需要平滑的线性层完整路径列表；`subgraph_type` 可填 `"norm-linear"`（表示多目标时记录所有 linear 名称）或其他已支持类型，仅影响内部命名，不改变非融合行为。
+
 ### 实现
 
 算法在 `msmodelslim/processor/anti_outlier/iter_smooth/processor.py` 中实现，处理流程分两阶段：
@@ -108,6 +124,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - **Linear-Linear子图**：对两个线性层应用平滑，调整权重和偏置。
 - **OV子图**：处理注意力机制中的输出投影（Output projection）和值投影（Value projection）之间的连接关系，支持QKV融合模式。
 - **Up-Down子图**：处理MLP门控机制，对上下投影层应用平滑。
+- **非融合子图**：当 `mapping.source` 为 `None` 且 `mapping.targets` 非空时，将目标线性层组成 NonFusionSubgraph，仅对权重做缩放并在每层注册输入侧 scale 的 pre-hook，不融合到前置层；不支持 shift。
 
 **平滑算法核心：**
 - 基于收集的激活统计信息计算每通道的缩放因子。
@@ -123,7 +140,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 - **模型架构要求**：模型必须支持 `IterSmoothInterface` 接口，并正确配置子图映射关系。
 - **模块命名要求**：模块名称必须与 `named_modules()` 返回的完整路径完全一致。
-- **子图类型支持**：目前支持四种标准子图类型：`norm-linear`、`linear-linear`、`ov`、`up-down`。
+- **子图类型支持**：目前支持四种标准子图类型：`norm-linear`、`linear-linear`、`ov`、`up-down`；另支持**非融合子图**（映射中 `source=None`、仅提供 `targets` 的线性层列表）。
 - **模块属性要求**：目标模块必须存在且具备可写的 `weight`（以及可选 `bias`），其他自定义模块暂不支持。
 - **模型结构假设**：算法基于标准的Transformer架构设计，对于非标准结构需要谨慎评估适用性。
 
@@ -191,7 +208,7 @@ from abc import ABC, abstractmethod
 @dataclass
 class MappingConfig:
     """模块映射关系配置"""
-    source: str  # 源模块名称，如 "model.layers.0.input_layernorm"
+    source: Optional[str]  # 源模块名称，如 "model.layers.0.input_layernorm"；为 None 时表示非融合子图，仅对 targets 中的线性层做平滑
     targets: List[str]  # 目标模块名称列表，如 ["model.layers.0.self_attn.q_proj", "model.layers.0.self_attn.k_proj"]
 
 @dataclass
@@ -205,7 +222,7 @@ class FusionConfig:
 @dataclass
 class AdapterConfig:
     """子图适配器配置"""
-    subgraph_type: str  # 子图类型：norm-linear, linear-linear, ov, up-down
+    subgraph_type: str  # 子图类型：norm-linear, linear-linear, ov, up-down（非融合时也可填 norm-linear 等，仅影响内部命名）
     mapping: Optional[MappingConfig] = None  # 模块映射关系
     fusion: FusionConfig = field(default_factory=lambda: FusionConfig())  # 融合配置
 
@@ -230,17 +247,18 @@ class IterSmoothInterface(ABC):
 **前置要求：**
 - 模型需要继承 `IterSmoothInterface` 接口。
 - 模块名称必须与 `named_modules()` 返回的完整路径一致。
-- 支持的子图类型：`norm-linear`、`linear-linear`、`ov`、`up-down`。
+- 支持的子图类型：`norm-linear`、`linear-linear`、`ov`、`up-down`；另支持**非融合子图**（`mapping.source=None`，仅提供 `targets`）。
 - 配置中的`subgraph_type`、`mapping` 是必要参数。
 - 当配置`FusionConfig`且`fusion_type`为qkv时，必须给出num_attention_heads和num_key_value_heads。
 
 **步骤：**
 1. **继承接口**：模型适配器继承 `IterSmoothInterface` 接口，实现 `get_adapter_config_for_subgraph()` 方法。
-2. **配置子图映射**：为每层配置四种类型的子图映射关系：
-   - **Norm-Linear子图**：归一化层到后续线性层的映射
+2. **配置子图映射**：为每层配置子图映射关系：
+   - **Norm-Linear子图**：归一化层到后续线性层的映射（`source` 为 norm，`targets` 为后续线性层）
    - **OV子图**：注意力机制中V投影到O投影的映射
    - **Up-Down子图**：MLP门控机制中上投影到下投影的映射
    - **Linear-Linear子图**：连续线性层的映射
+   - **非融合子图**：`source=None`，`targets` 为需要平滑的线性层路径列表（可不融合到前置层）
 3. **指定模块路径**：使用完整的模块路径，如 `model.layers.{i}.self_attn.q_proj`。
 
 **参考实现：** 可参考 `msmodelslim/model/qwen3/model_adapter.py` 中的 `Qwen3ModelAdapter` 实现。
@@ -296,6 +314,18 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
             )
         )
         
+        # 5. 非融合子图示例：仅对若干线性层做平滑，不融合到前置层（source 设为 None）
+        # non_fusion_config = AdapterConfig(
+        #     subgraph_type="norm-linear",
+        #     mapping=MappingConfig(
+        #         targets=[
+        #             f"model.layers.{layer_idx}.some_module.linear_a",
+        #             f"model.layers.{layer_idx}.some_module.linear_b",
+        #         ]
+        #     )
+        # )
+        # adapter_config.append(non_fusion_config)
+        
         adapter_config.extend([norm_linear_config1, norm_linear_config2, ov_config, up_down_config])
     
     return adapter_config
@@ -321,3 +351,7 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 ### 5. 映射关系错误
 **现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。  
 **解决方案**: 检查 `MappingConfig` 中的 `source` 和 `targets` 是否指向正确的模块。
+
+### 6. 非融合子图不生效
+**现象**: 已配置 `source=None` 和 `targets`，但未走非融合平滑。  
+**解决方案**: 确认 `mapping.source` 为 `None`（Python 中显式传入 `None`），且 `mapping.targets` 非空；确认这些目标模块在 `include` 范围内且未被 `exclude` 过滤掉。

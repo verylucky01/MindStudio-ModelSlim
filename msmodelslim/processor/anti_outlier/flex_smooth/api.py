@@ -31,6 +31,7 @@ from msmodelslim.ir.qal.qtypes import (
     LinearLinearSubgraph,
     OVSubgraph,
     UpDownSubgraph,
+    NonFusionSubgraph,
 )
 from msmodelslim.utils.logging import get_logger
 from .alpha_beta_search import (
@@ -61,6 +62,7 @@ def flex_smooth_quant(subgraph: Subgraph, config: FlexSmoothQuantConfig, context
             LinearLinearSubgraph
             OVSubgraph
             UpDownSubgraph
+            NonFusionSubgraph（非融合子图）
         config: FlexSmoothQuant算法配置
         context: 上下文，用于输入激活的smooth_scale，并记录权重的smooth_scale
         
@@ -190,6 +192,38 @@ def flex_smooth_impl_norm_linear(subgraph: Subgraph, config: FlexSmoothQuantConf
     )
     get_logger().debug("Norm-Linear smoothing completed successfully")
     return
+
+
+@torch.no_grad()
+@QFuncRegistry.register(dispatch_key=(NonFusionSubgraph, 1), api_name="flex_smooth_quant")
+def flex_smooth_impl_non_fusion_linear(
+    subgraph: Subgraph, config: FlexSmoothQuantConfig, context: SmoothContext
+) -> torch.Tensor:
+    """
+    对 NonFusionSubgraph 应用 flex_smooth_quant 进行异常值抑制（非融合子图接口）。
+
+    从 context 获取激活，对 subgraph.linears 的权重做 alpha/beta 搜索得到最优 scale，
+    通过 SubgraphFusionFactory 做权重融合，并在每个 linear 上注册 NonFusionSmoothQuantHookIR，
+    在推理时对输入做 scale 校正。
+    """
+    if len(subgraph.linears) < 1:
+        raise ValueError("NonFusionSubgraph must have at least one linear layer")
+
+    tmp_device = next(subgraph.linears[0].parameters()).device
+    dtype = subgraph.linears[0].weight.dtype
+    act = validate_and_process_tensors(context, tmp_device, dtype)
+    a_scale = context.a_smooth_scale
+    fc_weights = torch.cat([fc.weight for fc in subgraph.linears], dim=0)
+    best_alpha, best_beta = get_optimal_alpha_beta_flex_smooth(config, act, fc_weights)
+    w_scale = compute_multi_weight_scale([fc.weight for fc in subgraph.linears], dtype)
+    calculator = FlexSmoothScaleCalculator(alpha=best_alpha, beta=best_beta, group_method='max')
+    scales = calculator.compute_smooth_scale(a_scale, w_scale)
+
+    SubgraphFusionFactory.apply_fusion_to_subgraph(
+        subgraph,
+        scales={'scales': scales}
+    )
+    return scales
 
 
 # ============== FlexAWQSSZ Implementation ==============

@@ -22,6 +22,24 @@ from msmodelslim.processor.anti_outlier.common import (
 from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
 
 
+def _get_hook_objs(module):
+    """从 module 的 _forward_pre_hooks 中取出 hook 实例（兼容不同 PyTorch 的存储格式）。"""
+    if not hasattr(module, "_forward_pre_hooks"):
+        return []
+    out = []
+    for h in module._forward_pre_hooks.values():
+        if isinstance(h, tuple):
+            for x in h:
+                if callable(x) and not isinstance(x, (bool, int, float)):
+                    out.append(x)
+                    break
+        elif hasattr(h, "hook") and callable(getattr(h, "hook")):
+            out.append(h.hook)
+        elif callable(h):
+            out.append(h)
+    return out
+
+
 class TestIterSmoothImplNonFusionLinear(unittest.TestCase):
     """Tests for iter_smooth_impl_non_fusion_linear (NonFusionSubgraph)."""
 
@@ -43,7 +61,7 @@ class TestIterSmoothImplNonFusionLinear(unittest.TestCase):
         self.assertIn("at least one linear layer", str(ctx.exception))
 
     def test_single_linear_applies_fusion_and_registers_hook(self):
-        """Single linear: compute scales, apply fusion, register pre_hook."""
+        """Single linear: compute scales, apply fusion; caller registers pre_hook from returned scales."""
         linear = nn.Linear(2, 3)
         torch.nn.init.ones_(linear.weight)
         torch.nn.init.zeros_(linear.bias)
@@ -52,26 +70,28 @@ class TestIterSmoothImplNonFusionLinear(unittest.TestCase):
         with patch.object(
             SubgraphFusionFactory, "apply_fusion_to_subgraph"
         ) as mock_fusion:
-            iter_smooth(subgraph, self.config, self.context)
+            scales = iter_smooth(subgraph, self.config, self.context)
             mock_fusion.assert_called_once()
             call_args = mock_fusion.call_args
             self.assertIs(call_args[0][0], subgraph)
             self.assertIn("scales", call_args[1])
             self.assertIn("scales", call_args[1]["scales"])
 
+        self.assertIsNotNone(scales, "iter_smooth should return scales for NonFusionSubgraph")
+        # Register hooks as processor does (API returns scales; processor registers hooks)
+        for linear_module in subgraph.linears:
+            hook_ir = NonFusionSmoothQuantHookIR(scales)
+            hook_handle = linear_module.register_forward_pre_hook(hook_ir)
+            hook_ir.set_hook_handle(hook_handle)
+
         # Check pre_hooks registered (one NonFusionSmoothQuantHookIR per linear)
-        # PyTorch may store (priority, hook) or hook in _forward_pre_hooks.values()
-        raw_hooks = list(linear._forward_pre_hooks.values())
-        hook_objs = [
-            h[1] if isinstance(h, tuple) and len(h) == 2 else h
-            for h in raw_hooks
-        ]
+        hook_objs = _get_hook_objs(linear)
         ir_hooks = [h for h in hook_objs if isinstance(h, NonFusionSmoothQuantHookIR)]
         self.assertEqual(len(ir_hooks), 1)
         self.assertIsNotNone(ir_hooks[0].hook_handle)
 
     def test_multiple_linears_applies_fusion_and_registers_hooks(self):
-        """Multiple linears: w_scale from concat of per-linear stats, fusion and hooks for each."""
+        """Multiple linears: w_scale from concat of per-linear stats, fusion; caller registers hooks from returned scales."""
         linear1 = nn.Linear(2, 3)
         linear2 = nn.Linear(2, 3)
         torch.nn.init.ones_(linear1.weight)
@@ -81,25 +101,31 @@ class TestIterSmoothImplNonFusionLinear(unittest.TestCase):
         with patch.object(
             SubgraphFusionFactory, "apply_fusion_to_subgraph"
         ) as mock_fusion:
-            iter_smooth(subgraph, self.config, self.context)
+            scales = iter_smooth(subgraph, self.config, self.context)
             mock_fusion.assert_called_once()
 
-        raw_vals = lambda m: list(m._forward_pre_hooks.values())
-        hook_objs = lambda m: [
-            h[1] if isinstance(h, tuple) and len(h) == 2 else h
-            for h in raw_vals(m)
-        ]
+        self.assertIsNotNone(scales)
+        for linear_module in subgraph.linears:
+            hook_ir = NonFusionSmoothQuantHookIR(scales)
+            hook_handle = linear_module.register_forward_pre_hook(hook_ir)
+            hook_ir.set_hook_handle(hook_handle)
+
         for linear in subgraph.linears:
-            ir_hooks = [h for h in hook_objs(linear) if isinstance(h, NonFusionSmoothQuantHookIR)]
+            ir_hooks = [h for h in _get_hook_objs(linear) if isinstance(h, NonFusionSmoothQuantHookIR)]
             self.assertEqual(len(ir_hooks), 1)
 
     def test_single_linear_forward_after_smooth(self):
-        """After iter_smooth, single linear forward still runs (hook is no-op)."""
+        """After iter_smooth and registering hooks from returned scales, single linear forward still runs."""
         linear = nn.Linear(2, 3)
         torch.nn.init.ones_(linear.weight)
         torch.nn.init.zeros_(linear.bias)
         subgraph = NonFusionSubgraph(linears=[linear])
-        iter_smooth(subgraph, self.config, self.context)
+        scales = iter_smooth(subgraph, self.config, self.context)
+        self.assertIsNotNone(scales)
+        for linear_module in subgraph.linears:
+            hook_ir = NonFusionSmoothQuantHookIR(scales)
+            hook_handle = linear_module.register_forward_pre_hook(hook_ir)
+            hook_ir.set_hook_handle(hook_handle)
         x = torch.randn(1, 2)
         out = linear(x)
         self.assertEqual(out.shape, (1, 3))

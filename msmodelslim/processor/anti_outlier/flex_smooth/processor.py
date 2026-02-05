@@ -37,6 +37,8 @@ from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.utils.distributed.dist_ops import sync_gather_tensor_lists
 from msmodelslim.utils.distributed import DistHelper
 from msmodelslim.utils.validation.value import validate_normalized_value, is_string_list
+from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
+from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
 from ..common import (
     FlexSmoothQuantConfig,
     FlexAWQSSZConfig,
@@ -203,7 +205,12 @@ class FlexSmoothQuantProcessor(FlexSmoothBaseProcessor):
                 subgraph_type
             )
             return
-        flex_smooth_quant(subgraph_obj, config, smooth_context)
+        scales = flex_smooth_quant(subgraph_obj, config, smooth_context)
+        if scales is not None and isinstance(subgraph_obj, NonFusionSubgraph):
+            for linear_module in subgraph_obj.linears:
+                hook_ir = NonFusionSmoothQuantHookIR(scales)
+                hook_handle = linear_module.register_forward_pre_hook(hook_ir)
+                hook_ir.set_hook_handle(hook_handle)
         get_logger().info(f"Successfully applied FlexSmoothQuant to {subgraph_type} subgraph")
 
     def _build_smooth_context(self, linear_names: List[str]) -> Optional[FlexSmoothQuantContext]:

@@ -35,6 +35,8 @@ from msmodelslim.core.observer import MsMinMaxObserver, MinMaxObserverConfig
 from msmodelslim.utils.distributed import DistHelper
 from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.utils.logging import get_logger, logger_setter
+from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
+from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
 from msmodelslim.utils.validation.value import validate_normalized_value, is_boolean, is_string_list
 
 from ..common import (
@@ -180,7 +182,13 @@ class IterSmoothProcessor(BaseSmoothProcessor):
             )
             return
 
-        iter_smooth(subgraph_obj, iter_smooth_cfg, smooth_context)
+        scales = iter_smooth(subgraph_obj, iter_smooth_cfg, smooth_context)
+        if scales is not None and isinstance(subgraph_obj, NonFusionSubgraph):
+            for linear_module in subgraph_obj.linears:
+                hook_ir = NonFusionSmoothQuantHookIR(scales)
+                hook_handle = linear_module.register_forward_pre_hook(hook_ir)
+                hook_ir.set_hook_handle(hook_handle)
+        
         get_logger().info(
             "Successfully applied IterSmooth to %s subgraph (shift=%s)", subgraph_type, shift_value
         )

@@ -32,7 +32,6 @@ from msmodelslim.ir.qal.qtypes import (
     UpDownSubgraph,
     NonFusionSubgraph,
 )
-from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
 from msmodelslim.utils.logging import get_logger
 from ..common import (
     IterSmoothConfig,
@@ -205,7 +204,4 @@ def iter_smooth_impl_non_fusion_linear(subgraph: Subgraph, config: IterSmoothCon
         shifts=shifts if shifts else None
     )
 
-    for linear_module in subgraph.linears:
-        hook_ir = NonFusionSmoothQuantHookIR(scales)
-        hook_handle = linear_module.register_forward_pre_hook(hook_ir)
-        hook_ir.set_hook_handle(hook_handle)       
+    return scales   
