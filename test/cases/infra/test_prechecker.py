@@ -200,7 +200,7 @@ class TestExpectedAnswerRule:
     ])
     def test_contains_expected_answer_return_match_when_string_list_case_insensitive_none(self, text, expected_answer, should_match):
         """测试字符串、列表、大小写不敏感、None值匹配期望答案"""
-        rule = ExpectedAnswerRule(ExpectedAnswerPrecheckConfig(test_cases=["test"]))
+        rule = ExpectedAnswerRule(ExpectedAnswerPrecheckConfig(test_cases=[{"message": "test", "expected_answer": None}]))
         assert rule.contains_expected_answer(text, expected_answer) is should_match  # 校验匹配结果正确
     
     @patch('msmodelslim.infra.evaluation.precheck.expected_answer_rule.BasePrecheckRule.test_chat_via_api')
@@ -265,7 +265,7 @@ class TestExpectedAnswerRule:
         
         config = ExpectedAnswerPrecheckConfig(
             test_cases=[
-                "What is 2+2?"
+                {"What is 2+2?": None}
             ]
         )
         rule = ExpectedAnswerRule(config)
@@ -465,7 +465,7 @@ class TestParseTestCase:
         ({"What is 2+2?": "4"}, "What is 2+2?", "4"),
         ({"test": ""}, "test", None),
         ({"test": []}, "test", None),
-        ("What is 2+2?", "What is 2+2?", None),
+        ({"message": "What is 2+2?", "expected_answer": ["4", "four"]}, "What is 2+2?", ["4", "four"]),
     ])
     def test_parse_test_case_return_test_case_when_valid_format(self, input_data, expected_message, expected_answer):
         """测试解析有效格式的测试用例"""
@@ -476,7 +476,7 @@ class TestParseTestCase:
     
     @pytest.mark.parametrize("invalid_input", [
         123,
-        {"message": "test", "answer": "test", "other": "value"},
+        {"key1": "val1", "key2": "val2"},  # 多键值对且无 message 键
     ])
     def test_parse_test_case_raise_value_error_when_invalid_format(self, invalid_input):
         """测试解析无效格式的测试用例时抛出ValueError异常"""

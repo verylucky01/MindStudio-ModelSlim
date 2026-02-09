@@ -44,17 +44,20 @@ class TestCase(BaseModel):
 
 
 def parse_test_case(value: Any) -> TestCase:
-    """解析测试用例，支持字典格式（键值对）或字符串格式"""
+    """解析测试用例，支持字典格式（键值对）"""
     if isinstance(value, dict):
+        if "message" in value:
+            expected_answer = value.get("expected_answer")
+            if expected_answer == "" or expected_answer == []:
+                expected_answer = None
+            return TestCase(message=value["message"], expected_answer=expected_answer)
         if len(value) == 1:
             message, expected_answer = next(iter(value.items()))
             if expected_answer == "" or expected_answer == []:
                 expected_answer = None
             return TestCase(message=message, expected_answer=expected_answer)
-        raise ValueError(f"Invalid test case format: {value}. Must contain exactly one key-value pair")
-    if isinstance(value, str):
-        return TestCase(message=value, expected_answer=None)
-    raise ValueError(f"Invalid test case type: {type(value)}. Supported formats: dict or str")
+        raise ValueError(f"Invalid test case format: {value}. Must contain exactly one key-value pair or message/expected_answer keys")
+    raise ValueError(f"Invalid test case type: {type(value)}. Supported formats: dict (key-value or message/expected_answer)")
 
 
 def _default_expected_answer_test_cases() -> List[TestCase]:
