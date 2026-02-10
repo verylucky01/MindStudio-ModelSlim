@@ -58,6 +58,7 @@ __all__ = [
 
     # save interface
     'AscendV1SaveInterface',  # For AscendV1 save.
+    'AscendV1GlobalModelDtypeInterface',  # For global model torch dtype (e.g. Saver deq_scale int64).
 ]
 
 from msmodelslim.app.auto_tuning.model_info_interface import ModelInfoInterface as atmi
@@ -65,7 +66,7 @@ from msmodelslim.app.naive_quantization.model_info_interface import ModelInfoInt
 from msmodelslim.core.analysis_service.pipeline_interface import PipelineInterface as aspi
 from msmodelslim.core.quant_service.modelslim_v0.pipeline_interface import \
     PipelineInterface as ModelSlimPipelineInterfaceV0
-from msmodelslim.core.quant_service.modelslim_v1.save.interface import AscendV1SaveInterface
+from msmodelslim.core.quant_service.modelslim_v1.save.interface import AscendV1SaveInterface, AscendV1GlobalModelDtypeInterface
 from msmodelslim.core.quant_service.multimodal_sd_v1.pipeline_interface import \
     MultimodalPipelineInterface as MultimodalSDPipelineInterface
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface as ModelSlimPipelineInterfaceV1

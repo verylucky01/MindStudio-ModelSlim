@@ -37,11 +37,12 @@ from msmodelslim.utils.distributed import DistHelper
 from msmodelslim.utils.exception import ToDoError, SchemaValidateError
 from msmodelslim.utils.security import safe_copy_file
 from msmodelslim.utils.logging import logger_setter
-from .interface import AscendV1SaveInterface
+from .interface import AscendV1SaveInterface, AscendV1GlobalModelDtypeInterface
 from .saver import AutoSaverProcessor, AutoSaverBaseConfig
 from .utils.json import JsonWriter
 from .utils.pack import w4a8_pack_int4, process_scale
 from .utils.safetensors import SafetensorsWriter, BufferedSafetensorsWriter
+from .utils.deqscale import deqscale2int64_by_dtype
 
 
 def copy_files(input_path, output_path):
@@ -75,7 +76,7 @@ def remove_quantization_config(output_path):
 
     try:
         config_data = json_safe_load(config_file, check_user_stat=True)
-        
+
         if 'quantization_config' in config_data:
             del config_data['quantization_config']
             json_safe_dump(config_data, config_file, indent=2, check_user_stat=True)
@@ -86,7 +87,7 @@ def remove_quantization_config(output_path):
 class AscendV1Config(AutoSaverBaseConfig):
     """
     ascendV1 量化模型保存器配置。该配置用于配置ascendV1量化模型保存器。
-    
+
     该配置包含以下字段：
         - type: 量化模型保存器类型，固定为"ascendv1_saver"
         - save_directory: 量化模型保存目录，默认为"."
@@ -137,7 +138,7 @@ ASCENDV1_SAFETENSORS_NAME = "quant_model_weights.safetensors"
 class AscendV1Saver(AutoSaverProcessor):
     """
     ascendV1 量化模型保存器。该保存器将量化模型保存为AscendV1格式。
-    
+
     关于该格式的更多信息，请参考 AscendV1Config 中的说明。
     """
     # W4A8_DYNAMIC is hidden.
@@ -160,6 +161,8 @@ class AscendV1Saver(AutoSaverProcessor):
         self.version = "1.0.0"
         self.model_quant_type = "Unknown"
         self.group_size = 0
+        # If global torch dtype is bfloat16, convert deq_scale to int64.
+        self._global_torch_dtype_is_bf16 = self._resolve_is_bf16_from_adapter(adapter)
 
     def support_distributed(self) -> bool:
         return True
@@ -209,6 +212,20 @@ class AscendV1Saver(AutoSaverProcessor):
     def get_rank_save_directory(self) -> str:
         return os.path.join(self.config.save_directory, f"rank_{dist.get_rank()}")
 
+    def _resolve_is_bf16_from_adapter(self, adapter: object) -> bool:
+        """从 adapter 的 AscendV1GlobalModelDtypeInterface 或 config 解析原始模型是否为 bfloat16，用于 deq_scale 是否转 int64。"""
+        if isinstance(adapter, AscendV1GlobalModelDtypeInterface):
+            try:
+                return adapter.get_global_model_torch_dtype() == torch.bfloat16
+            except Exception as e:
+                logger.warning(
+                    "Failed to resolve torch_dtype from adapter %s, falling back to config. Error: %s",
+                    type(adapter).__name__,
+                    e,
+                )
+        logger.warning("Can not resolve torch_dtype from model config, using False as default.")
+        return False
+
     def write_tensor(self, prefix: str, desc: str, tensor: torch.Tensor):
         self.json_writer.write(prefix, desc)
         self.safetensors_writer.write(prefix, tensor)
@@ -229,11 +246,14 @@ class AscendV1Saver(AutoSaverProcessor):
             correction = quant_weight.to(torch.float32).sum(dim=1) * input_offset.to(torch.float32)
             correction = correction.unsqueeze(1) if deq_scale.ndim > 1 else correction
             quant_bias = torch.round(fp_weight_bias / deq_scale - correction).to(torch.int32)
+            deq_scale_to_write = deqscale2int64_by_dtype(
+                deq_scale.to(torch.float32), self._global_torch_dtype_is_bf16
+            )
             self.write_tensor(prefix + ".weight", "W8A8", quant_weight.to(torch.int8))
             self.write_tensor(prefix + ".quant_bias", "W8A8", quant_bias.to(torch.int32))
             self.write_tensor(prefix + ".input_scale", "W8A8", input_scale.to(torch.float32))
             self.write_tensor(prefix + ".input_offset", "W8A8", input_offset.to(torch.float32))
-            self.write_tensor(prefix + ".deq_scale", "W8A8", deq_scale.to(torch.float32))
+            self.write_tensor(prefix + ".deq_scale", "W8A8", deq_scale_to_write)
             if module.bias is not None:
                 self.write_tensor(prefix + ".bias", "W8A8", module.bias.to(torch.float32))
 
@@ -291,11 +311,14 @@ class AscendV1Saver(AutoSaverProcessor):
             correction = quant_weight.to(torch.float32).sum(dim=1) * input_offset.to(torch.float32)
             correction = correction.unsqueeze(1) if deq_scale.ndim > 1 else correction
             quant_bias = torch.round(fp_weight_bias / deq_scale - correction).to(torch.int32)
+            deq_scale_to_write = deqscale2int64_by_dtype(
+                deq_scale.to(torch.float32), self._global_torch_dtype_is_bf16
+            )
             self.write_tensor(prefix + ".weight", "W8A8_MIX", quant_weight.to(torch.int8))
             self.write_tensor(prefix + ".quant_bias", "W8A8_MIX", quant_bias.to(torch.int32))
             self.write_tensor(prefix + ".input_scale", "W8A8_MIX", input_scale.to(torch.float32))
             self.write_tensor(prefix + ".input_offset", "W8A8_MIX", input_offset.to(torch.float32))
-            self.write_tensor(prefix + ".deq_scale", "W8A8_MIX", deq_scale.to(torch.float32))
+            self.write_tensor(prefix + ".deq_scale", "W8A8_MIX", deq_scale_to_write)
 
             weight_scale = weight_scale.unsqueeze(-1)
             self.write_tensor(prefix + ".weight_scale", "W8A8_MIX", weight_scale.to(torch.float32))
@@ -463,7 +486,7 @@ class AscendV1Saver(AutoSaverProcessor):
     def on_activation_per_token(self, prefix: str, module: qir.FakeQuantActivationPerToken):
         # 对于FP8 per-token动态量化，保存quant_type标签
         from msmodelslim.ir.qal import QDType, QScope
-        if (module.x_q_scheme.dtype == QDType.FP8_E4M3 and 
+        if (module.x_q_scheme.dtype == QDType.FP8_E4M3 and
             module.x_q_scheme.scope == QScope.PER_TOKEN):
             # 保存格式为 self_attn.quant_type，而不是 fa3_q.quant_type
             # 提取父路径，例如 model.layers.0.self_attn.fa3_q -> model.layers.0.self_attn
@@ -523,17 +546,17 @@ class AscendV1Saver(AutoSaverProcessor):
                 desc += '_FLATQUANT'
             self.desc_quant = desc
             original_write_tensor(prefix, desc, tensor)
-        
+
         with patch.object(self, 'write_tensor', wraps=flat_write_tensor):
             self._process_module(prefix, wrapped_module)
         self.update_quant_type(self.desc_quant)
-        
+
         if module.save_trans is not None:
             save_trans = module.save_trans
             for key, trans in save_trans.items():
                 self.write_tensor(f"{prefix}.{key}", self.desc_quant, trans)
             self.write_tensor(f"{prefix}.clip_ratio", self.desc_quant, module.clip_factor)
-        
+
     def on_non_fusion_smooth_quant_wrapper(self, prefix: str, module: qir.NonFusionSmoothQuantWrapper):
         wrapped_module = module.wrapped_module
         self.write_tensor(prefix + ".div.mul_scale", "FLOAT", module.scales)

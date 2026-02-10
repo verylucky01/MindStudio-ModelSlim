@@ -200,6 +200,8 @@ class Qwen3VLModelAdapter(
             "Initializing Qwen3-VL model with v1 framework (layer-wise loading)..."
         )
 
+        global_torch_dtype = self.get_global_model_torch_dtype()
+
         # Save original layer count
         origin_layers = self.config.text_config.num_hidden_layers
         get_logger().info(
@@ -222,7 +224,7 @@ class Qwen3VLModelAdapter(
             self.model_path,
             config=self.config,
             trust_remote_code=self.trust_remote_code,
-            torch_dtype="auto",
+            torch_dtype=global_torch_dtype,
             local_files_only=True,
             device_map="cpu",  # All on CPU for now
             attn_implementation="eager",  # Required: prevents KeyError when accessing ALL_ATTENTION_FUNCTIONS
@@ -240,7 +242,14 @@ class Qwen3VLModelAdapter(
             "Loading weights for vision encoder, first decoder layer, and lm_head..."
         )
         state_dict = self._get_state_dict(model)
-        model.load_state_dict(state_dict)
+        # Convert state_dict to target_dtype so safetensors (e.g. bfloat16) do not overwrite config precision
+        state_dict = {k: v.to(global_torch_dtype) for k, v in state_dict.items()}
+        missing, unexpected = model.load_state_dict(state_dict, strict=False)
+        if missing:
+            get_logger().warning(
+                "load_state_dict with strict=False: missing key(s) in state_dict: %s",
+                missing,
+            )
 
         # CRITICAL: Copy text_config attention heads to model.config for OV smoothing
         # BaseSmoothProcessor._apply_standard_ov_smooth() reads from model.config, not model.config.text_config
@@ -597,6 +606,16 @@ class Qwen3VLModelAdapter(
             - pre_run_pairs: List containing embedding + visual rotations
             - rotate_pairs: List of RotatePairs for decoder layers
         """
+        tie_emb = getattr(self.config, "tie_word_embeddings", False) or getattr(
+            getattr(self.config, "text_config", None), "tie_word_embeddings", False
+        )
+        if tie_emb:
+            raise UnsupportedError(
+                "Qwen3-VL with tie_word_embeddings=True does not support QuaRot (rotation).",
+                action=(
+                    "Remove 'quarot' from spec.process or use a model without tied embeddings."
+                ),
+            )
         # Pass full config (includes vision_config) for visual projections
         pre_run, rot_pairs = _qwen3_vl_get_rotate_map(self.config, block_size)
 
@@ -698,8 +717,10 @@ class Qwen3VLModelAdapter(
             # Create layer structure (weights will be on meta or uninitialized)
             decoder = Qwen3VLTextDecoderLayer(self.config.text_config, layer_idx=idx)
 
-            # Load weights from safetensors
+            # Load weights from safetensors; convert to model dtype so bfloat16 checkpoint does not override
             state_dict = self._get_state_dict(decoder, prefix=name)
+            model_dtype = getattr(self, "_model_torch_dtype", None) or next(model.parameters()).dtype
+            state_dict = {k: v.to(model_dtype) for k, v in state_dict.items()}
             decoder.load_state_dict(state_dict)
             decoder.eval()
 

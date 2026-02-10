@@ -28,11 +28,12 @@ from transformers import PreTrainedTokenizerBase, PreTrainedModel, PretrainedCon
 
 from msmodelslim.core.const import DeviceType
 from msmodelslim.utils.exception import SchemaValidateError
+from msmodelslim.model.interface_hub import AscendV1GlobalModelDtypeInterface
 from msmodelslim.utils.security.model import SafeGenerator
 from ..base import BaseModelAdapter
 
 
-class TransformersModel(BaseModelAdapter):
+class TransformersModel(BaseModelAdapter, AscendV1GlobalModelDtypeInterface):
     """
     Transformers model which implements some basic attrs and methods for transformers model.
     You can reuse these basic attrs and methods to implement interface for your own model adapter.
@@ -46,6 +47,18 @@ class TransformersModel(BaseModelAdapter):
 
         self.model_pedigree = self._get_model_pedigree(self.model_type)
         self.model_type = self._get_model_type(self.model_type)
+
+    def get_global_model_torch_dtype(self) -> torch.dtype:
+        """AscendV1GlobalModelDtypeInterface: return global model torch dtype (delegate to get_global_torch_dtype)."""
+        dt = getattr(self.config, "torch_dtype", None)
+        if dt is None:
+            return torch.float32
+        if isinstance(dt, torch.dtype):
+            return dt
+        if isinstance(dt, str):
+            m = {"float32": torch.float32, "float16": torch.float16, "bfloat16": torch.bfloat16}
+            return m.get(dt, torch.float32)
+        return torch.float32
 
     def _enable_kv_cache(self, model: nn.Module, enable: bool):
         model.model.config.use_cache = enable

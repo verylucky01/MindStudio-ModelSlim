@@ -100,6 +100,26 @@ class BufferedSafetensorsWriter(SafetensorsWriter):
         json_safe_dump(index_json_dict, index_json_path, indent=2)
         self.logger.debug(f'Save index json to {index_json_path} successfully')
 
+    def _dedupe_shared_storage(self, keys_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+        """Resolve shared storage: prefer embed_tokens, write other keys (e.g. lm_head.weight) as clones."""
+        seen_ptr: Dict[int, str] = {}
+        out: Dict[str, torch.Tensor] = {}
+        for k in sorted(keys_dict.keys(), key=lambda x: (0 if "embed_tokens" in x else 1, x)):
+            t = keys_dict[k]
+            if not t.is_contiguous():
+                t = t.contiguous()
+            ptr = t.data_ptr()
+            if ptr in seen_ptr:
+                self.logger.warning(
+                    "Saving %s as clone (shares storage with %s) so both keys exist for tie_word_embeddings.",
+                    k, seen_ptr[ptr],
+                )
+                out[k] = t.clone()
+                continue
+            seen_ptr[ptr] = k
+            out[k] = t
+        return out
+
     def save_one_file(self) -> None:
         # no tensors no saving
         if not self.wait_save_keys:
@@ -110,6 +130,9 @@ class BufferedSafetensorsWriter(SafetensorsWriter):
             self.logger.warning(f'Tensor is too large with size {self._wait_save_size / ONE_GB_FILE_BYTES}GB, '
                                 f'exceeds file size limit: {self.max_size / ONE_GB_FILE_BYTES}GB')
 
+        # Dedupe shared storage (e.g. tie_word_embeddings: lm_head.weight vs embed_tokens.weight)
+        tensors_to_save = self._dedupe_shared_storage(self.wait_save_keys)
+
         self._save_count += 1
         save_file_name = f"{self.save_prefix}-{self._save_count:05d}{FILE_TMP_SUFFIX}"
         full_save_file_name = os.path.join(self.save_directory, save_file_name)
@@ -117,7 +140,7 @@ class BufferedSafetensorsWriter(SafetensorsWriter):
 
         self.logger.debug(f"Start save {full_save_file_name}")
         with SafeWriteUmask(umask=0o377):
-            save_file(self.wait_save_keys, full_save_file_name)
+            save_file(tensors_to_save, full_save_file_name)
         self.saved_keys_map.update({key: save_file_name for key in self.wait_save_keys.keys()})
         self.wait_save_keys.clear()
         self._wait_save_size = 0

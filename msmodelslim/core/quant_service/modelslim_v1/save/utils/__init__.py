@@ -18,3 +18,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 -------------------------------------------------------------------------
 """
+
+from .deqscale import deqscale2int64, deqscale2int64_by_dtype
+
+__all__ = ["deqscale2int64", "deqscale2int64_by_dtype"]

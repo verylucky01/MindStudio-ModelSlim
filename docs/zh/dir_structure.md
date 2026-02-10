@@ -236,6 +236,7 @@ model/                        # 各模型系列适配器（对接具体大模型
 ├── qwen3/                    # Qwen3 适配
 ├── qwen3_moe/                # Qwen3-MoE 适配
 ├── qwen3_next/               # Qwen3-Next 适配
+├── qwen3_vl/                 # Qwen3-VL 适配
 ├── qwen3_vl_moe/             # Qwen3-VL-MoE 适配
 ├── qwq/                      # QwQ 模型适配
 ├── wan2_1/                   # Wan2.1 模型适配

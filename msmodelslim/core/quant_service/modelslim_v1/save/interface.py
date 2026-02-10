@@ -21,7 +21,21 @@ See the Mulan PSL v2 for more details.
 
 from abc import ABC, abstractmethod
 from typing import Tuple
+
+import torch
 import torch.nn as nn
+
+
+class AscendV1GlobalModelDtypeInterface(ABC):
+    """Interface for adapters that expose the global model torch dtype (e.g. for Saver to decide deq_scale int64)."""
+
+    @abstractmethod
+    def get_global_model_torch_dtype(self) -> torch.dtype:
+        """
+        Return the global torch dtype used for model loading/calibration.
+        Used by Saver and other components to infer precision (e.g. whether bfloat16).
+        """
+        ...
 
 
 class AscendV1SaveInterface(ABC):

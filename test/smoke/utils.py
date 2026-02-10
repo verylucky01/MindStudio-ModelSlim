@@ -99,11 +99,12 @@ def check_w8a8_static_export(module: W8A8StaticFakeQuantLinear, name: str,
         (f"Quant bias tensor {quant_bias_key} shape mismatch: expected {module.quant_bias.shape}, "
          f"got {quant_bias_tensor.shape}")
 
-    # 验证deq缩放因子tensor必须存在
+    # 验证deq缩放因子tensor必须存在（非 bf16 时保存层将 deq_scale 转为 int64，deqscale2int64）
     assert deq_scale_key in all_tensors, f"Deq scale tensor {deq_scale_key} must exist in safetensors file"
     deq_scale_tensor = all_tensors[deq_scale_key]
-    assert deq_scale_tensor.dtype == torch.float32, \
-        f"Deq scale tensor {deq_scale_key} should be float32, got {deq_scale_tensor.dtype}"
+    assert deq_scale_tensor.dtype == torch.int64, (
+        f"Deq scale tensor {deq_scale_key} should be int64, got {deq_scale_tensor.dtype}"
+    )
     assert deq_scale_tensor.shape == (module.weight.shape[0],), \
         (f"Deq scale tensor {deq_scale_key} shape mismatch: expected {module.deq_scale.shape}, "
          f"got {deq_scale_tensor.shape}")
@@ -342,11 +343,12 @@ def check_w8a8_pd_mix_export(module: W8A8StaticFakeQuantLinear, name: str,
         (f"Quant bias tensor {quant_bias_key} shape mismatch: expected {module.quant_bias.shape}, "
          f"got {quant_bias_tensor.shape}")
 
-    # 验证deq缩放因子tensor必须存在
+    # 验证deq缩放因子tensor必须存在（非 bf16 时保存层将 deq_scale 转为 int64，deqscale2int64）
     assert deq_scale_key in all_tensors, f"Deq scale tensor {deq_scale_key} must exist in safetensors file"
     deq_scale_tensor = all_tensors[deq_scale_key]
-    assert deq_scale_tensor.dtype == torch.float32, \
-        f"Deq scale tensor {deq_scale_key} should be float32, got {deq_scale_tensor.dtype}"
+    assert deq_scale_tensor.dtype == torch.int64, (
+        f"Deq scale tensor {deq_scale_key} should be int64, got {deq_scale_tensor.dtype}"
+    )
     assert deq_scale_tensor.shape == (module.weight.shape[0],), \
         (f"Deq scale tensor {deq_scale_key} shape mismatch: expected {module.deq_scale.shape}, "
          f"got {deq_scale_tensor.shape}")
