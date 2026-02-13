@@ -30,7 +30,6 @@ from pydantic import BaseModel, Field, AfterValidator
 from msmodelslim.app.auto_tuning.evaluation_service_infra import EvaluateContext
 from msmodelslim.utils.exception import ConfigError
 from msmodelslim.utils.logging import logger_setter, get_logger
-from msmodelslim.utils.plugin import TypedConfig
 from msmodelslim.utils.security import AsyncProcess, build_safe_url, safe_get
 from msmodelslim.utils.validation.pydantic import (
     is_safe_host,
@@ -41,7 +40,7 @@ from msmodelslim.utils.validation.pydantic import (
     validate_str_length,
 )
 class VllmAscendConfig(BaseModel):
-    type: TypedConfig.TypeField = Literal['vllm-ascend']
+    type: Literal['vllm-ascend'] = 'vllm-ascend'
     entrypoint: Annotated[
         str,
         AfterValidator(non_empty_string),
