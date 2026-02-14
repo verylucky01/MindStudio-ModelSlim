@@ -1,7 +1,25 @@
 
 
-# msModelSlim
+<div align="center">
+  <br />
+  <br />
+  <img src="docs/assets/modelslim_slogan.png" alt="ModelSlim Slogan" width="340" />
+  <h4>昇腾模型压缩工具</h4>
+  <!-- 用分隔线替代背景 -->
 
+[![Release](https://img.shields.io/badge/dynamic/json?logo=gitcode&label=release&logoColor=blue&color=green&query=$.name&url=https://gitcode.com/api/v5/repos/Ascend/msmodelslim/releases/latest)](https://gitcode.com/Ascend/msmodelslim/releases)<br>
+[![Forks](https://img.shields.io/badge/dynamic/json?logo=forgejo&label=forks&logoColor=blue&color=blue&query=$.forks_count&url=https://gitcode.com/api/v5/repos/Ascend/msmodelslim?)](https://gitcode.com/Ascend/msmodelslim/members)
+[![Stars](https://img.shields.io/badge/dynamic/json?logo=ReverbNation&label=stars&logoColor=yellow&color=yellow&query=$.stargazers_count&url=https://gitcode.com/api/v5/repos/Ascend/msmodelslim)](https://gitcode.com/Ascend/msmodelslim/stargazers)
+[![Issues](https://img.shields.io/badge/dynamic/json?logo=gitcode&label=issues&logoColor=blue&color=red&query=$.open_issues_count&url=https://gitcode.com/api/v5/repos/Ascend/msmodelslim)](https://gitcode.com/Ascend/msmodelslim/issues)<br>
+[![License](https://img.shields.io/badge/license-Apache--2.0-red?logo=apache)](https://gitcode.com/Ascend/msmodelslim/blob/master/LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Keithwwa/msmodelslim)
+<br><br>
+[🌐项目主页](https://gitcode.com/Ascend/msmodelslim) |
+[📖工具文档](https://modelslim.readthedocs.io/zh-cn/latest/) |
+[🔥最新进展](#最新消息)|
+[🤔报告问题](https://gitcode.com/Ascend/msmodelslim/issues/new)
+<br><br>
+</div>
 
 ## 最新消息
 
@@ -21,10 +39,6 @@
 
 ### 2025年10月
 - msModelSlim 支持 Qwen3-235B-A22B W4A8、Qwen3-30B-A3B W4A8 量化。vLLM Ascend已支持量化模型推理部署 部署指导
-- msModelSlim 支持 DeepSeek-V3.2-Exp W8A8 量化，单卡64G显存，100G内存即可执行
-- msModelSlim 现已解决Qwen3-235B-A22B在W8A8量化下频繁出现"游戏副本"等异常token的问题 Qwen3-MoE 量化推荐实践
-- msModelSlim 支持DeepSeek R1 W4A8 per-channel 量化【Prototype】
-- msModelSlim 支持大模型量化敏感层分析
 
 ### 2025年9月
 - msModelSlim 支持 DeepSeek-V3.2-Exp W8A8 量化，单卡64G显存，100G内存即可执行
@@ -68,17 +82,17 @@ MindStudio ModelSlim（昇腾模型压缩工具，msModelSlim），一个以加�
 
 ## 版本说明
 
-msModelSlim的版本说明包含msModelSlim的软件版本配套关系和软件包下载以及每个版本的特性变更说明，具体参见[版本说明](./docs/zh/release_notes.md)。
+msModelSlim的版本说明包含msModelSlim的软件版本配套关系和软件包下载以及每个版本的特性变更说明，具体参见[版本说明](https://modelslim.readthedocs.io/zh-cn/latest/zh/getting_started/release_notes/)。
 
 ## 环境部署
 
-具体安装步骤请查看[《msModelSlim工具安装指南》](docs/zh/install_guide.md)。
+具体安装步骤请查看[《msModelSlim工具安装指南》](https://modelslim.readthedocs.io/zh-cn/latest/zh/getting_started/install_guide/)。
 
 ## 快速入门
 
 快速入门旨在帮助用户快速通过一键量化的方式完成大模型量化功能。
 
-具体快速入门请查看[快速入门](docs/zh/quantization_quick_start.md)。
+具体快速入门请查看[快速入门](https://modelslim.readthedocs.io/zh-cn/latest/zh/getting_started/quick_start/)。
 
 ## 功能介绍
 
@@ -86,18 +100,18 @@ msModelSlim的版本说明包含msModelSlim的软件版本配套关系和软件�
 
 支持矩阵旨在以表格形式呈现不同功能和模型已适配场景的情况。
 
-具体支持矩阵请查看[支持矩阵](docs/zh/foundation_model_support_matrix.md)。
+具体支持矩阵请查看[支持矩阵](https://modelslim.readthedocs.io/zh-cn/latest/zh/model_support/foundation_model_support_matrix/)。
 
 ### 功能指南	
 
-功能指南基于msModelSlim不同架构下的功能支持情况，提供功能使用说明和接口说明。	
+功能指南基于msModelSlim不同架构下的功能支持情况，提供功能介绍和使用说明。	
 
-具体功能指南请查看[功能指南](./docs/zh/feature_guide.md)。	
+具体功能指南请查看[功能指南](https://modelslim.readthedocs.io/zh-cn/latest/)。	
 
 ### 自主量化	
 面向需要将自有模型接入 msModelSlim 的开发者，提供自主将模型接入msModelSlim一键量化的指导。
 
-具体模型接入指南请查看[自主量化模型接入指南](docs/zh/custom_quantization/integrating_models.md)。
+具体模型接入指南请查看[模型接入指南](https://modelslim.readthedocs.io/zh-cn/latest/zh/developer_guide/integrating_models/)。
 
 ### 案例集
 
@@ -115,34 +129,34 @@ msModelSlim的版本说明包含msModelSlim的软件版本配套关系和软件�
     <tr>
       <td rowspan="4"><strong>量化精度调优</strong></td>
       <td>w8a8精度调优策略</td>
-      <td><a href="docs/zh/case_studies/w8a8_accuracy_tuning_policy.md">w8a8精度调优策略指南</a></td>
+      <td><a href="https://modelslim.readthedocs.io/zh-cn/latest/zh/case_studies/w8a8_accuracy_tuning_policy/">w8a8精度调优策略指南</a></td>
     </tr>
     <tr>
       <td>w8a16精度调优策略</td>
-      <td><a href="docs/zh/case_studies/w8a16_accuracy_tuning_policy.md">w8a16精度调优策略指南</a></td>
+      <td><a href="https://modelslim.readthedocs.io/zh-cn/latest/zh/case_studies/w8a16_accuracy_tuning_policy/">w8a16精度调优策略指南</a></td>
     </tr>
     <tr>
       <td>v1框架量化精度调优</td>
-      <td><a href="docs/zh/case_studies/quantization_precision_tuning_guide.md">v1框架量化精度调优指南</a></td>
+      <td><a href="https://modelslim.readthedocs.io/zh-cn/latest/zh/case_studies/quantization_precision_tuning_guide/">v1框架量化精度调优指南</a></td>
     </tr>
     <tr>
-      <td>v1框架Qwen3-32B w8a8a精度调优</td>
-      <td><a href="docs/zh/case_studies/qwen3-32B_w8a8_precision_tuning_case.md">v1框架Qwen3-32B w8a8a精度调优案例</a></td>
+      <td>v1框架Qwen3-32B 精度调优</td>
+      <td><a href="https://modelslim.readthedocs.io/zh-cn/latest/zh/case_studies/qwen3-32B_w8a8_precision_tuning_case/">v1框架Qwen3-32B w8a8精度调优案例</a></td>
     </tr>
     <tr>
       <td><strong>稀疏量化调试</strong></td>
       <td>稀疏量化精度调试案例</td>
-      <td><a href="docs/zh/case_studies/sparse_quantization_accuracy_tuning_cases.md">稀疏量化精度调试方法和案例</a></td>
+      <td><a href="https://modelslim.readthedocs.io/zh-cn/latest/zh/case_studies/sparse_quantization_accuracy_tuning_cases/">稀疏量化精度调试方法和案例</a></td>
     </tr>
     <tr>
       <td><strong>权重转换</strong></td>
       <td>msModelSlim量化权重转AutoAWQ&AutoGPTQ使用指南</td>
-      <td><a href="docs/zh/case_studies/msmodelslim_quantized_weight_to_autoawq_autogptq.md">量化权重格式转换指南</a></td>
+      <td><a href="https://modelslim.readthedocs.io/zh-cn/latest/zh/case_studies/msmodelslim_quantized_weight_to_autoawq_autogptq/">量化权重格式转换指南</a></td>
     </tr>
     <tr>
       <td><strong>推理部署</strong></td>
       <td>加速库&MindIE-Torch场景下的量化权重使用案例</td>
-      <td><a href="docs/zh/case_studies/quantization_weight_use_cases_in_acceleration_and_mindie_torch.md">推理加速库中量化权重使用方法</a></td>
+      <td><a href="https://modelslim.readthedocs.io/zh-cn/latest/zh/case_studies/quantization_weight_use_cases_in_acceleration_and_mindie_torch/">推理加速库中量化权重使用方法</a></td>
     </tr>
   </tbody>
 </table>
@@ -150,11 +164,11 @@ msModelSlim的版本说明包含msModelSlim的软件版本配套关系和软件�
 
 ## FAQ
 
-相关FAQ请参考链接：[FAQ](./docs/zh/faq.md)。
+相关FAQ请参考链接：[FAQ](https://modelslim.readthedocs.io/zh-cn/latest/zh/getting_started/faq/)。
 
 ## 安全声明
 
-描述msModelSlim产品的安全加固信息、公网地址信息及通信矩阵等内容。详情请参见[msModelSlim工具安全声明](docs/zh/security_statement/security_statement.md)。
+描述msModelSlim产品的安全加固信息、公网地址信息及通信矩阵等内容。详情请参见[msModelSlim工具安全声明](https://modelslim.readthedocs.io/zh-cn/latest/zh/getting_started/security_statement/)。
 
 ## 免责声明
 

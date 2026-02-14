@@ -1,0 +1,49 @@
+/* 优化左侧边栏目录缩进 */
+
+/* 二级目录缩进 */
+.md-nav[data-md-level="1"] > .md-nav__list > .md-nav__item > .md-nav__link {
+    padding-left: 1.3rem;
+}
+
+/* 三级目录缩进 */
+.md-nav[data-md-level="2"] > .md-nav__list > .md-nav__item > .md-nav__link {
+    padding-left: 1.5rem;
+}
+
+/* 调整折叠箭头的边距，防止重叠 */
+.md-nav[data-md-level="1"] .md-nav__icon,
+.md-nav[data-md-level="2"] .md-nav__icon {
+    margin-left: 1.5rem;
+}
+
+/* 全局表格样式优化 */
+.md-content table:not([class]) {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #dfe2e5;
+    display: table; /* 确保不被 md-typeset 的 overflow 破坏 */
+}
+
+.md-content table:not([class]) th, 
+.md-content table:not([class]) td {
+    border: 1px solid #dfe2e5;
+    padding: 8px 12px;
+}
+
+.md-content table:not([class]) tr:nth-child(2n) {
+    background-color: #f6f8fa;
+}
+
+/* 兼容之前的 custom-table 类名 */
+.custom-table table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #dfe2e5;
+}
+.custom-table th, .custom-table td {
+    border: 1px solid #dfe2e5;
+    padding: 8px 12px;
+}
+.custom-table tr:nth-child(2n) {
+    background-color: #f6f8fa;
+}

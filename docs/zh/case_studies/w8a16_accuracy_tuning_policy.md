@@ -11,8 +11,8 @@ Transformers 版本适配说明：ChatGLM2-6B 模型需依赖 4.40.2 版本的 T
 ## 前期准备
 
 参考以下两篇文档完成工具使用前准备工作  
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../install_guide.md)  
-以及[大模型量化工具依赖安装](../feature_guide/scripts_based_quantization_and_other_features/pytorch/foundation_model_post_training_quantization.md)。
+安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)  
+以及[大模型量化工具依赖安装](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#使用前准备)。
 
 ## 代码示例
 
@@ -215,7 +215,7 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
         calib_dataset.append([inputs.data['input_ids'].to(device), inputs.data['attention_mask'].to(device)])       
     return calib_dataset
 ```
-注： [Precision Tool 使用方法说明及数据集下载链接](../feature_guide/scripts_based_quantization_and_other_features/pytorch/fake_quantization_accuracy_testing_tool.md)  
+注： [Precision Tool 使用方法说明及数据集下载链接](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#精度定位方法)  
 
 ### 4 量化回退
 量化回退的原因：某些网络层对于量化比较敏感，量化后会带来较大的精度损失，这些层是不太适合量化的，应该使用浮点数进行计算，这个过程称之为回退（回退的都是线性层），可以通过设置disable_names控制哪些层应该被回退。

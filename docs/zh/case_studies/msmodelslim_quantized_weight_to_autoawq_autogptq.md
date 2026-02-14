@@ -19,9 +19,9 @@ AutoGPTQ：GPU
 
 ### 前期准备
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../install_guide.md)。
+安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)。
 
-参考大模型量化中的[使用前准备](../feature_guide/scripts_based_quantization_and_other_features/pytorch/foundation_model_post_training_quantization.md)，进行依赖安装大模型量化工具依赖安装
+参考大模型量化中的[使用前准备](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#使用前准备)，进行依赖安装大模型量化工具依赖安装
 
 ### 量化使用说明
 量化脚本跟正常的量化脚本一样，可以参考：[w8a8精度调优策略](w8a8_accuracy_tuning_policy.md) 。
@@ -34,7 +34,7 @@ anti_outlier.process()
 ```
 
 b.QuantConfig配置
-per_channel和per_group的参数配置是有差异的。  
+per_channel和per_group的参数配置是有差异的。 
 (1)per_group需要配置这三个参数：is_lowbit=True, open_outlier=False, group_size=128。  
 (2)per_channel场景下，如下的三个参数不需要配置，注释掉：is_lowbit=True, open_outlier=False, group_size=128。  
 (3)如果是AutoGPTQ需要更改w_method为='GPTQ', 另外开启GPTQ跑量化时间相对较长。  
@@ -57,14 +57,14 @@ quant_config = QuantConfig(
 ```
 c.关于保存的权重文件
 本脚本仅支持未切片的safetensors权重转换，所以使用保存量化权重文件的时候，不要使用分片保存。  
-参考链接：[save()接口说明](../python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_save().md)
+参考链接：[save()接口说明](../python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_save().md)
 ```python
 calibrator.save(output_path, safetensors_name=None, json_name=None, save_type=None, part_file_size=None)
 ```
 
 
 ### 转换脚本使用说明
-转换脚本路径位于：[ms_to_vllm.py](../../../example/ms_to_vllm.py)
+转换脚本路径位于：[ms_to_vllm.py](https://gitcode.com/Ascend/msmodelslim/blob/master/example/ms_to_vllm.py)
 
 经过上一步1.1使用msModelSlim对权重进行量化，生成quant_model_description_w4a16.json和quant_model_weight_w4a16.safetensors，再使用转换脚本ms_to_vllm.py进行权重格式转换，生成转换后的safetensors文件，用法如下：
 ```python 
@@ -231,12 +231,3 @@ print(tokenizer.decode(model.generate(**tokenizer("auto_gptq is", return_tensors
 
 ## 结论
 经过上述步骤，成功完成msModelSlim在NPU上的量化，并且量化权重经过转换脚本转换后能够在AutoAWQ和AutoGPTQ推理成功。
-
-
-
-
-
-
-
-
-
