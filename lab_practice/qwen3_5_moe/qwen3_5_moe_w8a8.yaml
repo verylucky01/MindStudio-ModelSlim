@@ -1,0 +1,47 @@
+# Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+apiversion: multimodal_vlm_modelslim_v1
+metadata:
+  config_id: Qwen3_5_moe_w8a8
+  score: 90
+  verified_model_types:
+    - Qwen3.5-397B-A17B
+  label:
+    w_bit: 8
+    a_bit: 8
+    is_sparse: False
+    kv_cache: False
+
+default_w8a8_dynamic: &default_w8a8_dynamic
+  act:
+    scope: "per_token"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+  weight:
+    scope: "per_channel"
+    dtype: "int8"
+    symmetric: True
+    method: "minmax"
+
+spec:
+  process:
+    - type: "group"
+      configs:
+        - type: "linear_quant"
+          qconfig: *default_w8a8_dynamic
+          include: 
+            - "*self_attn*"
+          exclude: 
+            - "*self_attn.o_proj*"
+            - "mtp*"
+        - type: "linear_quant"
+          qconfig: *default_w8a8_dynamic
+          include: 
+            - "*mlp.experts*"
+          exclude:
+            - "mtp*"
+  save:
+    - type: "ascendv1_saver"
+      part_file_size: 4
+  dataset: "calibImages"  # Short name: auto-searches in lab_calib/
+  default_text: "Describe this image in detail."

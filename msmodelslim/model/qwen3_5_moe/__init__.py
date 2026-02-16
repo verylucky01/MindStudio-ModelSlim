@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+"""
+-------------------------------------------------------------------------
+This file is part of the MindStudio project.
+Copyright (c) 2025 Huawei Technologies Co.,Ltd.
+
+MindStudio is licensed under Mulan PSL v2.
+You can use this software according to the terms and conditions of the Mulan PSL v2.
+You may obtain a copy of Mulan PSL v2 at:
+
+         http://license.coscl.org.cn/MulanPSL2
+
+THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+See the Mulan PSL v2 for more details.
+-------------------------------------------------------------------------
+"""
+"""
+Qwen3-VL-MoE V1 Framework Adapter
+
+This module provides v1 framework support for Qwen3-VL-MoE models with:
+- Layer-wise loading and quantization
+- Automatic MoE fusion layer conversion
+- Multimodal calibration dataset handling
+- Memory-efficient processing
+"""
+
+__all__ = [
+    'Qwen3_5ModelAdapter',
+    'Qwen3_5MoeExpertMLP',
+    'Qwen3_5MoeTopKRouter',
+    'Qwen3_5MoeSparseMoeBlockWithMLP',
+    'convert_experts_to_mlp',
+]
+
+from .model_adapter import Qwen3_5ModelAdapter
+from .moe_utils import (
+    Qwen3_5MoeExpertMLP,
+    Qwen3_5MoeTopKRouter,
+    Qwen3_5MoeSparseMoeBlockWithMLP,
+    convert_experts_to_mlp,
+)
