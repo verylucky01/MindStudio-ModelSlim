@@ -255,7 +255,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".input_offset", "W8A8", input_offset.to(torch.float32))
             self.write_tensor(prefix + ".deq_scale", "W8A8", deq_scale_to_write)
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W8A8", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w8a16_static_per_channel(self, prefix: str, module: qir.W8A16StaticPerChannelFakeQuantLinear):
         self.update_quant_type("W8A16")
@@ -267,7 +267,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_scale", "W8A16", weight_scale.to(torch.float32))
             self.write_tensor(prefix + ".weight_offset", "W8A16", weight_offset.to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W8A16", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
 
     def on_w8a16_static_per_group(self, prefix: str, module: qir.W8A16StaticPerGroupFakeQuantLinear):
@@ -281,7 +281,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_scale", "W8A16", weight_scale.to(torch.float32))
             self.write_tensor(prefix + ".weight_offset", "W8A16", weight_offset.to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W8A16", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w8a8_dynamic_per_channel(self, prefix: str, module: qir.W8A8DynamicPerChannelFakeQuantLinear):
         self.update_quant_type("W8A8_DYNAMIC")
@@ -293,7 +293,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_offset", "W8A8_DYNAMIC",
                               torch.zeros_like(weight_scale).to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W8A8_DYNAMIC", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w8a8_pd_mix(self, prefix: str, module: qir.W8A8PDMixFakeQuantLinear):
         self.update_quant_type("W8A8_MIX")
@@ -325,7 +325,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_offset", "W8A8_MIX",
                               torch.zeros_like(weight_scale).to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W8A8_MIX", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w8a8_dynamic_per_group(self, prefix: str, module: qir.W8A8DynamicPerGroupFakeQuantLinear):
         self.update_quant_type("W8A8_DYNAMIC")
@@ -338,7 +338,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_offset", "W8A8_DYNAMIC",
                               torch.zeros_like(weight_scale).to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W8A8_DYNAMIC", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_wfp8afp8_dynamic_per_channel(self, prefix: str, module: qir.WFP8AFP8DynamicPerChannelFakeQuantLinear):
         self.update_quant_type("WFP8AFP8_DYNAMIC")
@@ -349,7 +349,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_offset", "WFP8AFP8_DYNAMIC",
                               torch.zeros_like(weight_scale).to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "WFP8AFP8_DYNAMIC", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w8a8_mx_dynamic_per_block(self, prefix: str, module: qir.W8A8MXDynamicPerBlockFakeQuantLinear):
         self.update_quant_type("W8A8_MXFP8")
@@ -367,7 +367,7 @@ class AscendV1Saver(AutoSaverProcessor):
                 # +127 是对 weight_scale 进行偏移处理，使其从-127~128偏移到0~255，正好覆盖torch_uint8的取值范围
             )
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W8A8_MXFP8", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w4a8_dynamic(self, prefix: str, module: qir.W4A8DynamicFakeQuantLinear):
         self.update_quant_type("W4A8_DYNAMIC")
@@ -383,7 +383,7 @@ class AscendV1Saver(AutoSaverProcessor):
                               torch.zeros_like(weight_scale).to(torch.float32))
             self.write_tensor(prefix + '.scale_bias', "W4A8_DYNAMIC", scale_bias.to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W4A8_DYNAMIC", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w4a4_dynamic_per_channel(self, prefix: str, module: qir.W4A4DynamicPerChannelFakeQuantLinear):
         self.update_quant_type("W4A4_DYNAMIC")
@@ -395,7 +395,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_scale", "W4A4_DYNAMIC", weight_scale.to(torch.float32))
             self.write_tensor(prefix + ".weight_offset", "W4A4_DYNAMIC", weight_offset.to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W4A4_DYNAMIC", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w4a4_dynamic_per_group(self, prefix: str, module: qir.W4A4DynamicPerGroupFakeQuantLinear):
         self.update_quant_type("W4A4_DYNAMIC")
@@ -406,7 +406,7 @@ class AscendV1Saver(AutoSaverProcessor):
             self.write_tensor(prefix + ".weight_scale", "W4A4_DYNAMIC", module.weight_scale.to(torch.float32))
             self.write_tensor(prefix + ".weight_offset", "W4A4_DYNAMIC", module.weight_offset.to(torch.float32))
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W4A4_DYNAMIC", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w4a4_mx_dynamic_per_block(self, prefix: str, module: qir.W4A4MXDynamicPerBlockFakeQuantLinear):
         self.update_quant_type("W4A4_MXFP4")
@@ -424,7 +424,7 @@ class AscendV1Saver(AutoSaverProcessor):
                 # +127 是对 weight_scale 进行偏移处理，使其从-127~128偏移到0~255，正好覆盖torch_uint8的取值范围
             )
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W4A4_MXFP4", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_w4a8_mx_dynamic_per_block(self, prefix: str, module: qir.W4A8MXDynamicPerBlockFakeQuantLinear):
         self.update_quant_type("W4A8_MXFP")
@@ -442,7 +442,7 @@ class AscendV1Saver(AutoSaverProcessor):
                 # +127 是对 weight_scale 进行偏移处理，使其从-127~128偏移到0~255，正好覆盖torch_uint8的取值范围
             )
             if module.bias is not None:
-                self.write_tensor(prefix + ".bias", "W4A8_MXFP", module.bias.to(torch.float32))
+                self.write_tensor(prefix + ".bias", "FLOAT", module.bias.to(torch.float32))
 
     def on_float_linear(self, prefix: str, module: nn.Linear):
         self.update_quant_type("FLOAT")
