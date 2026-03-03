@@ -30,7 +30,6 @@ from msmodelslim.core.base.protocol import BatchProcessRequest
 from msmodelslim.ir.norm_bias import RMSNormBias
 from msmodelslim.processor.base import AutoSessionProcessor, AutoProcessorConfig
 from msmodelslim.utils.config_map import ConfigSet
-from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.utils.validation.value import validate_normalized_value, is_boolean
 
@@ -67,7 +66,6 @@ class SmoothQuantProcessor(BaseSmoothProcessor):
         
         # 初始化分布式辅助类（延迟到preprocess时创建，因为需要prefix信息）
         self.dist_helper = None
-    
 
     def apply_smooth_algorithm(self, subgraph_obj: Any, linear_names: List[str]) -> None:
         subgraph_type = SubgraphRegistry.get_name(type(subgraph_obj))
@@ -211,8 +209,10 @@ class SmoothQuantProcessor(BaseSmoothProcessor):
     def _validate_adapter_interface(self, adapter: object) -> None:
         """Validate that the adapter implements SmoothQuantInterface."""
         if not isinstance(adapter, SmoothQuantInterface):
-            raise UnsupportedError(
-                f'{adapter.__class__.__name__} does not implement SmoothQuantInterface',
-                action=f'Please ensure {adapter.__class__.__name__} inherits from SmoothQuantInterface '
-                       f'and implements the methods defined by the interface'
+            get_logger().warning(
+                '%s does not implement SmoothQuantInterface. Fallback to default model adapter logic (hook-based auto-detect). '
+                'To use model-specific config, ensure %s inherits from SmoothQuantInterface and implements the methods defined by the interface',
+                adapter.__class__.__name__,
+                adapter.__class__.__name__
             )
+            self.is_defalut_adapter = True

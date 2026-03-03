@@ -91,9 +91,10 @@ class TestBaseSmoothProcessor(unittest.TestCase):
         self.assertFalse(result)
 
     def test_pre_run(self):
+        """验证 pre_run 当前为空实现，不修改 global_adapter_config"""
         self.adapter.get_adapter_config_for_subgraph.return_value = ["config1", "config2"]
         self.processor.pre_run()
-        self.assertEqual(self.processor.global_adapter_config, ["config1", "config2"])
+        self.assertIsNone(self.processor.global_adapter_config)
 
     def test_preprocess(self):
         request = MagicMock(spec=BatchProcessRequest)

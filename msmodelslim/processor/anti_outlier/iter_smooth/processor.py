@@ -33,7 +33,6 @@ from msmodelslim.ir.rms_norm import RMSNorm
 from msmodelslim.processor.base import AutoSessionProcessor, AutoProcessorConfig
 from msmodelslim.core.observer import MsMinMaxObserver, MinMaxObserverConfig
 from msmodelslim.utils.distributed import DistHelper
-from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
 from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
@@ -288,8 +287,10 @@ class IterSmoothProcessor(BaseSmoothProcessor):
     def _validate_adapter_interface(self, adapter: object) -> None:
         """Validate that the adapter implements IterSmoothInterface."""
         if not isinstance(adapter, IterSmoothInterface):
-            raise UnsupportedError(
-                f'{adapter.__class__.__name__} does not implement IterSmoothInterface',
-                action=f'Please ensure {adapter.__class__.__name__} inherits from IterSmoothInterface '
-                       f'and implements the methods defined by the interface'
+            get_logger().warning(
+                '%s does not implement IterSmoothInterface. Fallback to default model adapter logic (hook-based auto-detect). '
+                'To use model-specific config, ensure %s inherits from IterSmoothInterface and implements the methods defined by the interface',
+                adapter.__class__.__name__,
+                adapter.__class__.__name__
             )
+            self.is_defalut_adapter = True

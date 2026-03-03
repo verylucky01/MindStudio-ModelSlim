@@ -132,13 +132,16 @@ class TestSmoothQuantProcessor:
 
     @staticmethod
     def test_init_with_invalid_adapter():
-        """验证使用无效适配器时抛出异常"""
+        """验证使用无效适配器时回退到默认适配器逻辑"""
         model = MockModel()
         config = SmoothQuantProcessorConfig()
         adapter = MockInvalidAdapter()
 
-        with pytest.raises(UnsupportedError):
-            SmoothQuantProcessor(model, config, adapter)
+        processor = SmoothQuantProcessor(model, config, adapter)
+
+        # 不再抛出异常，而是回退到默认适配器逻辑
+        assert isinstance(processor, SmoothQuantProcessor)
+        assert processor.is_defalut_adapter is True
 
     @staticmethod
     def test_filter_adapter_configs_by_config():

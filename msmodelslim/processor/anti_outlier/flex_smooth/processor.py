@@ -32,7 +32,7 @@ from msmodelslim.core.base.protocol import BatchProcessRequest
 from msmodelslim.processor.base import AutoSessionProcessor, AutoProcessorConfig
 from msmodelslim.core.quantizer.linear import LinearQConfig
 from msmodelslim.core.observer import MsMinMaxObserver, MinMaxObserverConfig
-from msmodelslim.utils.exception import UnsupportedError, SchemaValidateError
+from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.utils.distributed.dist_ops import sync_gather_tensor_lists
 from msmodelslim.utils.distributed import DistHelper
@@ -157,14 +157,16 @@ class FlexSmoothBaseProcessor(BaseSmoothProcessor):
         # 初始化分布式辅助类（延迟到preprocess时创建，因为需要prefix信息）
         self.dist_helper = None
 
-    def _validate_adapter_interface(self, adapter: object):
+    def _validate_adapter_interface(self, adapter: object) -> None:
         """Validate that the adapter implements FlexSmoothQuantInterface."""
         if not isinstance(adapter, FlexSmoothQuantInterface):
-            raise UnsupportedError(
-                f'{adapter.__class__.__name__} does not implement FlexSmoothQuantInterface',
-                action=f'Please ensure {adapter.__class__.__name__} inherits from FlexSmoothQuantInterface '
-                       f'and implements the methods defined by the interface'
+            get_logger().warning(
+                '%s does not implement FlexSmoothQuantInterface. Fallback to default model adapter logic (hook-based auto-detect). '
+                'To use model-specific config, ensure %s inherits from FlexSmoothQuantInterface and implements the methods defined by the interface',
+                adapter.__class__.__name__,
+                adapter.__class__.__name__
             )
+            self.is_defalut_adapter = True
 
 
 @QABCRegistry.register(dispatch_key=FlexSmoothQuantProcessorConfig, abc_class=AutoSessionProcessor)

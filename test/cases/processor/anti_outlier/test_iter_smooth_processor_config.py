@@ -25,6 +25,7 @@ import pytest
 import torch.nn as nn
 
 from msmodelslim.core.graph.adapter_types import AdapterConfig, MappingConfig, FusionConfig
+from msmodelslim.core.base.protocol import BatchProcessRequest
 from msmodelslim.processor.anti_outlier.iter_smooth import IterSmoothProcessor, IterSmoothProcessorConfig
 from msmodelslim.processor.anti_outlier.iter_smooth.interface import IterSmoothInterface
 from msmodelslim.utils.exception import SchemaValidateError, UnsupportedError
@@ -84,12 +85,10 @@ class TestIterSmoothProcessor:
         config = IterSmoothProcessorConfig()
         adapter = MockAdapterWithoutInterface()
 
-        # 在__init__时就会检查adapter是否实现IterSmoothInterface
-        with pytest.raises(UnsupportedError) as exc_info:
-            processor = IterSmoothProcessor(model, config, adapter)
-
-        assert "MockAdapterWithoutInterface does not implement IterSmoothInterface" in str(exc_info.value)
-        assert "Please ensure MockAdapterWithoutInterface inherits from IterSmoothInterface" in str(exc_info.value)
+        # 现在行为：不再抛出异常，而是记录警告并回退到默认适配器逻辑
+        processor = IterSmoothProcessor(model, config, adapter)
+        assert isinstance(processor, IterSmoothProcessor)
+        assert processor.is_defalut_adapter is True
 
     def test_adapter_missing_subgraph_type(self):
         """测试用例2：用户adapter不配置subgraph_type"""
@@ -97,11 +96,9 @@ class TestIterSmoothProcessor:
         config = IterSmoothProcessorConfig()
         adapter = MockAdapterWithIncompleteConfig()
 
-        processor = IterSmoothProcessor(model, config, adapter)
-
-        # 在pre_run时调用adapter.get_adapter_config_for_subgraph()会触发AdapterConfig验证
+        # 现在 AdapterConfig 在构造阶段就会校验 subgraph_type，并抛出 ValueError
         with pytest.raises(ValueError) as exc_info:
-            processor.pre_run()
+            _ = adapter.get_adapter_config_for_subgraph()
 
         assert "subgraph_type is required" in str(exc_info.value)
 
@@ -126,11 +123,9 @@ class TestIterSmoothProcessor:
         config = IterSmoothProcessorConfig()
         adapter = MockAdapterWithIncompleteFusion()
 
-        processor = IterSmoothProcessor(model, config, adapter)
-
-        # 在pre_run时调用adapter.get_adapter_config_for_subgraph()会触发FusionConfig验证
+        # FusionConfig 在构造阶段会校验必要字段，并抛出 ValueError
         with pytest.raises(ValueError) as exc_info:
-            processor.pre_run()
+            _ = adapter.get_adapter_config_for_subgraph()
 
         assert "QKV融合类型必须提供num_attention_heads和num_key_value_heads" in str(exc_info.value)
 

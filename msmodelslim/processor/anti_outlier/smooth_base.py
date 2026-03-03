@@ -34,6 +34,7 @@ from msmodelslim.ir.qal.qtypes import (
 from msmodelslim.core.base.protocol import BatchProcessRequest
 from msmodelslim.core.graph.adapter_types import AdapterConfig
 from msmodelslim.processor.base import AutoSessionProcessor, AutoProcessorConfig
+from msmodelslim.processor.anti_outlier.default.model_adapter import get_adapter_config_for_subgraph as default_get_adapter_config
 from msmodelslim.utils.config_map import ConfigSet
 from msmodelslim.utils.exception import MisbehaviorError, SchemaValidateError, UnsupportedError
 from msmodelslim.utils.logging import get_logger
@@ -65,6 +66,7 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
     def __init__(self, model: nn.Module, config: AutoProcessorConfig, adapter: Optional[Any] = None):
         super().__init__(model)
         self.model = model
+        self.is_defalut_adapter = False
         self._validate_adapter_interface(adapter)
         self.adapter = adapter
         self.config = config
@@ -73,7 +75,6 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
         self.global_adapter_config = None
         self.adapter_config = None
         self.stats_collector = None
-
     @abstractmethod
     def apply_smooth_algorithm(self, subgraph_obj: Any, linear_names: List[str]) -> None:
         """Apply smooth algorithm (must be implemented by subclass)"""
@@ -86,11 +87,12 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
         """
         ...
 
-    def pre_run(self) -> None:
-        self.global_adapter_config = self.adapter.get_adapter_config_for_subgraph()
-        self._validate_parameters()
-
     def preprocess(self, request: BatchProcessRequest) -> None:
+        if self.is_defalut_adapter:
+            self.global_adapter_config = default_get_adapter_config(request)
+        elif self.global_adapter_config is None:
+            self.global_adapter_config = self.adapter.get_adapter_config_for_subgraph()
+        self._validate_parameters()
         self.adapter_config = self._filter_adapter_configs_by_config(
             self.global_adapter_config,
             self.config,
@@ -132,7 +134,6 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
         layer_prefix = f"{scope}." if scope != "" else ""
         include = ConfigSet(config.include) if config.include else ConfigSet(["*"])
         exclude = ConfigSet(config.exclude) if config.exclude else ConfigSet([])
-
         for adapter_config in adapter_configs:
             if adapter_config.subgraph_type not in config.enable_subgraph_type:
                 continue

@@ -10,6 +10,9 @@ metadata:
     kv_cache: False
 spec:
   process:
+    - type: "iter_smooth"
+      include:
+        - "*"
     - type: "linear_quant"
       qconfig:
         act:
