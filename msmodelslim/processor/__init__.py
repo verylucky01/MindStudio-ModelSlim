@@ -25,6 +25,10 @@ __all__ = [
     "AdaptRotationProcessorConfig",
     "AutoProcessorConfig",
     "AutoroundQuantProcessor",
+    "UnaryAnalysisProcessorConfig",
+    "UnaryAnalysisProcessor",
+    "BinaryAnalysisProcessorConfig",
+    "BinaryAnalysisProcessor",
     "LinearProcessorConfig",
     "LinearQuantProcessor",
     "SmoothQuantProcessorConfig",
@@ -52,6 +56,12 @@ __all__ = [
     'FlatQuantProcessor',
 ]
 
+from .analysis import (
+    UnaryAnalysisProcessorConfig,
+    UnaryAnalysisProcessor,
+    BinaryAnalysisProcessorConfig,
+    BinaryAnalysisProcessor,
+)
 from .anti_outlier import (
     SmoothQuantProcessorConfig,
     SmoothQuantProcessor,
