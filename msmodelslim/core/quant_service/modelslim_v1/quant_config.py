@@ -20,6 +20,7 @@ See the Mulan PSL v2 for more details.
 """
 
 from pydantic import BaseModel, Field
+from typing import List, Optional
 from typing_extensions import Self
 
 from msmodelslim.core.const import RunnerType
@@ -28,8 +29,15 @@ from .save.saver import AutoSaverConfigList
 from ..interface import BaseQuantConfig
 
 
+class PriorStageConfig(BaseModel):
+    """前置阶段配置：仅 process + dataset，用于如 adapt_rotation stage1 等先验阶段。"""
+    process: AutoProcessorConfigList = Field(default_factory=list, description="该阶段处理器列表")
+    dataset: Optional[str] = Field(default=None, description="该阶段数据集名称，不提供则使用 spec.dataset")
+
+
 class ModelslimV1ServiceConfig(BaseModel):
     runner: RunnerType = RunnerType.AUTO
+    prior: List[PriorStageConfig] = Field(default_factory=list, description="前置阶段列表，每阶段含 process 与 dataset")
     process: AutoProcessorConfigList = Field(default_factory=list)
     save: AutoSaverConfigList = Field(default_factory=list)
     dataset: str = Field(default='mix_calib.jsonl')

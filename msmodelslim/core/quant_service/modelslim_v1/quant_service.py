@@ -24,6 +24,7 @@ from typing import Optional, Literal, List
 import torch
 
 from msmodelslim.core.const import RunnerType, DeviceType
+from msmodelslim.core.context import ContextFactory, ContextManager
 from msmodelslim.core.quant_service.dataset_loader_infra import DatasetLoaderInfra
 from msmodelslim.core.runner.layer_wise_runner import LayerWiseRunner
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
@@ -134,41 +135,54 @@ class ModelslimV1QuantService(IQuantService):
             # 如果使用npu进行量化需开启二进制编译，避免在线编译算子
             torch.npu.set_compile_mode(jit_compile=False)
 
-        get_logger().info(f"==========QUANTIZATION: Prepare Dataset==========")
-        dataset = self.dataset_loader.get_dataset_by_name(quant_config.spec.dataset)
-        get_logger().info(f"prepare dataset from {quant_config.spec.dataset} success")
-
-        final_process_cfg = quant_config.spec.process
         if save_path is not None:
             get_logger().info(f"==========QUANTIZATION: Prepare Persistence==========")
             for save_cfg in quant_config.spec.save:
                 save_cfg.set_save_directory(save_path)
-
-            # 注册处理器
-            final_process_cfg += quant_config.spec.save
             get_logger().info(f"prepare Persistence to {save_path} success")
 
-        get_logger().info(f"==========QUANTIZATION: Run Quantization==========")
-        # 选择 runner
         runner_type = self._choose_runner_type(quant_config, model_adapter, device_indices)
-        if runner_type == RunnerType.MODEL_WISE:
-            runner = PPRunner(adapter=model_adapter)
-        elif runner_type == RunnerType.LAYER_WISE:
-            runner = LayerWiseRunner(adapter=model_adapter)
-        elif runner_type == RunnerType.DP_LAYER_WISE:
-            # 延迟导入以避免循环依赖
-            from msmodelslim.core.runner.dp_layer_wise_runner import DPLayerWiseRunner
-            runner = DPLayerWiseRunner(adapter=model_adapter)
-        else:
+        ctx = ContextFactory().create(is_distributed=(runner_type == RunnerType.DP_LAYER_WISE))
+
+        def _create_runner():
+            if runner_type == RunnerType.MODEL_WISE:
+                return PPRunner(adapter=model_adapter)
+            if runner_type == RunnerType.LAYER_WISE:
+                return LayerWiseRunner(adapter=model_adapter)
+            if runner_type == RunnerType.DP_LAYER_WISE:
+                from msmodelslim.core.runner.dp_layer_wise_runner import DPLayerWiseRunner
+                return DPLayerWiseRunner(adapter=model_adapter)
             raise UnsupportedError("Invalid runner type",
                                    action="Please use RunnerType.MODEL_WISE or RunnerType.LAYER_WISE")
 
-        get_logger().info(f"Create runner {runner_type} success")
+        with ContextManager(ctx):
+            # 前置阶段：每阶段独立 process + dataset，结果通过 get_current_context() 传递到主阶段
+            for idx, prior_stage in enumerate(quant_config.spec.prior):
+                get_logger().info("==========QUANTIZATION: Prior Stage %s/%s==========", idx + 1, len(quant_config.spec.prior))
+                prior_dataset_name = prior_stage.dataset if prior_stage.dataset else quant_config.spec.dataset
+                if prior_stage.dataset:
+                    get_logger().info("Prior stage dataset specified, using dataset: %s", prior_dataset_name)
+                else:
+                    get_logger().info("Prior stage dataset not provided, fallback to spec.dataset: %s", prior_dataset_name)
+                prior_dataset = self.dataset_loader.get_dataset_by_name(prior_dataset_name)
+                get_logger().info("prepare dataset from %s success", prior_dataset_name)
+                runner = _create_runner()
+                for process_cfg in prior_stage.process:
+                    runner.add_processor(processor_cfg=process_cfg)
+                runner.run(calib_data=prior_dataset, device=device, device_indices=device_indices)
 
-        for process_cfg in final_process_cfg:
-            runner.add_processor(processor_cfg=process_cfg)
-
-        runner.run(calib_data=dataset, device=device, device_indices=device_indices)
+            # 主阶段：process + save，使用 spec.dataset（可读取 prior 写入的 context）
+            get_logger().info(f"==========QUANTIZATION: Run Quantization==========")
+            dataset = self.dataset_loader.get_dataset_by_name(quant_config.spec.dataset)
+            get_logger().info(f"prepare dataset from {quant_config.spec.dataset} success")
+            get_logger().info(f"Create runner {runner_type} success")
+            runner = _create_runner()
+            for process_cfg in quant_config.spec.process:
+                runner.add_processor(processor_cfg=process_cfg)
+            if save_path is not None:
+                for save_cfg in quant_config.spec.save:
+                    runner.add_processor(processor_cfg=save_cfg)
+            runner.run(calib_data=dataset, device=device, device_indices=device_indices)
         get_logger().info(f"==========QUANTIZATION: END==========")
 
 
