@@ -21,7 +21,9 @@ See the Mulan PSL v2 for more details.
 __all__ = [
     "IQuantService",
     "DatasetLoaderInfra",
+    "KeyInfoPersistenceInfra"
 ]
 
 from .dataset_loader_infra import DatasetLoaderInfra
 from .interface import IQuantService
+from .key_info_persistence_infra import KeyInfoPersistenceInfra

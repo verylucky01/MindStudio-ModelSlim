@@ -26,11 +26,13 @@ import torch
 
 from msmodelslim.core.const import RunnerType, DeviceType
 from msmodelslim.core.quant_service import DatasetLoaderInfra
+from msmodelslim.core.quant_service import KeyInfoPersistenceInfra
 from msmodelslim.core.runner.layer_wise_runner import LayerWiseRunner
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
 from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.utils.seed import seed_all
+from msmodelslim.core.context import ContextManager, IContextFactory
 from .quant_config import MultimodalVLMModelslimV1QuantConfig
 from ..interface import BaseQuantConfig, IQuantService, QuantServiceConfig
 
@@ -59,19 +61,27 @@ class MultimodalVLMModelslimV1QuantService(IQuantService):
 
     backend_name: str = "multimodal_vlm_modelslim_v1"
 
-    def __init__(self,
-                 quant_service_config: MultimodalVLMModelslimV1QuantServiceConfig,
-                 dataset_loader: DatasetLoaderInfra,
-                 **kwargs):
+    def __init__(
+        self,
+        quant_service_config: MultimodalVLMModelslimV1QuantServiceConfig,
+        dataset_loader: DatasetLoaderInfra,
+        context_factory: Optional[IContextFactory] = None,
+        debug_info_persistence: Optional[KeyInfoPersistenceInfra] = None,
+        **kwargs,
+    ):
         """
         Initialize multimodal VLM quantization service.
-        
+
         Args:
             quant_service_config: MultimodalVLMModelslimV1QuantServiceConfig.
             dataset_loader: DatasetLoaderInfra（用于加载数据集）.
+            context_factory: Optional context factory for dependency injection.
+            debug_info_persistence: Optional context persistence for saving debug info.
         """
         self.quant_service_config = quant_service_config
         self.dataset_loader = dataset_loader
+        self.context_factory = context_factory
+        self.debug_info_persistence = debug_info_persistence
 
     @staticmethod
     def _choose_runner_type(quant_config: MultimodalVLMModelslimV1QuantConfig,
@@ -201,16 +211,24 @@ class MultimodalVLMModelslimV1QuantService(IQuantService):
                 f"runner for multimodal_vlm_modelslim_v1 is not layer_wise, will be converted to layer_wise.")
 
         runner = LayerWiseRunner(adapter=model_adapter, offload_device="cpu")
-
+        ctx = self.context_factory.create()
         get_logger().info(f"Created runner LayerWiseRunner successfully")
+        with ContextManager(ctx=ctx):
+            # Add all processors
+            for process_cfg in final_process_cfg:
+                runner.add_processor(processor_cfg=process_cfg)
 
-        # Add all processors
-        for process_cfg in final_process_cfg:
-            runner.add_processor(processor_cfg=process_cfg)
+            # Run quantization
+            runner.run(calib_data=dataset, device=device)
+            get_logger().info(f"==========QUANTIZATION: END==========")
 
-        # Run quantization
-        runner.run(calib_data=dataset, device=device)
-        get_logger().info(f"==========QUANTIZATION: END==========")
+        # Save context if persistence is provided
+        if self.debug_info_persistence is not None:
+            get_logger().info(f"==========SAVE CONTEXT DEBUG INFO==========")
+            try:
+                self.debug_info_persistence.save_from_context(ctx=ctx)
+            except Exception as e:
+                get_logger().warning(f"Failed to save debug info: {e}")
 
 
 def get_plugin():

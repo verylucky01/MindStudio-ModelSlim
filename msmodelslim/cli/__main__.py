@@ -65,6 +65,8 @@ def main():
     quant_parser.add_argument('--trust_remote_code', type=convert_to_bool, default=False,
                               help="Trust custom code (bool type, must be True or False). "
                                    "Please ensure the security of the loaded custom code file.")
+    quant_parser.add_argument("--debug", action="store_true",
+                              help="Enable debug mode for context recording")
     quant_parser.add_argument('--scenario', nargs='*', default=None,
                               help="Optional scenario tags to match configs with verified scenario (e.g. mindie Atlas_A2, vllm cpu). "
                                    "User can add multiple tags; matching requires all tags to appear in the same scenario."

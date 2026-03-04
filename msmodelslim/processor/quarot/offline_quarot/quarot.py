@@ -90,9 +90,12 @@ class QuaRotProcessor(AutoSessionProcessor):
         return True
 
     def pre_run(self) -> None:
+
         pre_run_fused_ln, self.fused_map = self.adapter.get_ln_fuse_map()
         pre_run_bake_names, self.bake_names = self.adapter.get_bake_names()
         pre_run_pairs, self.rotate_pairs = self.adapter.get_rotate_map(block_size=self.config.block_size)
+
+        self._record_debug_info(pre_run_pairs, self.rotate_pairs)
         pre_run_commands = get_rotate_command(pre_run_pairs)
         self._fuse_norm(pre_run_fused_ln)
         self._bake_mean(pre_run_bake_names)
@@ -123,6 +126,34 @@ class QuaRotProcessor(AutoSessionProcessor):
                 "no global rotation matrix available for export (optional.quarot.global_rotation)."
             )
 
+    def _record_debug_info(self,pre_run_pairs, rotate_pairs):
+        from msmodelslim.core.context import get_current_context
+
+        ctx = get_current_context()
+
+        if ctx is not None and ctx.is_enable_debug():
+            ns = ctx["quarot_rotate_matrices"]
+
+            for pre_run in pre_run_pairs:
+                self._record_rotate_pair_mapping(pre_run, ns)
+
+            for rotate_pair in rotate_pairs:
+                self._record_rotate_pair_mapping(rotate_pair, ns)
+
+
+    def _record_rotate_pair_mapping(self, rotate_pair, ns):
+        for side_name, rot_dict in [
+            ("left", rotate_pair.left_rot),
+            ("right", rotate_pair.right_rot),
+        ]:
+            for layer_name, rot_tensor in rot_dict.items():
+                key = f"{layer_name}.{side_name}"
+
+                if isinstance(rot_tensor, list):
+                    ns.debug[key] = [m.cpu().detach() for m in rot_tensor]
+                else:
+                    ns.debug[key] = rot_tensor.cpu().detach()
+
     def preprocess(self, request: BatchProcessRequest) -> None:
         prefix = request.name
         prefix = f"{prefix}." if prefix != "" else ""
@@ -134,7 +165,7 @@ class QuaRotProcessor(AutoSessionProcessor):
         self._rotate(rotate_commands)
         if self.config.online:
             self.online_processor.preprocess(request)
-    
+
     def post_run(self) -> None:
         self._fuse_norm(self.fused_map)
         self.fused_map = {}

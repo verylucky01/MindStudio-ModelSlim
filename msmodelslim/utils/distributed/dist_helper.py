@@ -26,6 +26,28 @@ import torch.distributed as dist
 import torch.nn as nn
 
 
+def is_rank_zero() -> bool:
+    """
+    判断当前进程是否是 rank 0
+
+    在多卡量化时，通常只需要 rank 0 进行信息提取、日志记录、模型保存等操作。
+
+    Returns:
+        bool: 如果是 rank 0 或未初始化分布式环境，返回 True；否则返回 False
+
+    Examples:
+        >>> if is_rank_zero():
+        >>>     # 只在 rank 0 上执行
+        >>>     print("Saving model...")
+        >>>     model.save()
+    """
+    if not dist.is_available():
+        return True
+    if not dist.is_initialized():
+        return True
+    return dist.get_rank() == 0
+
+
 class Scope(Enum):
     """
     定义模块作用域的枚举类

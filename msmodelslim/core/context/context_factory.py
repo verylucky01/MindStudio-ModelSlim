@@ -23,9 +23,27 @@ from msmodelslim.core.context.interface import IContextFactory, IContext
 
 
 class ContextFactory(IContextFactory):
+
+    def __init__(self, enable_debug: bool = False):
+        """Initialize ContextFactory with debug setting.
+
+        Args:
+            enable_debug: Whether to enable debug recording in created contexts.
+        """
+        self.enable_debug = enable_debug
+
     def create(self, is_distributed: bool = False) -> IContext:
+        """Create a context instance.
+
+        Args:
+            is_distributed: Whether to create a distributed context for multi-process scenarios.
+
+        Returns:
+            IContext: A context instance (LocalDictContext or SharedDictContext).
+        """
+
         if is_distributed:
             from msmodelslim.core.context.shared_dict_context.context import SharedDictContext
-            return SharedDictContext()
+            return SharedDictContext(enable_debug=self.enable_debug)
         from msmodelslim.core.context.local_dict_context.context import LocalDictContext
-        return LocalDictContext()
+        return LocalDictContext(enable_debug=self.enable_debug)

@@ -44,11 +44,10 @@ class TestContextFactory:
 
     def test_create_returns_context_with_mutable_namespace_when_is_distributed_false(self):
         """create 在单进程场景下返回的 context 可创建 namespace，且 state/debug 为 MutableMapping 并可读写."""
-        factory = ContextFactory()
+        factory = ContextFactory(enable_debug=True)
         ctx = factory.create(is_distributed=False)
         with ContextManager(ctx=ctx):
             ctx_obj = get_current_context()
-            ctx_obj.create_namespace("Quarot")
             assert isinstance(ctx_obj["Quarot"].state, MutableMapping)
             assert isinstance(ctx_obj["Quarot"].debug, MutableMapping)
             ctx_obj["Quarot"].state["foo"] = "bar"
@@ -65,7 +64,7 @@ class TestBaseNamespaceState:
         factory = ContextFactory()
         ctx = factory.create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ns = ctx.create_namespace("test")
+            ns = ctx["test"]
             with pytest.raises(SchemaValidateError, match="Unsupported value type"):
                 ns.state["invalid"] = CustomInvalidType("state")
 
@@ -75,10 +74,10 @@ class TestBaseNamespaceDebug:
 
     def test_setitem_raises_schema_validate_error_when_value_is_non_whitelist_custom_type(self):
         """debug 赋值非白名单自定义类型时抛出 SchemaValidateError."""
-        factory = ContextFactory()
+        factory = ContextFactory(enable_debug=True)
         ctx = factory.create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ns = ctx.create_namespace("test")
+            ns = ctx["test"]
             with pytest.raises(SchemaValidateError, match="Unsupported value type"):
                 ns.debug["invalid"] = CustomInvalidType("debug")
 
@@ -127,7 +126,7 @@ class TestBaseContext:
         """key 存在时 get 返回对应 namespace."""
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ctx.create_namespace("a")
+            var = ctx["a"]
             ns = ctx.get("a")
             assert ns is not None
             assert ns.state is not None
@@ -136,7 +135,7 @@ class TestBaseContext:
         """delete 删除已存在的 namespace."""
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ctx.create_namespace("a")
+            var = ctx["a"]
             assert "a" in ctx
             ctx.delete("a")
             assert "a" not in ctx
@@ -145,8 +144,8 @@ class TestBaseContext:
         """有 namespace 时 keys 返回所有 key."""
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ctx.create_namespace("x")
-            ctx.create_namespace("y")
+            var = ctx["x"]
+            var = ctx["y"]
             assert set(ctx.keys()) == {"x", "y"}
 
     def test_getitem_creates_and_returns_namespace_when_key_missing(self):
@@ -161,14 +160,14 @@ class TestBaseContext:
         """key 已存在时 __getitem__ 返回同一 namespace."""
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ctx.create_namespace("same")
+            var = ctx["same"]
             assert ctx["same"] is ctx["same"]
 
     def test_delitem_removes_namespace_when_key_exists(self):
         """__delitem__ 删除已存在的 namespace."""
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ctx.create_namespace("d")
+            var = ctx["d"]
             del ctx["d"]
             assert "d" not in ctx
 
@@ -176,7 +175,7 @@ class TestBaseContext:
         """key 存在时 __contains__ 为 True."""
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ctx.create_namespace("k")
+            var = ctx["k"]
             assert "k" in ctx
 
     def test_contains_returns_false_when_key_missing(self):
@@ -190,16 +189,16 @@ class TestBaseContext:
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
             assert len(ctx) == 0
-            ctx.create_namespace("a")
-            ctx.create_namespace("b")
+            var = ctx["a"]
+            var = ctx["b"]
             assert len(ctx) == 2
 
     def test_iter_returns_keys_iterator(self):
         """__iter__ 可迭代出所有 namespace 的 key."""
         ctx = ContextFactory().create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ctx.create_namespace("p")
-            ctx.create_namespace("q")
+            var = ctx["p"]
+            var = ctx["q"]
             assert set(iter(ctx)) == {"p", "q"}
 
 
@@ -222,7 +221,7 @@ class TestBaseNamespaceStateWhitelist:
         factory = ContextFactory()
         ctx = factory.create(is_distributed=False)
         with ContextManager(ctx=ctx):
-            ns = ctx.create_namespace("test")
+            ns = ctx["test"]
             ns.state["int"] = 1
             ns.state["str"] = "ok"
             ns.state["float"] = 1.0

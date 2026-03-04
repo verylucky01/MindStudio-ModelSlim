@@ -25,12 +25,14 @@ from typing import Optional, List, Literal
 import torch
 
 from msmodelslim.core.const import DeviceType
+from msmodelslim.core.quant_service import KeyInfoPersistenceInfra
 from msmodelslim.model import IModel
 from msmodelslim.pytorch.llm_ptq.anti_outlier import AntiOutlier, AntiOutlierConfig
 from msmodelslim.pytorch.llm_ptq.llm_ptq_tools import Calibrator, QuantConfig
 from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.utils.logging import logger_setter, get_logger
 from msmodelslim.utils.security import safe_copy_file
+from msmodelslim.core.context.interface import IContextFactory
 from .pipeline_interface import PipelineInterface
 from .quant_config import ModelslimV0QuantConfig
 from ..dataset_loader_infra import DatasetLoaderInfra
@@ -65,12 +67,18 @@ class ModelslimV0QuantServiceConfig(QuantServiceConfig):
 class ModelslimV0QuantService(IQuantService):
     backend_name: str = "modelslim_v0"
 
-    def __init__(self,
-                 quant_service_config: ModelslimV0QuantServiceConfig,
-                 dataset_loader: DatasetLoaderInfra,
-                 **kwargs):
+    def __init__(
+        self,
+        quant_service_config: ModelslimV0QuantServiceConfig,
+        dataset_loader: DatasetLoaderInfra,
+        context_factory: IContextFactory,
+        debug_info_persistence: Optional[KeyInfoPersistenceInfra] = None,
+        **kwargs,
+    ):
         self.quant_service_config = quant_service_config
         self.dataset_loader = dataset_loader
+        self.context_factory = context_factory
+        self.debug_info_persistence = debug_info_persistence
 
     def quantize(
             self,

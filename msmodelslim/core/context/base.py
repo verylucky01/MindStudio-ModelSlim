@@ -26,6 +26,8 @@ import torch
 from msmodelslim.core.context.interface import IContext, INamespace, IValidatedState
 from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.core.context.interface import NAMESPACE_VALUE_WHITELIST
+from msmodelslim.utils.distributed import is_rank_zero
+
 
 def _is_torch_tensor(value: Any) -> bool:
     return isinstance(value, torch.Tensor)
@@ -106,12 +108,30 @@ class ValidatedDict(IValidatedState):
         return repr(self._dict)
 
 
+class DebugDict(ValidatedDict):
+    """Debug dictionary that only records when debug is enabled and on rank 0."""
+
+    def __init__(self, enable_debug: bool, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._enable_debug = enable_debug
+
+    def __setitem__(self, key, value) -> None:
+        # Only record debug info when debug is enabled and on rank 0
+        if self._enable_debug and is_rank_zero():
+            super().__setitem__(key, value)
+
+
 class BaseNamespace(INamespace):
-    def __init__(self, dict_factory: Optional[Callable[[], MutableMapping]] = None) -> None:
+
+    def __init__(
+        self,
+        enable_debug: bool = False,
+        dict_factory: Optional[Callable[[], MutableMapping]] = None,
+    ) -> None:
         if dict_factory is None:
             dict_factory = ValidatedDict
         self._state = dict_factory()
-        self._debug = dict_factory()
+        self._debug = DebugDict(enable_debug)
 
     @property
     def state(self) -> MutableMapping:
@@ -128,9 +148,9 @@ class BaseNamespace(INamespace):
 class BaseContext(IContext, ABC):
     """Base context implementation with common dict-based namespace operations."""
 
-    @abstractmethod
-    def create_namespace(self, key: str) -> INamespace:
-        """Create a new namespace. Subclasses define namespace type and storage."""
+    def __init__(self, enable_debug: bool = False) -> None:
+        self._namespaces = {}
+        self._enable_debug = enable_debug
 
     def get(self, key: str, default: Any = None) -> Any:
         return self._namespaces.get(key, default)
@@ -141,9 +161,17 @@ class BaseContext(IContext, ABC):
     def keys(self) -> Iterable[str]:
         return self._namespaces.keys()
 
+    def is_enable_debug(self) -> bool:
+        """Check if debug recording is enabled.
+
+        Returns:
+            bool: True if debug recording is enabled, False otherwise.
+        """
+        return self._enable_debug
+
     def __getitem__(self, key: str) -> INamespace:
         if key not in self._namespaces:
-            self.create_namespace(key)
+            self._namespaces[key] = BaseNamespace(self._enable_debug)
         return self._namespaces[key]
 
     def __delitem__(self, key: str) -> None:
@@ -160,4 +188,3 @@ class BaseContext(IContext, ABC):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(namespaces={list(self._namespaces.keys())})"
-

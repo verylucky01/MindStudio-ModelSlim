@@ -478,6 +478,7 @@ class TestFlexSmoothImplNormLinear:
         subgraph = Mock(spec=NormLinearSubgraph)
         subgraph.norm = Mock()
         subgraph.linears = [Mock(), Mock()]  # 多个线性层
+        subgraph.linear_names = ["name0", "name1"]
         
         # 设置权重
         for linear in subgraph.linears:

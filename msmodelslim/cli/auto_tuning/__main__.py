@@ -35,6 +35,7 @@ from msmodelslim.infra.yaml_practice_manager import YamlPracticeManager
 from msmodelslim.model import PluginModelFactory
 from msmodelslim.utils.config import msmodelslim_config
 from msmodelslim.utils.security.path import get_valid_read_path
+from msmodelslim.core.context import ContextFactory
 
 
 def get_practice_dir():
@@ -68,6 +69,7 @@ def main(args):
         QuantServiceProxyConfig(apiversion="proxy"),
         dataset_loader,
         vlm_dataset_loader,
+        context_factory=ContextFactory()
     )
     model_factory = PluginModelFactory()
     tuning_history_manager = YamlTuningHistoryManager()

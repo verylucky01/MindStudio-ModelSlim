@@ -36,6 +36,7 @@ from msmodelslim.core.quant_service.multimodal_sd_v1.quant_service import (
     MultimodalSDModelslimV1QuantService,
     MultimodalSDModelslimV1QuantServiceConfig,
 )
+from msmodelslim.core.context import IContextFactory
 
 
 class TestQuantProcessComplete:
@@ -67,8 +68,10 @@ class TestQuantProcessComplete:
 
         # QuantService 初始化使用 QuantServiceConfig（仅 apiversion），不是 QuantConfig
         self.quant_service_config = MultimodalSDModelslimV1QuantServiceConfig()
+        self.context_factory = Mock(spec=IContextFactory)
         self.service = MultimodalSDModelslimV1QuantService(
-            self.quant_service_config, self.dataset_loader
+            self.quant_service_config, self.dataset_loader, 
+            self.context_factory
         )
 
         # 模型适配器（保持原逻辑）

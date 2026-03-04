@@ -24,13 +24,16 @@ import os
 from pathlib import Path
 from typing import Optional, List, Literal
 
+
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.quant_service.dataset_loader_infra import DatasetLoaderInfra
+from msmodelslim.core.quant_service import KeyInfoPersistenceInfra
 from msmodelslim.core.runner.layer_wise_runner import LayerWiseRunner
 from msmodelslim.model import IModel
 from msmodelslim.utils.cache import load_cached_data_for_models, to_device
 from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.utils.logging import get_logger, logger_setter
+from msmodelslim.core.context import IContextFactory, ContextManager
 from .pipeline_interface import MultimodalPipelineInterface
 from .quant_config import MultimodalSDModelslimV1QuantConfig, MultiExpertQuantConfig
 from ..interface import BaseQuantConfig, QuantServiceConfig, IQuantService
@@ -46,12 +49,18 @@ class MultimodalSDModelslimV1QuantServiceConfig(QuantServiceConfig):
 class MultimodalSDModelslimV1QuantService(IQuantService):
     backend_name: str = "multimodal_sd_modelslim_v1"
 
-    def __init__(self,
-                 quant_service_config: MultimodalSDModelslimV1QuantServiceConfig,
-                 dataset_loader: DatasetLoaderInfra,
-                 **kwargs):
+    def __init__(
+        self,
+        quant_service_config: MultimodalSDModelslimV1QuantServiceConfig,
+        dataset_loader: DatasetLoaderInfra,
+        context_factory: IContextFactory,
+        debug_info_persistence: Optional[KeyInfoPersistenceInfra] = None,
+        **kwargs,
+    ):
         self.quant_service_config = quant_service_config
         self.dataset_loader = dataset_loader
+        self.context_factory = context_factory
+        self.debug_info_persistence = debug_info_persistence
 
     def quantize(
             self,
@@ -122,17 +131,40 @@ class MultimodalSDModelslimV1QuantService(IQuantService):
                 get_logger().warning(f"runner for multimodal_sd_v1 is not layer_wise, will be converted to layer_wise.")
 
             runner = LayerWiseRunner(adapter=model_adapter)
-            for process_cfg in final_process_cfg:
-                runner.add_processor(processor_cfg=process_cfg)
+            ctx = self.context_factory.create()
+            with ContextManager(ctx=ctx):
+                for process_cfg in final_process_cfg:
+                    runner.add_processor(processor_cfg=process_cfg)
 
-            try:
-                model_adapter.apply_quantization(functools.partial(runner.run,
-                                                                   calib_data=calib_data[expert_name], device=device,
-                                                                   model=expert_model))
-                get_logger().info(f"========== {expert_name} quantized, save to {expert_save_path} ==========")
-            except Exception as e:
-                get_logger().error(f"========== {expert_name} quantization failed: {str(e)} ==========")
-                raise RuntimeError(f"========== {expert_name} quantization failed: {str(e)} ==========") from e
+                try:
+                    model_adapter.apply_quantization(
+                        functools.partial(
+                            runner.run,
+                            calib_data=calib_data[expert_name],
+                            device=device,
+                            model=expert_model,
+                        )
+                    )
+                    get_logger().info(
+                        f"========== {expert_name} quantized, save to {expert_save_path} =========="
+                    )
+                except Exception as e:
+                    get_logger().error(
+                        f"========== {expert_name} quantization failed: {str(e)} =========="
+                    )
+                    raise RuntimeError(
+                        f"========== {expert_name} quantization failed: {str(e)} =========="
+                    ) from e
+
+            # Save context if persistence is provided
+            if self.debug_info_persistence is not None:
+                get_logger().info(
+                    f"==========SAVE DEBUG INFO for {expert_name}=========="
+                )
+                try:
+                    self.debug_info_persistence.save_from_context(ctx=ctx)
+                except Exception as e:
+                    get_logger().warning(f"Failed to save debug info: {e}")
 
         model_adapter.transformer = original_transformer
 

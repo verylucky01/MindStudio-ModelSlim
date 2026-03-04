@@ -39,6 +39,7 @@ class NonFusionSubgraph(Subgraph):
     该子图代表了非融合操作符。
     """
     linears: List[nn.Linear]
+    linear_names: Optional[List[str]] = None
 
 
 @dataclass
@@ -56,6 +57,7 @@ class NormLinearSubgraph(Subgraph):
 
     norm: Union["RMSNormBias"]
     linears: List[nn.Linear]
+    linear_names: Optional[List[str]] = None
 
 
 @dataclass
@@ -70,6 +72,8 @@ class LinearLinearSubgraph(Subgraph):
 
     linear1: nn.Linear
     linear2: nn.Linear
+    linear1_name: Optional[str] = None
+    linear2_name: Optional[str] = None
 
 
 @dataclass
@@ -93,6 +97,8 @@ class OVSubgraph(Subgraph):
     num_attention_heads: int
     key_value_heads: int
     extra_config: Optional[Dict[str, Any]] = None
+    o_proj_name: Optional[str] = None
+    v_proj_name: Optional[str] = None
 
 
 @dataclass
@@ -108,3 +114,6 @@ class UpDownSubgraph(Subgraph):
     up_proj: nn.Linear
     down_proj: nn.Linear
     gate_proj: nn.Linear
+    up_proj_name: Optional[str] = None
+    down_proj_name: Optional[str] = None
+    gate_proj_name: Optional[str] = None

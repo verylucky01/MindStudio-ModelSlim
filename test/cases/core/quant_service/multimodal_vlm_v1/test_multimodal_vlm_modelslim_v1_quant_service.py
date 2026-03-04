@@ -44,7 +44,7 @@ from msmodelslim.core.quant_service.multimodal_vlm_v1.quant_service import (
 )
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
 from msmodelslim.utils.exception import SchemaValidateError
-
+from msmodelslim.core.context import IContextFactory
 
 class TestMultimodalVLMModelslimV1QuantService:
     """测试 `MultimodalVLMModelslimV1QuantService` 的关键行为。"""
@@ -56,8 +56,10 @@ class TestMultimodalVLMModelslimV1QuantService:
 
         # QuantService 初始化使用 QuantServiceConfig（仅 apiversion），不是 QuantConfig
         self.quant_service_config = MultimodalVLMModelslimV1QuantServiceConfig()
+        self.context_factory = Mock(spec=IContextFactory)
         self.service = MultimodalVLMModelslimV1QuantService(
-            self.quant_service_config, self.dataset_loader
+            self.quant_service_config, self.dataset_loader, 
+            self.context_factory
         )
 
         # 模型适配器使用 PipelineInterface 的 spec，确保类型检查分支可被命中

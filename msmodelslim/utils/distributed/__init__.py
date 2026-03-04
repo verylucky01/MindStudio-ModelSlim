@@ -25,8 +25,9 @@ __all__ = [
     "sync_base_operation",
     "sync_gather_tensors",
     "setup_distributed",
+    "is_rank_zero",
 ]
 
-from msmodelslim.utils.distributed.dist_helper import DistHelper
+from msmodelslim.utils.distributed.dist_helper import DistHelper, is_rank_zero
 from msmodelslim.utils.distributed.dist_ops import sync_base_operation, sync_gather_tensors
 from msmodelslim.utils.distributed.dist_setup import find_free_port, setup_distributed

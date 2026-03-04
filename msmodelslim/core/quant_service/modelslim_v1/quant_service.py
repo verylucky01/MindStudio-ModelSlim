@@ -24,8 +24,9 @@ from typing import Optional, Literal, List
 import torch
 
 from msmodelslim.core.const import RunnerType, DeviceType
-from msmodelslim.core.context import ContextFactory, ContextManager
+from msmodelslim.core.context import ContextFactory, ContextManager, IContextFactory
 from msmodelslim.core.quant_service.dataset_loader_infra import DatasetLoaderInfra
+from msmodelslim.core.quant_service import KeyInfoPersistenceInfra
 from msmodelslim.core.runner.layer_wise_runner import LayerWiseRunner
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
 from msmodelslim.core.runner.pipeline_parallel_runner import PPRunner
@@ -47,12 +48,18 @@ class ModelslimV1QuantServiceConfig(QuantServiceConfig):
 class ModelslimV1QuantService(IQuantService):
     backend_name: str = "modelslim_v1"
 
-    def __init__(self,
-                 quant_service_config: ModelslimV1QuantServiceConfig,
-                 dataset_loader: DatasetLoaderInfra,
-                 **kwargs):
+    def __init__(
+        self,
+        quant_service_config: ModelslimV1QuantServiceConfig,
+        dataset_loader: DatasetLoaderInfra,
+        context_factory: IContextFactory,
+        debug_info_persistence: Optional[KeyInfoPersistenceInfra] = None,
+        **kwargs,
+    ):
         self.quant_service_config = quant_service_config
         self.dataset_loader = dataset_loader
+        self.context_factory = context_factory
+        self.debug_info_persistence = debug_info_persistence
 
     @staticmethod
     def _choose_runner_type(quant_config: ModelslimV1QuantConfig,
@@ -142,7 +149,7 @@ class ModelslimV1QuantService(IQuantService):
             get_logger().info(f"prepare Persistence to {save_path} success")
 
         runner_type = self._choose_runner_type(quant_config, model_adapter, device_indices)
-        ctx = ContextFactory().create(is_distributed=(runner_type == RunnerType.DP_LAYER_WISE))
+        ctx = self.context_factory.create(is_distributed=(runner_type == RunnerType.DP_LAYER_WISE))
 
         def _create_runner():
             if runner_type == RunnerType.MODEL_WISE:
@@ -184,6 +191,14 @@ class ModelslimV1QuantService(IQuantService):
                     runner.add_processor(processor_cfg=save_cfg)
             runner.run(calib_data=dataset, device=device, device_indices=device_indices)
         get_logger().info(f"==========QUANTIZATION: END==========")
+
+        # Save context if persistence is provided
+        if self.debug_info_persistence is not None:
+            get_logger().info(f"==========SAVE DEBUG INFO==========")
+            try:
+                self.debug_info_persistence.save_from_context(ctx=ctx)
+            except Exception as e:
+                get_logger().warning(f"Failed to save debug info: {e}")
 
 
 def get_plugin():

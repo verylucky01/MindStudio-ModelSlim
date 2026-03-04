@@ -45,13 +45,14 @@ class IValidatedState(MutableMapping):
     Max depth is 10. If the depth is greater than 10, a SchemaValidateError will be raised.
     If the value is a torch.Tensor, it must be on cpu. If not, a SchemaValidateError will be raised.
     """
+
     @abstractmethod
     def __getitem__(self, key):
         pass
 
     @abstractmethod
     def __setitem__(self, key, value) -> None:
-       pass
+        pass
 
     @abstractmethod
     def __delitem__(self, key) -> None:
@@ -111,6 +112,10 @@ class IContext(ABC):
     @abstractmethod
     def keys(self) -> Iterable[str]:
         """List all namespace keys."""
+
+    @abstractmethod
+    def is_enable_debug(self) -> bool:
+        """Check if debug recording is enabled."""
 
     @abstractmethod
     def __getitem__(self, key: str) -> INamespace:

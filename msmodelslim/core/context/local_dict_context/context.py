@@ -24,16 +24,17 @@ from msmodelslim.core.context.base import BaseContext, BaseNamespace
 
 
 class Namespace(BaseNamespace):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, enable_debug: bool = False) -> None:
+        super().__init__(enable_debug=enable_debug)
 
 
 class LocalDictContext(BaseContext):
-    def __init__(self) -> None:
+
+    def __init__(self, enable_debug: bool = False) -> None:
+        super().__init__(enable_debug)
         self._namespaces: Dict[str, Namespace] = {}
 
-    def create_namespace(self, key: str) -> Namespace:
+    def __getitem__(self, key: str) -> Namespace:
         if key not in self._namespaces:
-            self._namespaces[key] = Namespace()
+            self._namespaces[key] = Namespace(self._enable_debug)
         return self._namespaces[key]
-

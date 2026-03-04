@@ -28,9 +28,11 @@ from msmodelslim.infra.file_dataset_loader import FileDatasetLoader
 from msmodelslim.infra.dataset_loader.vlm_dataset_loader import VLMDatasetLoader
 from msmodelslim.infra.plugin_practice_dirs import discover_plugin_practice_dirs
 from msmodelslim.infra.yaml_practice_manager import YamlPracticeManager
+from msmodelslim.infra.debug_info_persistence import DebugInfoPersistence
 from msmodelslim.model import PluginModelFactory
 from msmodelslim.utils.config import msmodelslim_config
 from msmodelslim.utils.security.path import get_valid_read_path
+from msmodelslim.core.context import ContextFactory
 
 
 def get_practice_dir():
@@ -61,10 +63,18 @@ def main(args):
     dataset_loader = FileDatasetLoader(dataset_dir)
     vlm_dataset_loader = VLMDatasetLoader(dataset_dir)
     device_type, device_index = parse_device_string(args.device)
+
+    # Create context persistence if debug mode is enabled
+    debug_info_persistence = None
+    if args.debug:
+        debug_info_persistence = DebugInfoPersistence(save_dir=args.save_path)
+
     quant_service = QuantServiceProxy(
         QuantServiceProxyConfig(apiversion="proxy"),
         dataset_loader,
         vlm_dataset_loader,
+        context_factory=ContextFactory(enable_debug=args.debug),
+        debug_info_persistence=debug_info_persistence,
     )
 
     app = NaiveQuantizationApplication(

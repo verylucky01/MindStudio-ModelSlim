@@ -25,15 +25,20 @@ from .peercred_manager import PeercredManager
 
 class SharedNamespace(BaseNamespace):
     """Shared namespace for multi-process scenarios."""
-    def __init__(self, manager: PeercredManager) -> None:
-        super().__init__(dict_factory=manager.validated_dict)
+
+    def __init__(
+        self, enable_debug: bool = False, manager: PeercredManager = None
+    ) -> None:
+        super().__init__(enable_debug, dict_factory=manager.validated_dict)
 
     def __repr__(self) -> str:
         return f"SharedNamespace(state={self._state}, debug={self._debug})"
 
 
 class SharedDictContext(BaseContext):
-    def __init__(self) -> None:
+
+    def __init__(self, enable_debug: bool = False) -> None:
+        super().__init__(enable_debug)
         self._manager = PeercredManager()
         self._manager.start()
         self._address = self._manager.address
@@ -45,11 +50,17 @@ class SharedDictContext(BaseContext):
             self._manager = PeercredManager(address=self._address)
         return self._manager
 
-    def create_namespace(self, key: str) -> SharedNamespace:
+    def get_namespaces(self) -> Dict[str, SharedNamespace]:
+        return self._namespaces
+
+    def __getitem__(self, key: str) -> SharedNamespace:
         if key not in self._namespaces:
             manager = self._ensure_manager()
-            self._namespaces[key] = SharedNamespace(manager)
+            self._namespaces[key] = SharedNamespace(self._enable_debug, manager)
         return self._namespaces[key]
+
+    def __repr__(self) -> str:
+        return f"SharedContext(namespaces={list(self._namespaces.keys())})"
 
     def __getstate__(self) -> Dict[str, Any]:
         state = self.__dict__.copy()
@@ -59,4 +70,6 @@ class SharedDictContext(BaseContext):
     def __setstate__(self, state: Dict[str, Any]) -> None:
         self.__dict__.update(state)
         self._manager = None
-
+        # Ensure _enable_debug exists after unpickling
+        if "_enable_debug" not in self.__dict__:
+            self._enable_debug = False

@@ -213,7 +213,9 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
         else:
             linear_names = [adapter_config.mapping.targets[0]]
         self.apply_smooth_algorithm(
-            NonFusionSubgraph(linears=target_modules),
+            NonFusionSubgraph(
+                linears=target_modules, linear_names=adapter_config.mapping.targets
+            ),
             linear_names,
         )
         return True
@@ -235,8 +237,14 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
             down_name
         )
         self.apply_smooth_algorithm(
-            UpDownSubgraph(up_module, down_module, gate_module),
-            [down_name]
+            UpDownSubgraph(
+                up_module,
+                down_module,
+                gate_module,
+                up_proj_name=up_name,
+                down_proj_name=down_name,
+            ),
+            [down_name],
         )
 
     def _apply_ov_smooth(self, adapter_config: AdapterConfig) -> None:
@@ -291,9 +299,11 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
                 v_proj=virtual_v_module,
                 num_attention_heads=fusion.num_attention_heads,
                 key_value_heads=fusion.num_key_value_heads,
-                extra_config=extra_config
+                extra_config=extra_config,
+                o_proj_name=o_name,
+                v_proj_name=v_name,
             ),
-            [o_name]
+            [o_name],
         )
         virtual_v_module.update_weights()
         get_logger().debug("Successfully applied QKV fusion smoothing: %s -> %s", v_name, o_name)
@@ -322,9 +332,11 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
                 v_proj=v_module,
                 num_attention_heads=num_attention_heads,
                 key_value_heads=num_key_value_heads,
-                extra_config=extra_config
+                extra_config=extra_config,
+                o_proj_name=o_name,
+                v_proj_name=v_name,
             ),
-            [o_name]
+            [o_name],
         )
         get_logger().debug("Successfully applied standard OV smoothing: %s -> %s", v_name, o_name)
 
@@ -340,13 +352,16 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
             return
 
         self.apply_smooth_algorithm(
-            NormLinearSubgraph(source_module, target_modules),
-            target_names
+            NormLinearSubgraph(
+                source_module, target_modules, linear_names=target_names
+            ),
+            target_names,
         )
 
     def _apply_linear_linear_smooth(self, adapter_config: AdapterConfig) -> None:
         """Apply Linear-Linear smoothing (Priority 4)"""
-        source_module = self.model.get_submodule(adapter_config.mapping.source)
+        source_name = adapter_config.mapping.source
+        source_module = self.model.get_submodule(source_name)
         target_modules = [self.model.get_submodule(name) for name in adapter_config.mapping.targets]
         target_modules = [m for m in target_modules if m is not None]
         target_name = adapter_config.mapping.targets[0] if adapter_config.mapping.targets else ''
@@ -357,8 +372,13 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
 
         target_module = target_modules[0]
         self.apply_smooth_algorithm(
-            LinearLinearSubgraph(source_module, target_module),
-            [target_name]
+            LinearLinearSubgraph(
+                source_module,
+                target_module,
+                linear1_name=source_name,
+                linear2_name=target_name,
+            ),
+            [target_name],
         )
 
     def _remove_all_hooks(self) -> None:

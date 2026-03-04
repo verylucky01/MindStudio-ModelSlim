@@ -22,6 +22,8 @@ from pathlib import Path
 from typing import Optional, Any, List, Dict, Literal
 
 from msmodelslim.core.const import DeviceType
+from msmodelslim.core.context.interface import IContextFactory
+from msmodelslim.core.quant_service import KeyInfoPersistenceInfra
 from msmodelslim.utils.logging import logger_setter
 from msmodelslim.utils.plugin.plugin_utils import load_plugin_config_class
 from msmodelslim.utils.plugin.typed_factory import TypedFactory
@@ -47,17 +49,21 @@ class QuantServiceProxy(IQuantService):
     """量化服务代理：根据 quant_config.apiversion 通过插件创建 IQuantService 并委托 quantize。"""
 
     def __init__(
-            self,
-            quant_service_config: QuantServiceProxyConfig,
-            dataset_loader: DatasetLoaderInfra,
-            vlm_dataset_loader: Optional[DatasetLoaderInfra] = None,
-            **kwargs,
+        self,
+        quant_service_config: QuantServiceProxyConfig,
+        dataset_loader: DatasetLoaderInfra,
+        vlm_dataset_loader: Optional[DatasetLoaderInfra] = None,
+        context_factory: IContextFactory = None,
+        debug_info_persistence: Optional[KeyInfoPersistenceInfra] = None,
+        **kwargs,
     ):
         """QuantServiceConfig 与 dataset_loader、vlm_dataset_loader 分开传入。"""
         self.quant_service_config = quant_service_config
         self.dataset_loader = dataset_loader
         self.vlm_dataset_loader = vlm_dataset_loader
         self._service_cache: Dict[str, IQuantService] = {}
+        self.context_factory = context_factory
+        self.debug_info_persistence = debug_info_persistence
 
     def quantize(
             self,
@@ -73,7 +79,10 @@ class QuantServiceProxy(IQuantService):
             backend_config_class = load_plugin_config_class(QUANT_SERVICE_PLUGIN_GROUP, api_version)
             backend_config = backend_config_class(apiversion=api_version)
             self._service_cache[api_version] = _QUANT_SERVICE_FACTORY.create(
-                backend_config, dataset_loader=dataset_loader
+                backend_config,
+                dataset_loader=dataset_loader,
+                context_factory=self.context_factory,
+                debug_info_persistence=self.debug_info_persistence,
             )
         quant_service = self._service_cache[api_version]
         quant_service.quantize(
