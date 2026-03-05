@@ -36,9 +36,9 @@ class Metadata(BaseModel):
     label: dict = Field(default_factory=dict)
     # verified model types, e.g., ['LLaMa3.1-70B', 'Qwen2.5-72B']
     verified_model_types: List[str] = field(default_factory=list)
-    # verified_scenario: Dict[model_type, List[List[tags]]]
-    # key: model_type; value: list of scenarios, each scenario is a list of tags (e.g. ["MindIE","Atlas_A2"], ["vLLM","Atlas_A3"])
-    verified_scenario: Dict[str, List[List[str]]] = Field(default_factory=dict)
+    # verified_tags: Dict[model_type, List[List[tags]]]
+    # key: model_type; value: list of scenarios, each scenario is a list of tags (e.g. ["MindIE","Atlas_A2_Inference"], ["vLLM-Ascend","Atlas_A3_Inference"])
+    verified_tags: Dict[str, List[List[str]]] = Field(default_factory=dict)
 
 
 class PracticeConfig(BaseQuantConfig):
@@ -47,25 +47,20 @@ class PracticeConfig(BaseQuantConfig):
     def extract_quant_config(self) -> BaseQuantConfig:
         return self
 
-
-def config_matches_scenario_tags(
-        config: PracticeConfig,
-        model_type: str,
-        scenario_tags: Optional[List[str]]
-    ) -> bool:
-    """
-    Return True if config's verified_scenario has at least one scenario (for model_type)
-    that contains ALL effective tags.
-    """
-    if not scenario_tags:
-        return True
-    model_scenario = getattr(config.metadata, 'verified_scenario', None) or {}
-    scenarios = model_scenario.get(model_type, [])
-    if not scenarios:
-        return False
-    user_lower = [t.lower() for t in scenario_tags]
-    for scenario_tags_list in scenarios:
-        scenario_lower = [str(t).lower() for t in scenario_tags_list]
-        if all(ut in scenario_lower for ut in user_lower):
+    def matches_scenario_tags(self, model_type: str, scenario_tags: Optional[List[str]]) -> bool:
+        """
+        Return True if config's verified_tags has at least one scenario (for model_type)
+        that contains ALL effective tags.
+        """
+        if not scenario_tags:
             return True
-    return False
+        model_scenario = getattr(self.metadata, 'verified_tags', None) or {}
+        scenarios = model_scenario.get(model_type, [])
+        if not scenarios:
+            return False
+        user_lower = [t.lower() for t in scenario_tags]
+        for scenario_tags_list in scenarios:
+            scenario_lower = [str(t).lower() for t in scenario_tags_list]
+            if all(ut in scenario_lower for ut in user_lower):
+                return True
+        return False

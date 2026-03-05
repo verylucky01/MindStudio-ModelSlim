@@ -92,5 +92,5 @@ def main(args):
         quant_type=args.quant_type,
         config_path=args.config_path,
         trust_remote_code=args.trust_remote_code,
-        scenario=getattr(args, 'scenario', None)
+        tag=getattr(args, 'tag', None)
     )

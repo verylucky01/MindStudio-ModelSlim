@@ -190,13 +190,13 @@
   msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8C8量化权重路径} --device npu --model_type Qwen3-32B --quant_type w8a8c8 --trust_remote_code True
   ```
 
-#### <span id="qwen3-32b-vllm-ascend量化">Qwen3-32B w8a8 vllm-ascend量化</span>
+#### <span id="qwen3-32b-vllm-ascend量化">Qwen3-32B w8a8量化</span>
 
-使用vllm-ascend推理引擎部署量化模型请使用以下非PDMIX量化方案的最佳实践：
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization/usage.md)，因推理引擎 MindIE 和 vLLM-Ascend 支持的量化方案不同，请使用``--scenario``标签指定推理引擎。
 
-**W8A8量化：**
+
   ```shell
-  msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type Qwen3-32B --config_path ./best_practice/qwen3-32b-w8a8-no-pdmix.yaml --trust_remote_code True
+ msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8量化权重路径} --device npu --model_type Qwen3-32B --quant_type w8a8 --scenario {场景标签} --trust_remote_code True
   ```
 
 #### <span id="qwen3-32b-稀疏量化">Qwen3-32B 稀疏量化</span>

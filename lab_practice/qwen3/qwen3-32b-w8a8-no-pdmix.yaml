@@ -2,8 +2,12 @@ apiversion: modelslim_v0
 metadata:
   config_id: qwen3-32b-w8a8-no-pdmix
   score: 90
-  verified_model_types:
-    - Qwen3-32B
+  verified_tags:
+    Qwen3-32B:
+      - - vLLM-Ascend
+        - Atlas_A2_Inference
+      - - vLLM-Ascend
+        - Atlas_A3_Inference
   label:
     w_bit: 8
     a_bit: 8

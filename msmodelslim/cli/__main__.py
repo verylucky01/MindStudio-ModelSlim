@@ -67,8 +67,8 @@ def main():
                                    "Please ensure the security of the loaded custom code file.")
     quant_parser.add_argument("--debug", action="store_true",
                               help="Enable debug mode for context recording")
-    quant_parser.add_argument('--scenario', nargs='*', default=None,
-                              help="Optional scenario tags to match configs with verified scenario (e.g. mindie Atlas_A2, vllm cpu). "
+    quant_parser.add_argument('--tag', nargs='*', default=None,
+                              help="Optional tag to match configs with verified scenario tags (e.g. mindie Atlas_A2_Inference, vllm cpu). "
                                    "User can add multiple tags; matching requires all tags to appear in the same scenario."
                                    "If user specifies this parameter but does not provide a hardware type tag, the current device type will be matched automatically.")
 

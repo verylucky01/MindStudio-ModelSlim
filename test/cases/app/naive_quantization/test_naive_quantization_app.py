@@ -81,13 +81,13 @@ class TestCheckConfig(TestNaiveQuantizationAppBase):
     """测试 check_config 静态方法"""
 
     def _make_config(self, w_bit=8, a_bit=8, is_sparse=False, kv_cache=False,
-                     verified_model_types=None, verified_scenario=None):
+                     verified_model_types=None, verified_tags=None):
         metadata = Metadata(
             config_id="test_config",
             score=90,
             label={"w_bit": w_bit, "a_bit": a_bit, "is_sparse": is_sparse, "kv_cache": kv_cache},
             verified_model_types=verified_model_types or [],
-            verified_scenario=verified_scenario or {},
+            verified_tags=verified_tags or {},
         )
         return PracticeConfig(apiversion="modelslim_v1", metadata=metadata)
 
@@ -132,11 +132,11 @@ class TestCheckConfig(TestNaiveQuantizationAppBase):
         self.assertFalse(result)
 
     def test_check_config_scenario_tags_match(self):
-        """测试 scenario_tags 匹配 verified_scenario"""
+        """测试 scenario_tags 匹配 verified_tags"""
         from msmodelslim.app.naive_quantization.application import NaiveQuantizationApplication
 
         config = self._make_config(
-            verified_scenario={"Qwen2.5-7B": [["mindie", "npu"], ["vllm", "cpu"]]}
+            verified_tags={"Qwen2.5-7B": [["mindie", "npu"], ["vllm", "cpu"]]}
         )
         result = NaiveQuantizationApplication.check_config(
             config, "Qwen2.5-7B", QuantType.W8A8,
@@ -152,7 +152,7 @@ class TestCheckConfig(TestNaiveQuantizationAppBase):
         )
 
         config = self._make_config(
-            verified_scenario={"Qwen2.5-7B": [["mindie", "npu"]]}
+            verified_tags={"Qwen2.5-7B": [["mindie", "npu"]]}
         )
         result = NaiveQuantizationApplication.check_config(
             config, "Qwen2.5-7B", QuantType.W8A8,
@@ -164,7 +164,7 @@ class TestCheckConfig(TestNaiveQuantizationAppBase):
         """测试无 scenario_tags 时返回 True"""
         from msmodelslim.app.naive_quantization.application import NaiveQuantizationApplication
 
-        config = self._make_config(verified_scenario={"Qwen2.5-7B": [["mindie", "npu"]]})
+        config = self._make_config(verified_tags={"Qwen2.5-7B": [["mindie", "npu"]]})
         result = NaiveQuantizationApplication.check_config(
             config, "Qwen2.5-7B", QuantType.W8A8,
             scenario_tags=None,
@@ -296,14 +296,14 @@ class TestQuantParameterValidation(TestNaiveQuantizationAppBase):
             )
 
     def test_quant_scenario_validation(self):
-        """测试 scenario 参数校验"""
+        """测试 tag 参数校验"""
         app = self._make_app()
         with self.assertRaises(SchemaValidateError):
             app.quant(
                 model_type="Qwen2.5-7B",
                 model_path=str(self.model_path),
                 save_path=str(self.save_path),
-                scenario="not_a_list",
+                tag="not_a_list",
             )
 
 

@@ -50,7 +50,7 @@ msmodelslim quant [ARGS]
 
 1. 最佳实践库中的配置文件放在 `msmodelslim/lab_practice` 中。
 2. 若最佳实践库中未搜寻到最佳配置，系统则会向用户询问是否采用默认配置，即使用 `msmodelslim/lab_practice/default/default.yaml` 实施量化。
-3. 若用户唯一指定了场景标签（'scenario'参数），且未在最佳实践库中搜寻到匹配场景验证的最佳配置，系统则会向用户询问是否采用匹配了quant_type和model_type的配置。
+3. 若用户唯一指定了场景标签（'tag'参数），且未在最佳实践库中搜寻到匹配场景验证的最佳配置，系统则会向用户询问是否采用匹配了quant_type和model_type的配置。
 4. 如果需要打印量化运行日志，可通过以下环境变量进行设置：
 
 | 环境变量                  | 解释        | 是否可选 | 范围             |
@@ -65,9 +65,9 @@ msmodelslim quant [ARGS]
 | save_path         | 量化权重保存路径  | 必选                | 类型：Str                                                                               |
 | device            | 量化设备      | 可选                | 1. 类型：Str <br>2. 参考值：'npu','npu:0,1,2,3','cpu' <br>3. 默认值为"npu"（单设备）<br>4. 当配置文件启用分布式逐层量化，且指定多个设备时（如：'npu:0,1,2,3'），系统启动DP逐层量化，请确定配置的算法是否支持分布式执行，配置方式及算法支持详见[逐层量化及分布式逐层量化](#逐层量化及分布式逐层量化)|
 | model_type        | 模型名称      | 必选                | 1. 类型：Str <br>2. 大小写敏感，请参考[大模型支持矩阵](../../model_support/foundation_model_support_matrix.md)                                               |  |
-| config_path       | 指定配置路径    | 与"quant_type"二选一  | 1. 类型：Str <br>2. 配置文件格式为yaml <br>3. 当前只支持最佳实践库中已验证的配置，若自定义配置，msModelSlim不为量化结果负责。配置指导可参考[量化配置协议详解](#量化配置协议详解)。 <br> 4. 用户选用config_path后，scenario参数无效|
+| config_path       | 指定配置路径    | 与"quant_type"二选一  | 1. 类型：Str <br>2. 配置文件格式为yaml <br>3. 当前只支持最佳实践库中已验证的配置，若自定义配置，msModelSlim不为量化结果负责。配置指导可参考[量化配置协议详解](#量化配置协议详解)。 <br> 4. 用户选用config_path后，tag参数无效|
 | quant_type        | 量化类型      | 与"config_path"二选一 | w4a8, w4a8c8, w8a8, w8a8s, w8a8c8, w8a16, w16a16s，请参考[大模型支持矩阵](../../model_support/foundation_model_support_matrix.md)                                   |
-| scenairo | 校验指定场景标签 | 可选 | 1. 类型：Str <br> 2. 大小写不敏感，支持多个标签，用空格分割；支持用户确定地指定一种场景。<br> 3. 当前支持两类标签，每一类别可指定一种场景：指定使用的推理引擎，包含MindIE、vLLM-Ascend、SGLang等；指定推理用的硬件形态，包含Atlas_A2、Atlas_A3等。 <br> 4. 如果未找到验证当前场景的配置，则于用户交互是否采用匹配quant_type或model_type的量化配置。|
+| tag | 校验指定场景标签 | 可选 | 1. 类型：Str <br> 2. 大小写不敏感，支持多个标签，用空格分割；支持用户确定地指定一种场景。<br> 3. 当前支持两类标签，每一类别可指定一种场景：指定使用的推理引擎，包含MindIE、vLLM-Ascend、SGLang等；指定推理用的硬件形态，包含Atlas_A2_Inference、Atlas_A3_Inference、Atlas_A2_Training、Atlas_A3_Training、CPU等。 <br> 4. 如果未找到验证当前场景的配置，则于用户交互是否采用匹配quant_type或model_type的量化配置。|
 | trust_remote_code | 是否信任自定义代码 | 可选                | 1. 类型：Bool，默认值：False <br>2. 请确保加载的自定义代码文件的安全性，设置为True有安全风险。                          |
 | h, help           | 命令行参数帮助信息 | 可选                |               -            |
 
@@ -75,7 +75,7 @@ msmodelslim quant [ARGS]
 
 #### 示例1：使用量化类型参数（推荐方式）
 
-使用一键量化功能量化 Qwen2.5-7B-Instruct 模型，量化方式采用 w8a8，指定场景推理引擎使用vLLM-Ascend，硬件形态用Atlas_A2服务器：
+使用一键量化功能量化 Qwen2.5-7B-Instruct 模型，量化方式采用 w8a8：
 
 ```bash
 msmodelslim quant \
@@ -84,7 +84,6 @@ msmodelslim quant \
   --device npu \
   --model_type Qwen2.5-7B-Instruct \
   --quant_type w8a8 \
-  --scenario vLLM-Ascend Atlas_A2 \
   --trust_remote_code True
 ```
 
