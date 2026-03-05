@@ -38,6 +38,7 @@ from msmodelslim.core.tune_strategy.standing_high_with_experience.standing_high_
     StandingHighWithExperienceInterface
 )
 from msmodelslim.model import IModel
+from msmodelslim.processor.base import AutoSessionProcessor, AutoProcessorConfigList
 from msmodelslim.utils.exception import SchemaValidateError, UnsupportedError
 from msmodelslim.utils.logging import logger_setter, get_logger
 
@@ -46,23 +47,23 @@ class StandingHighWithExperienceStrategyConfig(StrategyConfig):
     """基于专家经验的摸高算法策略配置"""
     type: Literal["standing_high_with_experience"] = "standing_high_with_experience"
 
-    structure_configs: Optional[List[StructureConfig]] = Field(
-        default=None,
-        description="结构配置列表，每个配置包含结构类型和对应的 include/exclude，例如 [{'type': 'GQA', 'include': ['*self_attn*'], 'exclude': ['*kv_b_proj']}]"
+    structure_configs: List[StructureConfig] = Field(
+        description="结构配置列表，每个配置包含结构类型和对应的 include/exclude，例如 [{'type': 'GQA', 'include': ['*self_attn*'], 'exclude': ['*kv_b_proj']}]（必填，无默认配置）"
     )
     quant_type: QuantType = Field(
         default=QuantType.W8A8,
         description="量化类型（QuantType 枚举），须在专家经验 supported_quant_types 范围内。"
     )
 
-    @field_validator("quant_type")
+    @field_validator("quant_type", mode="before")
     @classmethod
-    def _quant_type_must_be_supported_by_expert_experience(cls, v: QuantType) -> QuantType:
-        supported = ExpertExperienceLoader.get_supported_quant_types()
-        if v.value not in supported:
+    def _quant_type_only_expert_supported(cls, v):
+        allowed_values = set(ExpertExperienceLoader.get_supported_quant_types())
+        value_str = v.value if isinstance(v, QuantType) else v
+        if value_str not in allowed_values:
             raise SchemaValidateError(
-                f"quant_type '{v.value}' is not in expert experience supported_quant_types. "
-                f"Supported: {supported}.",
+                f"quant_type must be one of expert experience supported_quant_types. "
+                f"Input should be one of {sorted(allowed_values)}, got {v!r}.",
                 action="Please set quant_type to one of the values in expert_experience.yaml supported_quant_types.",
             )
         return v
@@ -123,28 +124,33 @@ class StandingHighWithExperienceStrategy(BaseTuningStrategy, ITuningStrategy):
                 self.config.structure_configs = structure_configs
         
         # 生成完整的基础配置
-        base_config = self._generate_base_config(self.config, structure_configs)
-        
+        base_config = self._generate_base_config(
+            self.config, structure_configs, model=model
+        )
+
         # 创建 StandingHighStrategy 实例并委托其执行摸高算法
         standing_high_strategy = StandingHighStrategy(
             config=base_config,
             dataset_loader=self.dataset_loader
         )
-        
+
         yield from standing_high_strategy.generate_practice(model, device)
-    
+
     def _generate_base_config(
-        self, 
+        self,
         config: StandingHighWithExperienceStrategyConfig,
-        structure_configs: List[StructureConfig]
+        structure_configs: List[StructureConfig],
+        model: Optional[IModel] = None,
     ) -> StandingHighStrategyConfig:
         """
-        根据输入配置生成完整的 StandingHighStrategyConfig
-        
+        根据输入配置生成完整的 StandingHighStrategyConfig。
+        会过滤掉当前环境不支持的离群值抑制策略并打日志警告。
+
         Args:
             config: StandingHighWithExperienceStrategyConfig 配置对象
             structure_configs: 结构配置列表（已处理，不会是 None）
-            
+            model: 可选，模型适配器（需同时为 PipelineInterface），用于检测离群值抑制是否支持
+
         Returns:
             生成的 StandingHighStrategyConfig 配置对象
         """
@@ -170,13 +176,77 @@ class StandingHighWithExperienceStrategy(BaseTuningStrategy, ITuningStrategy):
                 "Expert experience builder must provide anti_outlier_strategies in tuning search space."
             )
 
+        get_logger().info(
+            "Tuning search space: anti_outlier_strategies_count=%s",
+            len(search_space.anti_outlier_strategies or []),
+        )
+
+        get_logger().info(
+            "Tuning search space (anti_outlier_strategies): %s", 
+            search_space.anti_outlier_strategies)
+
+        anti_outlier_strategies = search_space.anti_outlier_strategies
+        if model is not None:
+            anti_outlier_strategies = self._filter_supported_anti_outlier_strategies(
+                anti_outlier_strategies, model
+            )
+            if not anti_outlier_strategies:
+                raise SchemaValidateError(
+                    "No supported anti_outlier strategy left after filtering. "
+                    "Please check expert_experience.yaml and model adapter capabilities."
+                )
+
         return StandingHighStrategyConfig(
             type="standing_high",
-            anti_outlier_strategies=search_space.anti_outlier_strategies,
+            anti_outlier_strategies=anti_outlier_strategies,
             template=quant_config.spec,
             metadata=quant_config.metadata
         )
-    
+
+    def _filter_supported_anti_outlier_strategies(
+        self,
+        strategies: List[AutoProcessorConfigList],
+        model: IModel,
+    ) -> List[AutoProcessorConfigList]:
+        """
+        过滤出当前模型支持的离群值抑制策略。
+        """
+        try:
+            loaded_model = model.load_model(device="cpu")
+        except Exception as e:
+            get_logger().warning(
+                "Cannot load model for anti_outlier support check, using all strategies: %s",
+                e,
+            )
+            return strategies
+
+        filtered: List[AutoProcessorConfigList] = []
+        for idx, strategy_list in enumerate(strategies):
+            for proc_cfg in strategy_list:
+                try:
+                    AutoSessionProcessor.from_config(loaded_model, proc_cfg, model)
+                except UnsupportedError as e:
+                    proc_type = getattr(proc_cfg, "type", type(proc_cfg).__name__)
+                    get_logger().warning(
+                        "Anti-outlier strategy not supported, skipping: index=%s, type=%s, reason=%s",
+                        idx,
+                        proc_type,
+                        e,
+                    )
+                    break
+            else:
+                filtered.append(strategy_list)
+
+        try:
+            loaded_model.to("meta")
+        except Exception as e:
+            get_logger().warning(
+                "Failed to release loaded_model (to('meta')), possible resource leak: %s",
+                e,
+            )
+
+        return filtered
+
     def _auto_detect_structure_configs(self, model: IModel) -> Optional[List[StructureConfig]]:
         """
         自动检测模型结构配置
