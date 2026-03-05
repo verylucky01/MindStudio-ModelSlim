@@ -1,0 +1,17 @@
+apiversion: "modelslim_v1"
+spec:
+  process:
+    - type: "awq"
+      weight_qconfig:
+        scope: "per_channel"
+        dtype: "int8"
+        symmetric: True
+        method: "minmax"
+      enable_subgraph_type:
+        - "norm-linear"
+        - "linear-linear"
+        - "ov"
+        - "up-down"
+      n_grid: 20
+
+  dataset: test.json
