@@ -83,8 +83,6 @@ class BinaryAnalysisProcessor(AutoSessionProcessor):
         ctx = get_current_context()
         if ctx is None:
             raise UnexpectedError("No context is working.")
-        if "layer_analysis" not in ctx:
-            ctx.create_namespace("layer_analysis")
 
         for processor in self.quant_processors:
             processor.pre_run()

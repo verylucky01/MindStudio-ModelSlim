@@ -114,7 +114,6 @@ class UnaryAnalysisProcessor(AutoSessionProcessor):
 
     def post_run(self) -> None:
         ctx = get_current_context()
-        ctx.create_namespace("layer_analysis")
         ctx["layer_analysis"].state["layer_scores"] = self._layer_scores
         ctx["layer_analysis"].state["method"] = self._analysis_method.name
         ctx["layer_analysis"].state["patterns"] = self.config.patterns
