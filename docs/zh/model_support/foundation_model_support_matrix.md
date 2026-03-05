@@ -10,6 +10,16 @@
 msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type ${模型名称} --quant_type ${量化模式} --trust_remote_code True
 ```
 - 未标记“一键量化”的最佳实践请阅读对应模型类别的最佳实践页面并在 [example](https://gitcode.com/Ascend/msmodelslim/tree/master/example) 目录下对应模型类别的子目录中执行命令，如 [DeepSeek](https://gitcode.com/Ascend/msmodelslim/tree/master/example/DeepSeek)、[Qwen3](https://gitcode.com/Ascend/msmodelslim/tree/master/example/Qwen)。
+
+## 量化模式命名规范
+
+量化模式名称格式为 `W{weight_bit}A{activation_bit}[C{cache_bit}][S]`，含义如下：
+
+- `{weight_bit}`：权重量化位数（如 8、4、16）
+- `{activation_bit}`：激活值量化位数（如 8、16）
+- `{cache_bit}`（可选）：KV Cache 量化位数（如 8）
+- `S`（可选）：表示稀疏量化（Sparse）
+
 ## 大语言模型支持列表
 
 !!! info "提示"

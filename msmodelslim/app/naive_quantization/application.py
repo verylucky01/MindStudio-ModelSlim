@@ -41,7 +41,7 @@ from msmodelslim.utils.validation.conversion import (
 )
 from msmodelslim.utils.validation.value import validate_str_length
 from .model_info_interface import ModelInfoInterface
-from .practice_manager_infra import PracticeManagerInfra
+from .practice_manager_infra import PracticeManagerInfra, QuantConfigExportInfra
 
 DEFAULT_PEDIGREE = 'default'
 DEFAULT_QUANT_TYPE = QuantType.W8A8
@@ -156,10 +156,12 @@ class NaiveQuantizationApplication:
             practice_manager: PracticeManagerInfra,
             quant_service: IQuantService,
             model_factory: IModelFactory,
+            quant_config_export_infra: Optional[QuantConfigExportInfra] = None,
     ):
         self.practice_manager = practice_manager
         self.quant_service = quant_service
         self.model_factory = model_factory
+        self.quant_config_export_infra = quant_config_export_infra
 
     @staticmethod
     def check_config(
@@ -443,6 +445,13 @@ class NaiveQuantizationApplication:
             config_path=config_path,
             tag=tag
         )
+        # 使用量化配置导出基础设施导出配置
+        self.quant_config_export_infra.export_quant_config(
+            practice_config.extract_quant_config(),
+            model_type,
+            save_path
+        )
+
         if config_path is not None:
             config_url = str(config_path)
         else:

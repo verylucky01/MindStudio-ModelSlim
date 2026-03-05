@@ -29,6 +29,7 @@ from msmodelslim.infra.dataset_loader.vlm_dataset_loader import VLMDatasetLoader
 from msmodelslim.infra.plugin_practice_dirs import discover_plugin_practice_dirs
 from msmodelslim.infra.yaml_practice_manager import YamlPracticeManager
 from msmodelslim.infra.debug_info_persistence import DebugInfoPersistence
+from msmodelslim.infra.yaml_quant_config_exporter import YamlQuantConfigExporter
 from msmodelslim.model import PluginModelFactory
 from msmodelslim.utils.config import msmodelslim_config
 from msmodelslim.utils.security.path import get_valid_read_path
@@ -77,10 +78,14 @@ def main(args):
         debug_info_persistence=debug_info_persistence,
     )
 
+    # 创建YAML量化配置导出器
+    quant_config_exporter = YamlQuantConfigExporter()
+    
     app = NaiveQuantizationApplication(
         practice_manager=practice_manager,
         quant_service=quant_service,
         model_factory=PluginModelFactory(),
+        quant_config_export_infra=quant_config_exporter,
     )
 
     app.quant(
