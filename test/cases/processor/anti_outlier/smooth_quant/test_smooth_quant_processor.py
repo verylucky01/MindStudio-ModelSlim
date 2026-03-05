@@ -25,7 +25,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from msmodelslim.ir.qal.qtypes import NormLinearSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import NormLinearSubgraph
 from msmodelslim.core.base.protocol import BatchProcessRequest
 from msmodelslim.core.graph.adapter_types import AdapterConfig, MappingConfig
 from msmodelslim.ir.norm_bias import RMSNormBias

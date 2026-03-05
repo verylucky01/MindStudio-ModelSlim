@@ -26,10 +26,12 @@ from transformers import PreTrainedTokenizerBase
 
 from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.core.const import DeviceType
+from msmodelslim.processor.anti_outlier.awq import AWQInterface
 from msmodelslim.processor.kv_smooth import KVSmoothFusedType, KVSmoothFusedUnit
 from msmodelslim.utils.exception import InvalidModelError
 from msmodelslim.utils.logging import logger_setter
 from msmodelslim.utils.security.model import SafeGenerator
+from msmodelslim.core.graph.adapter_types import AdapterConfig, MappingConfig
 from ..common.layer_wise_forward import generated_decoder_layer_visit_func, transformers_generated_forward_func
 from ..default.model_adapter import DefaultModelAdapter
 from ..interface_hub import ModelInfoInterface, ModelSlimPipelineInterfaceV0, ModelSlimPipelineInterfaceV1, \
@@ -43,7 +45,7 @@ class Qwen2ModelAdapter(DefaultModelAdapter,
                          ModelSlimPipelineInterfaceV1,
                          AnalyzePipelineInterface,
                          KVSmoothFusedInterface,
-                         ):
+                         AWQInterface):
     def get_model_type(self) -> str:
         return self.model_type
 
@@ -128,3 +130,38 @@ class Qwen2ModelAdapter(DefaultModelAdapter,
             pad_token='<|extra_0|>',
             eos_token='<|endoftext|>',
             trust_remote_code=trust_remote_code)
+    
+    def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
+        adapter_configs: List[AdapterConfig] = []
+        for i in range(self.config.num_hidden_layers):
+            layer_prefix = f"model.layers.{i}"
+
+            norm_linear_attn = MappingConfig(
+                source=f"{layer_prefix}.input_layernorm",
+                targets=[
+                    f"{layer_prefix}.self_attn.k_proj",
+                    f"{layer_prefix}.self_attn.q_proj",
+                    f"{layer_prefix}.self_attn.v_proj",
+                ],
+            )
+
+            norm_linear_mlp = MappingConfig(
+                source=f"{layer_prefix}.post_attention_layernorm",
+                targets=[
+                    f"{layer_prefix}.mlp.gate_proj",
+                    f"{layer_prefix}.mlp.up_proj",
+                ],
+            )
+
+            up_down_mapping = MappingConfig(
+                source=f"{layer_prefix}.mlp.up_proj",
+                targets=[f"{layer_prefix}.mlp.down_proj"],
+            )
+            
+            adapter_configs.extend([
+                AdapterConfig(subgraph_type="norm-linear", mapping=norm_linear_attn),
+                AdapterConfig(subgraph_type="norm-linear", mapping=norm_linear_mlp),
+                AdapterConfig(subgraph_type="up-down", mapping=up_down_mapping),
+            ])
+
+        return adapter_configs

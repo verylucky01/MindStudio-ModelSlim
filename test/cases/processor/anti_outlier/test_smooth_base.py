@@ -36,7 +36,7 @@ from msmodelslim.processor.anti_outlier.smooth_base import BaseSmoothProcessor
 from msmodelslim.processor.anti_outlier.iter_smooth import IterSmoothProcessorConfig
 from msmodelslim.core.graph.adapter_types import AdapterConfig, MappingConfig
 from msmodelslim.core.base.protocol import BatchProcessRequest
-from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import NonFusionSubgraph
 from msmodelslim.utils.exception import SchemaValidateError
 
 
@@ -179,12 +179,11 @@ class TestBaseSmoothProcessor(unittest.TestCase):
             mock_stats_collector.create_hook.assert_called_once()
 
     def test_remove_all_hooks(self):
-        self.processor.hook_manager.hook_handles = {
-            "module1": MagicMock(),
-            "module2": MagicMock()
-        }
-        with patch.object(self.processor.hook_manager.hook_handles["module1"], 'remove') as mock_remove1:
-            with patch.object(self.processor.hook_manager.hook_handles["module2"], 'remove') as mock_remove2:
+        hook1 = MagicMock()
+        hook2 = MagicMock()
+        self.processor.hook_manager.hook_handles = [hook1, hook2]
+        with patch.object(hook1, 'remove') as mock_remove1:
+            with patch.object(hook2, 'remove') as mock_remove2:
                 self.processor._remove_all_hooks()
                 mock_remove1.assert_called_once()
                 mock_remove2.assert_called_once()

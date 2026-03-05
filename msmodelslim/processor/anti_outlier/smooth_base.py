@@ -24,15 +24,12 @@ from typing import List, Optional, Any
 
 from torch import nn
 
-from msmodelslim.ir.qal.qtypes import (
-    LinearLinearSubgraph,
-    NormLinearSubgraph,
+from msmodelslim.processor.anti_outlier.common.subgraph_type import (
     UpDownSubgraph,
-    OVSubgraph,
-    NonFusionSubgraph,
 )
 from msmodelslim.core.base.protocol import BatchProcessRequest
 from msmodelslim.core.graph.adapter_types import AdapterConfig
+from msmodelslim.processor.anti_outlier.common.subgraph_type import LinearLinearSubgraph, NonFusionSubgraph, NormLinearSubgraph, OVSubgraph
 from msmodelslim.processor.base import AutoSessionProcessor, AutoProcessorConfig
 from msmodelslim.processor.anti_outlier.default.model_adapter import get_adapter_config_for_subgraph as default_get_adapter_config
 from msmodelslim.utils.config_map import ConfigSet
@@ -226,7 +223,6 @@ class BaseSmoothProcessor(AutoSessionProcessor, ABC):
         up_module = self.model.get_submodule(up_name)
         down_name = adapter_config.mapping.targets[0] if adapter_config.mapping.targets else ""
         down_module = self.model.get_submodule(down_name) if down_name else None
-
         if not up_module or not down_module:
             get_logger().warning("Failed to get modules for up-down subgraph: %s", adapter_config.mapping.source)
             return

@@ -4,7 +4,7 @@
 """
 -------------------------------------------------------------------------
 This file is part of the MindStudio project.
-Copyright (c) 2025 Huawei Technologies Co.,Ltd.
+Copyright (c) 2026 Huawei Technologies Co.,Ltd.
 
 MindStudio is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -19,15 +19,13 @@ See the Mulan PSL v2 for more details.
 -------------------------------------------------------------------------
 """
 
+from torch import nn as nn
 
 from dataclasses import dataclass
-from typing import Union, List, Dict, Any, Optional, TYPE_CHECKING
-
-from torch import nn as nn
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 if TYPE_CHECKING:
     from msmodelslim.ir import RMSNormBias
-
 
 class Subgraph:
     pass
@@ -40,7 +38,6 @@ class NonFusionSubgraph(Subgraph):
     """
     linears: List[nn.Linear]
     linear_names: Optional[List[str]] = None
-
 
 @dataclass
 class NormLinearSubgraph(Subgraph):
@@ -59,7 +56,6 @@ class NormLinearSubgraph(Subgraph):
     linears: List[nn.Linear]
     linear_names: Optional[List[str]] = None
 
-
 @dataclass
 class LinearLinearSubgraph(Subgraph):
     """
@@ -74,7 +70,6 @@ class LinearLinearSubgraph(Subgraph):
     linear2: nn.Linear
     linear1_name: Optional[str] = None
     linear2_name: Optional[str] = None
-
 
 @dataclass
 class OVSubgraph(Subgraph):
@@ -99,7 +94,6 @@ class OVSubgraph(Subgraph):
     extra_config: Optional[Dict[str, Any]] = None
     o_proj_name: Optional[str] = None
     v_proj_name: Optional[str] = None
-
 
 @dataclass
 class UpDownSubgraph(Subgraph):

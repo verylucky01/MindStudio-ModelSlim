@@ -26,14 +26,7 @@ from typing import Dict, Optional
 import torch
 from torch import nn
 
-from msmodelslim.ir.qal.qtypes import (
-    Subgraph,
-    OVSubgraph,
-    UpDownSubgraph,
-    LinearLinearSubgraph,
-    NormLinearSubgraph,
-    NonFusionSubgraph
-)
+from msmodelslim.processor.anti_outlier.common.subgraph_type import UpDownSubgraph, LinearLinearSubgraph, NonFusionSubgraph, NormLinearSubgraph, OVSubgraph, Subgraph
 from msmodelslim.core.context import get_current_context
 
 

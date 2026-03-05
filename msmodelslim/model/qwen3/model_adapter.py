@@ -26,6 +26,7 @@ from torch import nn
 from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.graph.adapter_types import AdapterConfig, MappingConfig
+from msmodelslim.processor.anti_outlier.awq.interface import AWQInterface
 from msmodelslim.processor.kv_smooth import KVSmoothFusedType, KVSmoothFusedUnit
 from msmodelslim.processor.quarot import (
     QuaRotInterface,
@@ -59,7 +60,8 @@ class Qwen3ModelAdapter(DefaultModelAdapter,
                         FlexSmoothQuantInterface,
                         QuaRotInterface,
                         LAOSOnlineRotationInterface,
-                        FlatQuantInterface
+                        FlatQuantInterface,
+                        AWQInterface
                         ):
     def get_flatquant_subgraph(self) ->  List[Dict[str, object]]:
         """分析Qwen模型结构并注册所有相关的结构对。"""

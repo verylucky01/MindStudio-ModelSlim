@@ -26,14 +26,12 @@ from unittest.mock import Mock
 import torch
 
 # 应用程序自定义模块导入
-from msmodelslim.ir.qal.qtypes import (
-    LinearLinearSubgraph,
-    NormLinearSubgraph,
-    OVSubgraph,
+from msmodelslim.processor.anti_outlier.common.subgraph_type import (
     UpDownSubgraph,
 )
 from msmodelslim.processor.anti_outlier.common.smooth_types import FlexSmoothQuantConfig
 from msmodelslim.processor.anti_outlier.common import SmoothContext
+from msmodelslim.processor.anti_outlier.common.subgraph_type import LinearLinearSubgraph, NormLinearSubgraph, OVSubgraph
 from msmodelslim.processor.anti_outlier.flex_smooth.alpha_beta_search import (
     FlexSmoothAlphaBetaSearcher,
     quant_int8asym,

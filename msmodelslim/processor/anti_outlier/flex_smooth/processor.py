@@ -38,7 +38,7 @@ from msmodelslim.utils.distributed.dist_ops import sync_gather_tensor_lists
 from msmodelslim.utils.distributed import DistHelper
 from msmodelslim.utils.validation.value import validate_normalized_value, is_string_list
 from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
-from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import NonFusionSubgraph
 from ..common import (
     FlexSmoothQuantConfig,
     FlexAWQSSZConfig,

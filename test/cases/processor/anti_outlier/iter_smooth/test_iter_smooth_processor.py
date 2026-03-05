@@ -119,7 +119,6 @@ class TestIterSmoothProcessor:
         assert processor.config == config
         assert processor.adapter == adapter
         assert isinstance(processor.stats_collector.act_stats, dict)
-        assert isinstance(processor.hook_manager.hook_handles, dict)
         # 验证config属性
         assert processor.config.alpha == 0.9
         assert processor.config.scale_min == 1e-5

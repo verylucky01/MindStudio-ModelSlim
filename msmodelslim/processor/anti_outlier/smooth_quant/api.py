@@ -24,10 +24,10 @@ from typing import Type, Tuple
 import torch
 
 from msmodelslim.ir.qal.qregistry import QFuncRegistry
-from msmodelslim.ir.qal.qtypes import (
-    Subgraph,
+from msmodelslim.processor.anti_outlier.common.subgraph_type import (
     NormLinearSubgraph,
 )
+from msmodelslim.processor.anti_outlier.common.subgraph_type import Subgraph
 from ..common import (
     SmoothQuantConfig,
     SmoothContext,

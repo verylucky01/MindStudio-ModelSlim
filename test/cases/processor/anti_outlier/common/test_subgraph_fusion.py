@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 import torch
 import torch.nn as nn
 
-from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import NonFusionSubgraph
 from msmodelslim.processor.anti_outlier.common.subgraph_fusion import (
     SubgraphFusionFactory,
     NonFusionSubgraphFusion,

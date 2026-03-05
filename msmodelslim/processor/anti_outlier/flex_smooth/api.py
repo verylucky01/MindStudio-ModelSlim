@@ -25,14 +25,10 @@ import torch
 from torch import nn
 
 from msmodelslim.ir.qal.qregistry import QFuncRegistry
-from msmodelslim.ir.qal.qtypes import (
-    Subgraph,
-    NormLinearSubgraph,
-    LinearLinearSubgraph,
-    OVSubgraph,
+from msmodelslim.processor.anti_outlier.common.subgraph_type import (
     UpDownSubgraph,
-    NonFusionSubgraph,
 )
+from msmodelslim.processor.anti_outlier.common.subgraph_type import LinearLinearSubgraph, NonFusionSubgraph, NormLinearSubgraph, OVSubgraph, Subgraph
 from msmodelslim.utils.logging import get_logger
 from .alpha_beta_search import (
     FlexSmoothAlphaBetaSearcher,

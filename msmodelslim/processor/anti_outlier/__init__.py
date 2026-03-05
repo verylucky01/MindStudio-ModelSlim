@@ -37,6 +37,8 @@ __all__ = [
     "FlexSmoothQuantProcessorConfig",
     "FlexAWQSSZProcessor",
     "FlexAWQSSZProcessorConfig",
+    "AWQProcessor",
+    "AWQProcessorConfig",
     "SubgraphRegistry",
     "HookManager",
     "StatsCollector"
@@ -54,3 +56,4 @@ from .iter_smooth import IterSmoothProcessorConfig, IterSmoothProcessor
 from .iter_smooth.api import iter_smooth
 from .smooth_quant import SmoothQuantProcessorConfig, SmoothQuantProcessor
 from .smooth_quant.api import smooth_quant
+from .awq import AWQProcessorConfig, AWQProcessor

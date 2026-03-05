@@ -35,7 +35,7 @@ from msmodelslim.core.observer import MsMinMaxObserver, MinMaxObserverConfig
 from msmodelslim.utils.distributed import DistHelper
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
-from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import NonFusionSubgraph
 from msmodelslim.utils.validation.value import validate_normalized_value, is_boolean, is_string_list
 
 from ..common import (

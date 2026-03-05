@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 
 from msmodelslim.ir.non_fusion_smooth_quant_ir import NonFusionSmoothQuantHookIR
-from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import NonFusionSubgraph
 from msmodelslim.processor.anti_outlier.common import (
     FlexSmoothQuantConfig,
     FlexSmoothQuantContext,

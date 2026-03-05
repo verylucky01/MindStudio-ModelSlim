@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import torch
 import torch.nn as nn
 
-from msmodelslim.ir.qal.qtypes import NonFusionSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import NonFusionSubgraph
 from msmodelslim.processor.anti_outlier.iter_smooth.api import iter_smooth
 from msmodelslim.processor.anti_outlier.common import (
     IterSmoothConfig,

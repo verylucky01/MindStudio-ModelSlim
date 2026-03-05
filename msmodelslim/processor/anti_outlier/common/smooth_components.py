@@ -21,17 +21,14 @@ See the Mulan PSL v2 for more details.
 
 
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Dict, Any, Callable, List
 from enum import Enum
 import torch.nn as nn
 
+from msmodelslim.processor.anti_outlier.common.subgraph_type import LinearLinearSubgraph, NonFusionSubgraph, NormLinearSubgraph, OVSubgraph
 from msmodelslim.utils.logging import get_logger
-from msmodelslim.ir.qal.qtypes import (
-    NormLinearSubgraph,
-    LinearLinearSubgraph,
-    OVSubgraph,
-    UpDownSubgraph,
-    NonFusionSubgraph
+from msmodelslim.processor.anti_outlier.common.subgraph_type import (
+    UpDownSubgraph
 )
 
 
@@ -45,29 +42,42 @@ class StatKey(str, Enum):
     STAT_KEY_SMOOTH_SCALE = "smooth_scale"
     STAT_KEY_VARIANCE = "std"
     TENSOR = 'tensor'
+    STAT_KEY_MEAN = "mean"
+    STAT_KEY_ARGS_AND_KWARGS = "args_and_kwargs"
 
 
 class HookManager:   
     def __init__(self, model: nn.Module):
         self.model = model
-        self.hook_handles: Dict[str, any] = {}
+        self.hook_handles: List[Any] = []
     
     def install_hook(self, module_name: str, hook_fn: Callable, subgraph_type: str = None) -> bool:
         module = self.model.get_submodule(module_name)
         handle = module.register_forward_hook(hook_fn)
-        self.hook_handles[module_name] = handle
+        self.hook_handles.append(handle)
         get_logger().debug(
             f"Successfully installed hook for module {module_name}"
             + (f" (subgraph_type: {subgraph_type})" if subgraph_type else "")
         )
         return True
     
+    def install_pre_hook(self, module_name: str, hook_fn: Callable, subgraph_type: str = None, with_kwargs: bool = False) -> bool:
+        module = self.model.get_submodule(module_name)
+        handle = module.register_forward_pre_hook(hook_fn, with_kwargs=with_kwargs)
+        self.hook_handles.append(handle)
+        get_logger().debug(
+            f"Successfully installed pre-hook for module {module_name}"
+            + (f" (subgraph_type: {subgraph_type})" if subgraph_type else "")
+        )
+        return True
+    
     def remove_all_hooks(self) -> int:   
-        for module_name, handle in self.hook_handles.items():
+        count = len(self.hook_handles)
+        for handle in self.hook_handles:
             handle.remove()
-            get_logger().debug("Successfully removed hook for module %s", module_name)
         self.hook_handles.clear()
-        return len(self.hook_handles)
+        get_logger().debug("Removed %d hooks", count)
+        return count
 
 
 class StatsCollector(ABC):

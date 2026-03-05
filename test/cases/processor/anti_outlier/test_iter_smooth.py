@@ -33,10 +33,7 @@ import torch
 import torch.nn as nn
 
 # 应用程序自定义模块导入
-from msmodelslim.ir.qal.qtypes import (
-    LinearLinearSubgraph,
-    NormLinearSubgraph,
-    OVSubgraph,
+from msmodelslim.processor.anti_outlier.common.subgraph_type import (
     UpDownSubgraph,
 )
 from msmodelslim.processor.anti_outlier.common.smooth_types import (
@@ -49,6 +46,7 @@ from msmodelslim.processor.anti_outlier.common.scale_computation import (
     prepare_mqga_parameters,
     reduce_scales_for_mqga_mean,
 )
+from msmodelslim.processor.anti_outlier.common.subgraph_type import LinearLinearSubgraph, NormLinearSubgraph, OVSubgraph
 from msmodelslim.processor.anti_outlier.iter_smooth.api import (
     iter_smooth_impl_linear_linear,
     iter_smooth_impl_norm_linear,
