@@ -19,7 +19,7 @@
 
 import torch
 import torch.nn as nn
-from typing import Callable
+from typing import Callable, Optional, Tuple
 from collections import defaultdict
 from msmodelslim.core.base.protocol import BatchProcessRequest
 
@@ -36,7 +36,7 @@ def is_layernorm(module: nn.Module) -> bool:
 
 def collect_shared_input_modules(
     request: BatchProcessRequest
-) -> tuple[dict, dict | None]:
+) -> Tuple[dict, Optional[dict]]:
     """Collect modules that share the same input using forward hooks.
 
     This is a common helper for both LLM and diffusion model fusion.

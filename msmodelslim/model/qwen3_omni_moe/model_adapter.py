@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details.
 -------------------------------------------------------------------------
 """
 
+import glob
 import os
 from collections import defaultdict
 from functools import lru_cache
@@ -26,6 +27,7 @@ from unittest.mock import patch
 
 import torch
 from safetensors import safe_open
+from safetensors.torch import save_file
 from torch import nn
 from tqdm import tqdm
 import librosa
@@ -45,11 +47,12 @@ from msmodelslim.model.common.layer_wise_forward import generated_decoder_layer_
 from msmodelslim.model.interface_hub import (
     IterSmoothInterface,
     FlexSmoothQuantInterface,
-    ModelSlimPipelineInterfaceV1
+    ModelSlimPipelineInterfaceV1,
+    AscendV1SaveInterface,
 )
 from msmodelslim.model.common.vlm_base import VLMBaseModelAdapter
 from msmodelslim.utils.logging import logger_setter, get_logger
-from msmodelslim.utils.security import get_valid_read_path, json_safe_load, MAX_READ_FILE_SIZE_32G
+from msmodelslim.utils.security import get_valid_read_path, json_safe_load, json_safe_dump, MAX_READ_FILE_SIZE_32G
 
 
 @logger_setter()
@@ -58,7 +61,8 @@ class Qwen3OmniMoeThinkerModelAdapter(
     ModelInfoInterface,
     ModelSlimPipelineInterfaceV1,
     IterSmoothInterface,
-    FlexSmoothQuantInterface):
+    FlexSmoothQuantInterface,
+    AscendV1SaveInterface):
     """
     Adapter for Qwen3-Omni-Moe model.
     Focuses on quantizing the 'thinker' (LLM) part for ASR scenarios.
@@ -646,7 +650,19 @@ class Qwen3OmniMoeThinkerModelAdapter(
                         ])
         
         return adapter_config
-    
+
+    def ascendv1_save_postprocess(self, model: nn.Module, save_directory: str) -> None:
+        """为满足 vLLM Ascend 要求，在描述/索引与权重文件中为键名统一添加 thinker. 前缀。"""
+        prefix = "thinker."
+        for name in ("quant_model_description.json", "quant_model_weights.safetensors.index.json"):
+            path = os.path.join(save_directory, name)
+            data = json_safe_load(path)
+            target = data.get("weight_map") if data.get("weight_map") is not None else data
+            json_safe_dump({f"{prefix}{k}": v for k, v in target.items()}, path, indent=2)
+        for path in glob.glob(os.path.join(save_directory, "*.safetensors")):
+            with safe_open(path, framework="pt", device="cpu") as f:
+                save_file({f"{prefix}{k}": f.get_tensor(k) for k in f.keys()}, path)
+
     @lru_cache(maxsize=1)
     def _get_weight_map(self) -> Dict[str, str]:
         """Get weight map from model.safetensors.index.json"""
