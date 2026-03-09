@@ -19,7 +19,7 @@ toc_depth: 3
 
 ### 功能说明
 
-- **多维度分析**: 支持 `std`、`quantile`、`kurtosis` 三种**一元**衡量算法，以及 `attention_mse` **二元**衡量算法，能够从数据分布、稳健性、峰态特征和量化前后注意力输出的差异等多个维度，精准评估层敏感度。
+- **多维度分析**: 支持 `std`、`quantile`、`kurtosis` 三种**线性层**衡量算法，以及 `attention_mse` 一种**attention结构**衡量算法，能够从数据分布、稳健性、峰态特征和量化前后注意力输出的差异等多个维度，精准评估层敏感度。
 - **灵活配置**: 支持自定义校准数据集（JSON/JSONL格式）、层名匹配以及丰富的参数选项，满足不同场景的量化需求。
 - **智能输出**: 支持打印Top K敏感层列表，实际打印数量可能会大于或等于目标数量，如QKV一起打印。
 
@@ -64,11 +64,11 @@ msmodelslim analyze [参数选项]
 
 不同分析指标（metrics）所支持的 model_type 不同，请按所选指标查看对应列表。
 
-**一元算法（std / quantile / kurtosis）支持的 model_type**
+**线性层衡量算法（std / quantile / kurtosis）支持的 model_type**
 
-一元算法当前支持的 model_type 与 ModelslimV1 量化一致，具体可参阅 [config.ini](../../../../config/config.ini) 中的 `[ModelAdapter]` 。
+线性层衡量算法当前支持的 model_type 与 ModelslimV1 量化一致，具体可参阅 [config.ini](../../../../config/config.ini) 中的 `[ModelAdapter]` 。
 
-**二元算法（attention_mse）支持的 model_type**
+**attention结构衡量算法（attention_mse）支持的 model_type**
 
 | model_type       |
 | ---------------- |
