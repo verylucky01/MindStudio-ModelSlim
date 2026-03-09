@@ -92,7 +92,7 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,  # 提供多模态通用能力
 
 #### 3.1 `handle_dataset`：处理多模态校准数据
 
-将校准数据（`VlmCalibSample`）转换为多模态理解模型支持的输入，`VlmCalibSample`的定义可参考[`vlm_dataset_loader.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/vlm_dataset_loader.py)：
+将校准数据（`VlmCalibSample`）转换为多模态理解模型支持的输入，`VlmCalibSample`的定义可参考[`vlm_dataset_loader.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)：
 
 **关键点**：
 
@@ -111,7 +111,7 @@ def handle_dataset(self, dataset: Any, device: DeviceType = DeviceType.NPU) -> L
     Returns:
         List of model inputs (dict with input_ids, pixel_values, etc.)
     """
-    from msmodelslim.infra.vlm_dataset_loader import VlmCalibSample
+    from msmodelslim.infra.dataset_loader.vlm_dataset_loader import VlmCalibSample
     from transformers import AutoProcessor
     self._processor = AutoProcessor.from_pretrained(self.model_path, trust_remote_code=True, local_files_only=True)
     
