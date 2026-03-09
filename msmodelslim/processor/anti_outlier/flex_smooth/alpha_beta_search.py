@@ -219,7 +219,9 @@ class FlexAWQSSZAlphaBetaSearcher(BaseAlphaBetaSearcher):
                 "  - Created quantizer with weight_quantizer: %s",
                 type(quantizer.weight_quantizer).__name__
             )
-            _ = quantizer.forward(scaled_act)
+            # 如果量化器是data free场景，则不进行前向
+            if not quantizer.is_data_free():
+                _ = quantizer.forward(scaled_act)
             ir_module = quantizer.deploy()
             
             get_logger().debug("  - Deployed IR module: %s", type(ir_module).__name__)
