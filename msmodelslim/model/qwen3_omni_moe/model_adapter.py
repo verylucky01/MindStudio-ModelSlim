@@ -31,8 +31,12 @@ from safetensors.torch import save_file
 from torch import nn
 from tqdm import tqdm
 import librosa
-from qwen_vl_utils import process_vision_info
-from qwen_omni_utils import process_mm_info
+try:
+    from qwen_omni_utils import process_mm_info
+except ImportError:
+    raise ImportError("Please install qwen_omni_utils by: pip install qwen_omni_utils")
+
+
 from transformers import Qwen3OmniMoeProcessor
 from transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe import (
     Qwen3OmniMoeThinkerTextDecoderLayer
@@ -89,7 +93,6 @@ class Qwen3OmniMoeThinkerModelAdapter(
         """
         Prepare calibration dataset for Qwen3-Omni-Moe.
         """
-
         # 1. Init processor (once)
         self._processor = Qwen3OmniMoeProcessor.from_pretrained(
             self.model_path,
