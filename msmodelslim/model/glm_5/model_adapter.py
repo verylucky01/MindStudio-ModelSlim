@@ -34,8 +34,9 @@ from msmodelslim.app.naive_quantization.model_info_interface import ModelInfoInt
 from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.graph import AdapterConfig, MappingConfig, FusionConfig
+from msmodelslim.ir import QuaRotExtraInfoWrapperIR
 from msmodelslim.processor.quarot import QuaRotInterface
-from msmodelslim.utils.exception import InvalidModelError
+from msmodelslim.utils.exception import InvalidModelError, UnsupportedError
 from msmodelslim.utils.logging import logger_setter, get_logger
 from msmodelslim.utils.security import get_valid_read_path, json_safe_load, MAX_READ_FILE_SIZE_32G
 from .quarot import get_ln_fuse_map, get_rotate_map
@@ -44,7 +45,7 @@ from .model import Transformer, ModelArgs
 from .mtp_quant_module import MTPLayer, wrap_mtp_decoder, remove_zero_and_shift
 from ..common.layer_wise_forward import generated_decoder_layer_visit_func, TransformersForwardBreak
 from ..common.transformers import TransformersModel
-from ..interface_hub import ModelSlimPipelineInterfaceV1, FlexSmoothQuantInterface
+from ..interface_hub import ModelSlimPipelineInterfaceV1, FlexSmoothQuantInterface, AscendV1SaveInterface
 
 
 @logger_setter("msmodelslim.model.glm_5")
@@ -52,7 +53,8 @@ class GLM5ModelAdapter(TransformersModel,
                               ModelInfoInterface,
                               ModelSlimPipelineInterfaceV1,
                               FlexSmoothQuantInterface,
-                              QuaRotInterface
+                              QuaRotInterface,
+                              AscendV1SaveInterface
                               ):
     def get_model_pedigree(self) -> str:
         return 'glm_5'
@@ -407,6 +409,62 @@ class GLM5ModelAdapter(TransformersModel,
             rot_pairs['rot_b_proj'].right_rot[f"model.layers.{layer_idx}.self_attn.indexer.wq_b"] = \
                 rotate_matrix['rot_b_proj']
         return [pre_run], [pair for pair in rot_pairs.values()]
+
+    def ascendv1_save_postprocess(self, model: nn.Module, save_directory: str) -> None:
+        global_rotation, norm_weight = None, None
+        
+        # catch the global rotation
+        for _, module in model.named_modules():
+            if isinstance(module, QuaRotExtraInfoWrapperIR):
+                offline_info = module.rotation_info
+                global_rotation = offline_info.global_rotation
+        if global_rotation is None:
+            raise UnsupportedError("Global rotation is not found.")
+        
+        # catch the original model.norm.weight
+        weight_path = os.path.join(self.model_path, "model-00282-of-00282.safetensors")
+        with safe_open(weight_path, framework='pt', device='cpu') as f:
+            norm_weight = f.get_tensor("model.norm.weight")
+        if norm_weight is None:
+            raise UnsupportedError("model.norm.weight is not found.")
+
+        def _apply_rot_transform(w: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
+            """
+            计算 Q.T @ w @ Q。
+            - 约定 w 为 1D (d,) 或 (d, 1)，视为对角矩阵 diag(w)，Q 为 (d, d)，返回 (d, d)。
+            """
+            if w.dim() != 1:
+                raise ValueError(f"Weight w must be 1D, got shape {w.shape}")
+            dtype = torch.float32
+            device = w.device
+            w = w.to(dtype=dtype, device=device)
+            Q = Q.to(dtype=dtype, device=device)
+
+            w = w.flatten()
+            d = w.shape[0]
+            if Q.shape[0] != d or Q.shape[1] != d:
+                raise ValueError(f"Q must be ({d}, {d}) when w is 1D length {d}, got Q {Q.shape}")
+            return Q.T * w @ Q
+
+        # keep the output dtype same as the original model.norm.weight
+        original_dtype = norm_weight.dtype
+        rot_weight = _apply_rot_transform(norm_weight, global_rotation).to(original_dtype)
+
+        from safetensors.torch import save_file
+        save_file({"rot.weight": rot_weight}, os.path.join(save_directory, "rot.safetensors"))
+
+        # update quant_model_description.json
+        from msmodelslim.utils.security import json_safe_dump
+        description_path = os.path.join(save_directory, "quant_model_description.json")
+        description_data = json_safe_load(description_path)
+        description_data["is_rot_used"] = True
+        json_safe_dump(description_data, description_path, indent=2)
+
+        # update quant_model_weights.safetensors.index.json
+        index_path = os.path.join(save_directory, "quant_model_weights.safetensors.index.json")
+        index_data = json_safe_load(index_path)
+        index_data["weight_map"]["rot.weight"] = "rot.safetensors"
+        json_safe_dump(index_data, index_path, indent=2)
 
     def _load_config(self, trust_remote_code=False) -> object:
         return ModelArgs()

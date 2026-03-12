@@ -101,8 +101,8 @@ class ModelArgs:
     n_routed_experts: int = 256
     n_shared_experts: int = 1
     num_experts_per_tok: int = 8
-    n_group: int = 8
-    topk_group: int = 4
+    n_group: int = 1
+    topk_group: int = 1
     scoring_func: Literal["softmax", "sigmoid"] = "sigmoid"
     routed_scaling_factor: float = 2.5
     # mla
@@ -621,7 +621,7 @@ class Gate(nn.Module):
         self.route_scale = args.routed_scaling_factor
         self.weight = nn.Parameter(torch.empty(args.n_routed_experts, args.hidden_size))
         self.e_score_correction_bias = nn.Parameter(
-            torch.empty(args.n_routed_experts, dtype=torch.float32)) if self.dim == 7168 else None
+            torch.empty(args.n_routed_experts, dtype=torch.float32)) if self.dim == 6144 else None
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """

@@ -50,13 +50,19 @@ class TransformersModel(BaseModelAdapter, AscendV1GlobalModelDtypeInterface):
 
     def get_global_model_torch_dtype(self) -> torch.dtype:
         """AscendV1GlobalModelDtypeInterface: return global model torch dtype (delegate to get_global_torch_dtype)."""
-        dt = getattr(self.config, "torch_dtype", None)
+        dt = (
+            getattr(self.config, "dtype", None)
+            or getattr(self.config, "torch_dtype", None)
+        )
         if dt is None:
             return torch.float32
         if isinstance(dt, torch.dtype):
             return dt
         if isinstance(dt, str):
-            m = {"float32": torch.float32, "float16": torch.float16, "bfloat16": torch.bfloat16}
+            m = {"float32": torch.float32, 
+                 "float16": torch.float16, 
+                 "bfloat16": torch.bfloat16,
+                 "bf16": torch.bfloat16}
             return m.get(dt, torch.float32)
         return torch.float32
 
