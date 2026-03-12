@@ -178,11 +178,12 @@ class DebugInfoPersistence(KeyInfoPersistenceInfra):
             return ref_cache[hash_hex]
         elif isinstance(value, dict):
             return {
-                k: self._serialize_value(v, f"{key_path}.{k}") for k, v in value.items()
+                k: self._serialize_value(v, f"{key_path}.{k}", ref_cache, ref_key)
+                for k, v in value.items()
             }
         elif isinstance(value, (list, tuple)):
             return [
-                self._serialize_value(v, f"{key_path}[{idx}]")
+                self._serialize_value(v, f"{key_path}[{idx}]", ref_cache, ref_key)
                 for idx, v in enumerate(value)
             ]
         elif isinstance(value, (int, float, str, bool, type(None))):
