@@ -35,6 +35,7 @@ from .pipeline_interface import MultimodalPipelineInterface
 
 
 class DumpConfig(BaseModel):
+    enable_dump: bool = Field(default=True)
     capture_mode: Literal["args"] = Field(default="args")
     dump_data_dir: str = Field(default="")
 

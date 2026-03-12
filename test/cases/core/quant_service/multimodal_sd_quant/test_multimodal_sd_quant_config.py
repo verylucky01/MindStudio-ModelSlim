@@ -33,6 +33,7 @@ from msmodelslim.utils.exception import SchemaValidateError
 def test_dump_config_default():
     """测试DumpConfig默认值"""
     config = DumpConfig()
+    assert config.enable_dump is True
     assert config.capture_mode == "args"
     assert config.dump_data_dir == ""
 
@@ -42,6 +43,14 @@ def test_dump_config_custom():
     config = DumpConfig(capture_mode="args", dump_data_dir="/test/path")
     assert config.capture_mode == "args"
     assert config.dump_data_dir == "/test/path"
+
+
+def test_dump_config_enable_dump_false():
+    """测试DumpConfig enable_dump=False 能正确解析"""
+    config = DumpConfig(enable_dump=False)
+    assert config.enable_dump is False
+    config_from_dict = DumpConfig(**{"enable_dump": False, "capture_mode": "args", "dump_data_dir": ""})
+    assert config_from_dict.enable_dump is False
 
 
 def test_multimodal_sd_config_default():
@@ -91,6 +100,23 @@ def test_load_specific_config_valid():
     config = load_specific_config(yaml_spec)
     assert isinstance(config, MultimodalSDServiceConfig)
     assert config.multimodal_sd_config.dump_config.dump_data_dir == "/valid/path"
+    assert config.multimodal_sd_config.dump_config.enable_dump is True
+
+
+def test_load_specific_config_enable_dump_false():
+    """测试load_specific_config加载 enable_dump: false"""
+    yaml_spec = {
+        "multimodal_sd_config": {
+            "dump_config": {
+                "enable_dump": False,
+                "capture_mode": "args",
+                "dump_data_dir": ""
+            }
+        }
+    }
+    config = load_specific_config(yaml_spec)
+    assert isinstance(config, MultimodalSDServiceConfig)
+    assert config.multimodal_sd_config.dump_config.enable_dump is False
 
 
 def test_load_specific_config_invalid_type():

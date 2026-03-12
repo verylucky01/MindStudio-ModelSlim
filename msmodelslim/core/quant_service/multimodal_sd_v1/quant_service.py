@@ -31,7 +31,7 @@ from msmodelslim.core.quant_service import KeyInfoPersistenceInfra
 from msmodelslim.core.runner.layer_wise_runner import LayerWiseRunner
 from msmodelslim.model import IModel
 from msmodelslim.utils.cache import load_cached_data_for_models, to_device
-from msmodelslim.utils.exception import SchemaValidateError
+from msmodelslim.utils.exception import SchemaValidateError, UnsupportedError
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.core.context import IContextFactory, ContextManager
 from .pipeline_interface import MultimodalPipelineInterface
@@ -179,25 +179,42 @@ class MultimodalSDModelslimV1QuantService(IQuantService):
 
         models = model_adapter.init_model(device)
 
-        config_dump_data_dir = quant_config.spec.multimodal_sd_config.dump_config.dump_data_dir
-        if config_dump_data_dir:
-            base_dir = config_dump_data_dir
+        dump_config = quant_config.spec.multimodal_sd_config.dump_config
+        if dump_config.enable_dump:
+            config_dump_data_dir = dump_config.dump_data_dir
+            if config_dump_data_dir:
+                base_dir = config_dump_data_dir
+            else:
+                base_dir = save_path
+
+            pth_file_path_list = {}
+            for expert_name, _ in models.items():
+                pth_file_path_list[expert_name] = os.path.join(base_dir,
+                                                               f"calib_data_{model_adapter.model_args.task_config}_{expert_name}.pth")
+
+            calib_data = load_cached_data_for_models(
+                pth_file_path_list=pth_file_path_list,
+                generate_func=model_adapter.run_calib_inference,
+                models=models,
+                dump_config=dump_config
+            )
+
+            get_logger().info(f"prepare calib_data from {base_dir} success")
         else:
-            base_dir = save_path
-
-        pth_file_path_list = {}
-        for expert_name, _ in models.items():
-            pth_file_path_list[expert_name] = os.path.join(base_dir,
-                                                           f"calib_data_{model_adapter.model_args.task_config}_{expert_name}.pth")
-
-        calib_data = load_cached_data_for_models(
-            pth_file_path_list=pth_file_path_list,
-            generate_func=model_adapter.run_calib_inference,
-            models=models,
-            dump_config=quant_config.spec.multimodal_sd_config.dump_config
-        )
-
-        get_logger().info(f"prepare calib_data from {base_dir} success")
+            tips = (
+                "With enable_dump=False in the current config, calibration data will not be loaded/dumped. "
+                "Please confirm whether your use case requires dump data: pure dynamic quantization does not need "
+                "calibration data; static quantization or outlier suppression requires it. "
+                "If you don't need it, enter y to continue."
+            )
+            user_input = input(tips + " (Enter y to continue, otherwise it will exit): ").strip().lower()[:3]
+            if user_input != 'y':
+                raise UnsupportedError(
+                    tips,
+                    action="To dump calibration data, set multimodal_sd_config.dump_config.enable_dump: True in your config.",
+                )
+            get_logger().info("enable_dump=False, skipping calibration data load/dump")
+            calib_data = {expert_name: None for expert_name in models}
 
         calib_data = to_device(calib_data, device.value)
         get_logger().info(f"==========QUANTIZATION: Run Quantization==========")

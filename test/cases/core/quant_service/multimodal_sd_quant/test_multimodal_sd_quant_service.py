@@ -27,6 +27,7 @@ import pytest
 
 from msmodelslim.core.const import DeviceType
 from msmodelslim.core.quant_service.interface import BaseQuantConfig
+from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.core.quant_service.multimodal_sd_v1.quant_config import (
     MultimodalSDModelslimV1QuantConfig,
     MultimodalPipelineInterface,
@@ -53,7 +54,7 @@ class TestQuantProcessComplete:
         # 量化配置核心属性
         self.mock_quant_spec.multimodal_sd_config.model_extra = {"model_config": "test_config"}
         self.mock_quant_spec.multimodal_sd_config.dump_config = MagicMock(
-            capture_mode='args', dump_data_dir="/test/dump"
+            capture_mode='args', dump_data_dir="/test/dump", enable_dump=True
         )
         # 处理/保存配置（2个实例，覆盖多配置场景）
         self.mock_quant_spec.process = [Mock(), Mock()]
@@ -282,3 +283,47 @@ class TestQuantProcessComplete:
         self.service.quant_process(self.quant_config, self.model_adapter, save_path=None, device=self.device)
         for save_cfg in scene3_save_cfgs:
             save_cfg.set_save_directory.assert_not_called()
+
+    @patch("builtins.input", return_value="y")
+    @patch("msmodelslim.core.quant_service.multimodal_sd_v1.quant_service.load_cached_data_for_models")
+    @patch("msmodelslim.core.quant_service.multimodal_sd_v1.quant_service.to_device")
+    @patch("msmodelslim.core.quant_service.multimodal_sd_v1.quant_service.LayerWiseRunner")
+    def test_quant_process_enable_dump_false(self, mock_runner_cls, mock_to_device, mock_load_cache, mock_input):
+        """enable_dump=False 时不调用 load_cached_data_for_models，calib_data 为各 expert 对应 None；需交互确认后继续"""
+        self.model_adapter.init_model.return_value = {"": self.mock_model1}
+        self.model_adapter.model_args.task_config = ""
+        self.mock_quant_spec.multimodal_sd_config.dump_config.enable_dump = False
+        mock_to_device.side_effect = lambda x, _: x  # 透传，便于断言 calib_data 内容
+        mock_runner_cls.return_value = Mock()
+
+        captured_config = []
+
+        def capture_config(config):
+            captured_config.append(config)
+
+        with patch.object(self.service, "quantize_multi_expert_models", side_effect=capture_config):
+            self.service.quant_process(self.quant_config, self.model_adapter, self.save_path, self.device)
+
+        mock_load_cache.assert_not_called()
+        mock_input.assert_called_once()
+        assert len(captured_config) == 1
+        assert captured_config[0].calib_data == {"": None}
+        mock_to_device.assert_called_once()
+        call_args = mock_to_device.call_args[0]
+        assert call_args[0] == {"": None}
+
+    @patch("builtins.input", return_value="n")
+    @patch("msmodelslim.core.quant_service.multimodal_sd_v1.quant_service.load_cached_data_for_models")
+    @patch("msmodelslim.core.quant_service.multimodal_sd_v1.quant_service.LayerWiseRunner")
+    def test_quant_process_enable_dump_false_user_declines(self, mock_runner_cls, mock_load_cache, mock_input):
+        """enable_dump=False 时用户输入非 y，应抛出 UnsupportedError 并退出"""
+        self.model_adapter.init_model.return_value = {"": self.mock_model1}
+        self.model_adapter.model_args.task_config = ""
+        self.mock_quant_spec.multimodal_sd_config.dump_config.enable_dump = False
+        mock_runner_cls.return_value = Mock()
+
+        with pytest.raises(UnsupportedError) as excinfo:
+            self.service.quant_process(self.quant_config, self.model_adapter, self.save_path, self.device)
+
+        assert "enable_dump" in str(excinfo.value) or "dump" in str(excinfo.value).lower()
+        mock_load_cache.assert_not_called()
