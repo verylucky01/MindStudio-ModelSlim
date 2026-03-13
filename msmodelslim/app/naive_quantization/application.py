@@ -196,7 +196,7 @@ class NaiveQuantizationApplication:
                 return True
             return False
 
-        if not scenario_tags or config.matches_scenario_tags(model_type, scenario_tags):
+        if config.matches_scenario_tags(model_type, scenario_tags):
             return True
         return STANDBY_CONFIG
 

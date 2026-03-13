@@ -52,12 +52,12 @@ class PracticeConfig(BaseQuantConfig):
         Return True if config's verified_tags has at least one scenario (for model_type)
         that contains ALL effective tags.
         """
-        if not scenario_tags:
-            return True
         model_scenario = getattr(self.metadata, 'verified_tags', None) or {}
         scenarios = model_scenario.get(model_type, [])
         if not scenarios:
             return False
+        if not scenario_tags:
+            return True
         user_lower = [t.lower() for t in scenario_tags]
         for scenario_tags_list in scenarios:
             scenario_lower = [str(t).lower() for t in scenario_tags_list]
