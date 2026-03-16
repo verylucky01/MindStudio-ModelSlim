@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from msmodelslim.core.practice import Metadata
 from msmodelslim.core.quant_service.modelslim_v1.quant_config import ModelslimV1ServiceConfig
@@ -35,8 +35,19 @@ from msmodelslim.core.tune_strategy.common.config_builder.quantization_config im
 class StructureConfig(BaseModel):
     """结构配置，定义模型结构的量化配置"""
     type: str = Field(min_length=1, description="结构类型，非空，例如 'GQA', 'MoE', 'FFN'")
-    include: Optional[List[str]] = Field(default=None, description="包含的模式列表，例如 ['*self_attn*']")
+    include: List[str] = Field(..., min_length=1, description="包含的模式列表，必选，不可为空且不能包含空字符串，例如 ['*self_attn*']")
     exclude: Optional[List[str]] = Field(default=None, description="排除的模式列表，例如 ['*kv_b_proj', '*wq_b']")
+
+    @field_validator("include")
+    @classmethod
+    def include_no_empty_string(cls, v: List[str]) -> List[str]:
+        for s in v:
+            if not s or not str(s).strip():
+                raise ValueError(
+                    f"structure_configs.include is a list of module name patterns; "
+                    f"include pattern must not be empty (e.g. '*self_attn*', '*mlp*')."
+                )
+        return v
 
 
 class ExpertExperienceLoader:
@@ -158,8 +169,7 @@ class ExpertExperienceConfigBuilder(QuantizationConfigBuilder):
                     "its include patterns will be excluded from other linear_quant processors",
                     structure_config.type
                 )
-                if structure_config.include:
-                    null_structure_includes.extend(structure_config.include)
+                null_structure_includes.extend(structure_config.include)
         process = []
         for structure_config, qconfig_dict in structure_configs_with_qconfig:
             exclude_list = list(structure_config.exclude or [])
@@ -169,7 +179,7 @@ class ExpertExperienceConfigBuilder(QuantizationConfigBuilder):
                 LinearProcessorConfig(
                     type="linear_quant",
                     qconfig=qconfig_dict,
-                    include=structure_config.include or ["*"],
+                    include=structure_config.include,
                     exclude=exclude_list
                 )
             )

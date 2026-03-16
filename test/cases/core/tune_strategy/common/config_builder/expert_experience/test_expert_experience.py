@@ -35,14 +35,25 @@ class TestStructureConfig:
         assert cfg.include == ["*self_attn*"]
         assert cfg.exclude == ["*kv_b_proj"]
 
-    def test_StructureConfig_optional_fields_default_to_none_when_omitted(self):
+    @pytest.mark.parametrize("kwargs", [
+        {"type": "MHA"},
+        {"type": "MHA", "include": []},
+        {"type": "MHA", "include": ["*self_attn*", "", "*mlp*"]},
+    ], ids=["include_omitted", "include_empty_list", "include_contains_empty_string"])
+    def test_StructureConfig_raises_SchemaValidateError_when_include_invalid(self, kwargs):
         """
-        场景：构造 StructureConfig 时仅传入必填 type，不传可选字段 include、exclude。
-        预期：include、exclude 为 None，用于看护默认值不被随意变更。
+        场景：include 未传、为空列表或含空字符串时构造 StructureConfig。
+        预期：抛出 SchemaValidateError 且消息含 include。
         """
-        cfg = StructureConfig(type="MHA")
+        with pytest.raises(SchemaValidateError) as exc_info:
+            StructureConfig(**kwargs)
+        assert "include" in str(exc_info.value).lower()
+
+    def test_StructureConfig_exclude_optional_defaults_to_none_when_omitted(self):
+        """传入 type、include 时不传 exclude，预期 exclude 为 None。"""
+        cfg = StructureConfig(type="MHA", include=["*"])
         assert cfg.type == "MHA"
-        assert cfg.include is None
+        assert cfg.include == ["*"]
         assert cfg.exclude is None
 
 
