@@ -81,6 +81,7 @@ class SubgraphFusionStrategy(ABC):
 
 
 class OVSubgraphFusion(SubgraphFusionStrategy):
+    @torch.no_grad()
     def apply_fusion(
         self, 
         subgraph: OVSubgraph, 
@@ -97,6 +98,9 @@ class OVSubgraphFusion(SubgraphFusionStrategy):
         o_proj_name = getattr(subgraph, "o_proj_name", None)
         v_proj_name = getattr(subgraph, "v_proj_name", None)
 
+        if getattr(subgraph.v_proj, "bias", None) is not None:
+            subgraph.v_proj.bias.mul_(1.0 / v_scales)
+
         apply_smooth_scale_shift(
             subgraph.o_proj, o_scales.view(1, -1), o_shift, o_proj_name
         )
@@ -106,6 +110,7 @@ class OVSubgraphFusion(SubgraphFusionStrategy):
 
 
 class UpDownSubgraphFusion(SubgraphFusionStrategy):
+    @torch.no_grad()
     def apply_fusion(
         self, 
         subgraph: UpDownSubgraph, 
@@ -121,6 +126,9 @@ class UpDownSubgraphFusion(SubgraphFusionStrategy):
         down_proj_name = getattr(subgraph, "down_proj_name", None)
         up_proj_name = getattr(subgraph, "up_proj_name", None)
 
+        if getattr(subgraph.up_proj, "bias", None) is not None:
+            subgraph.up_proj.bias.mul_(1.0 / scales_tensor)
+
         apply_smooth_scale_shift(
             subgraph.down_proj, scales_tensor.view(1, -1), down_shift, down_proj_name
         )
@@ -130,6 +138,7 @@ class UpDownSubgraphFusion(SubgraphFusionStrategy):
 
 
 class LinearLinearSubgraphFusion(SubgraphFusionStrategy):
+    @torch.no_grad()
     def apply_fusion(
         self, 
         subgraph: LinearLinearSubgraph, 
@@ -145,6 +154,9 @@ class LinearLinearSubgraphFusion(SubgraphFusionStrategy):
         linear1_name = getattr(subgraph, "linear1_name", None)
         linear2_name = getattr(subgraph, "linear2_name", None)
 
+        if getattr(subgraph.linear1, "bias", None) is not None:
+            subgraph.linear1.bias.mul_(1.0 / scales_tensor)
+
         apply_smooth_scale_shift(
             subgraph.linear2, scales_tensor.view(1, -1), linear2_shift, linear2_name
         )
@@ -157,6 +169,7 @@ class LinearLinearSubgraphFusion(SubgraphFusionStrategy):
 
 
 class NormLinearSubgraphFusion(SubgraphFusionStrategy):
+    @torch.no_grad()
     def apply_fusion(
         self, 
         subgraph: NormLinearSubgraph, 
@@ -180,6 +193,8 @@ class NormLinearSubgraphFusion(SubgraphFusionStrategy):
             )
 
         # Note: norm layer doesn't have a name field in the subgraph, so we pass None
+        if getattr(subgraph.norm, "bias", None) is not None:
+            subgraph.norm.bias.mul_(1.0 / scales_tensor)
         apply_smooth_scale_shift(
             subgraph.norm, (1.0 / scales_tensor).squeeze(), norm_shift, None
         )
