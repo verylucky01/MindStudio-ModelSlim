@@ -24,11 +24,14 @@ import torch
 import torch.nn as nn
 
 from msmodelslim.ir.quarot import (
+    QuarotOfflineRotationInfo,
     QuarotOnlineRotationInfo,
     QuarotOnlineHeadRotationWrapper,
     QuarotOnlineKroneckerRotationWrapper,
     QuarotHeadsRotationHookIR,
     QuarotKroneckerRotationHookIR,
+    QuaRotExtraInfoHookIR,
+    QuaRotExtraInfoWrapperIR,
     RotationType,
     OnlineRotationInfo,
     BaseOnlineRotation,
@@ -276,6 +279,78 @@ class TestOnlineRotationHookIR(unittest.TestCase):
         output = wrapper(x)
         self.assertIsInstance(output, tuple)
         self.assertEqual(len(output), 2)
+
+
+class TestQuarotOfflineRotationInfo(unittest.TestCase):
+    """Unit tests for QuarotOfflineRotationInfo (PR #141)."""
+
+    def test_QuarotOfflineRotationInfo_after_init_global_rotation_equals_input(self):
+        """QuarotOfflineRotationInfo-初始化后-global_rotation 与传入张量一致"""
+        rot = torch.randn(8, 8)
+        info = QuarotOfflineRotationInfo(global_rotation=rot)
+        self.assertIs(info.global_rotation, rot)
+        self.assertTrue(torch.equal(info.global_rotation, rot))
+
+
+class TestQuaRotExtraInfoHookIR(unittest.TestCase):
+    """Unit tests for QuaRotExtraInfoHookIR (PR #141)."""
+
+    def setUp(self):
+        self.global_rotation = torch.eye(4)
+        self.rotation_info = QuarotOfflineRotationInfo(global_rotation=self.global_rotation)
+
+    def test_QuaRotExtraInfoHookIR_after_init_holds_rotation_info(self):
+        """QuaRotExtraInfoHookIR-初始化后-正确持有 rotation_info"""
+        hook_ir = QuaRotExtraInfoHookIR(self.rotation_info)
+        self.assertIs(hook_ir.rotation_info, self.rotation_info)
+
+    def test_QuaRotExtraInfoHookIR_on_call_returns_args_unchanged(self):
+        """QuaRotExtraInfoHookIR-调用 __call__ 时-不改变前向参数"""
+        hook_ir = QuaRotExtraInfoHookIR(self.rotation_info)
+        module = nn.Linear(4, 4)
+        x = torch.randn(2, 4)
+        result = hook_ir(module, (x,))
+        self.assertEqual(len(result), 1)
+        self.assertIs(result[0], x)
+        self.assertTrue(torch.equal(result[0], x))
+
+    def test_QuaRotExtraInfoHookIR_on_wrapper_module_returns_QuaRotExtraInfoWrapperIR_and_removes_hook(self):
+        """QuaRotExtraInfoHookIR-调用 wrapper_module 后-返回 QuaRotExtraInfoWrapperIR 且移除 hook"""
+        hook_ir = QuaRotExtraInfoHookIR(self.rotation_info)
+        module = nn.Linear(4, 4)
+        wrapper = hook_ir.wrapper_module(module)
+        self.assertIsInstance(wrapper, QuaRotExtraInfoWrapperIR)
+        self.assertIs(wrapper.wrapped_module, module)
+        self.assertIs(wrapper.rotation_info, self.rotation_info)
+        self.assertIsNone(hook_ir.hook_handle)
+
+
+class TestQuaRotExtraInfoWrapperIR(unittest.TestCase):
+    """Unit tests for QuaRotExtraInfoWrapperIR (PR #141)."""
+
+    def setUp(self):
+        self.global_rotation = torch.eye(4)
+        self.rotation_info = QuarotOfflineRotationInfo(global_rotation=self.global_rotation)
+        self.wrapped_module = nn.Linear(8, 4)
+
+    def test_QuaRotExtraInfoWrapperIR_after_init_holds_wrapped_module_and_rotation_info(self):
+        """QuaRotExtraInfoWrapperIR-初始化后-正确持有 wrapped_module 与 rotation_info"""
+        wrapper = QuaRotExtraInfoWrapperIR(self.wrapped_module, self.rotation_info)
+        self.assertIs(wrapper.wrapped_module, self.wrapped_module)
+        self.assertIs(wrapper.rotation_info, self.rotation_info)
+
+    def test_QuaRotExtraInfoWrapperIR_is_atomic_returns_false(self):
+        """QuaRotExtraInfoWrapperIR-调用 is_atomic()-返回 False 表示额外导出模式"""
+        self.assertFalse(QuaRotExtraInfoWrapperIR.is_atomic())
+
+    def test_QuaRotExtraInfoWrapperIR_on_forward_delegates_to_wrapped_module(self):
+        """QuaRotExtraInfoWrapperIR-调用 forward 时-透传到 wrapped_module 且输出一致"""
+        wrapper = QuaRotExtraInfoWrapperIR(self.wrapped_module, self.rotation_info)
+        x = torch.randn(2, 8)
+        out = wrapper(x)
+        expected = self.wrapped_module(x)
+        self.assertEqual(out.shape, expected.shape)
+        self.assertTrue(torch.allclose(out, expected))
 
 
 if __name__ == '__main__':
