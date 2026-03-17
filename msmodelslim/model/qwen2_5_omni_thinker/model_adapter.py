@@ -31,11 +31,6 @@ from safetensors.torch import save_file
 from torch import nn
 from tqdm import tqdm
 from qwen_omni_utils import process_mm_info
-from transformers import Qwen2_5OmniProcessor
-from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import (
-    Qwen2_5OmniDecoderLayer
-)
-from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
 
 from msmodelslim.core.const import DeviceType
 from msmodelslim.app.naive_quantization.model_info_interface import ModelInfoInterface
@@ -66,11 +61,16 @@ class Qwen25OmniThinkerModelAdapter(
     Adapter for Qwen2.5-Omni model.
     Focuses on quantizing the 'thinker' (LLM) part for ASR scenarios.
     """
-
     def __init__(self, model_type: str, model_path: str, trust_remote_code: bool = False):
         self._processor = None
         self._tokenizer = None
         super().__init__(model_type, model_path, trust_remote_code)
+        from transformers import Qwen2_5OmniProcessor
+        from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import (
+            Qwen2_5OmniDecoderLayer
+        )
+        from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
+
 
     def get_model_pedigree(self) -> str:
         """Return model pedigree for best practice matching"""

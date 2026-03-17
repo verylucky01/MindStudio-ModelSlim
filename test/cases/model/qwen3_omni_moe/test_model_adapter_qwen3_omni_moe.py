@@ -183,12 +183,13 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         mock_processor.return_value = mock_inputs
 
         with patch(
-            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeProcessor.from_pretrained",
-            return_value=mock_processor,
-        ), patch(
+            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeProcessor",
+            create=True,
+        ) as mock_cls, patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.process_mm_info",
             return_value=([], [], []),
         ):
+            mock_cls.from_pretrained.return_value = mock_processor
             adapter._collect_inputs_to_device = MagicMock(return_value={"input_ids": mock_inputs["input_ids"]})
             sample = MagicMock()
             sample.text = "hello"
@@ -208,15 +209,16 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         mock_processor.apply_chat_template.return_value = "text"
         mock_processor.return_value = {"input_ids": torch.tensor([[1]])}
         with patch(
-            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeProcessor.from_pretrained",
-            return_value=mock_processor,
-        ), patch(
+            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeProcessor",
+            create=True,
+        ) as mock_cls, patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.process_mm_info",
             return_value=([], [], []),
         ), patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.get_valid_read_path",
             side_effect=lambda x: x,
         ):
+            mock_cls.from_pretrained.return_value = mock_processor
             adapter._collect_inputs_to_device = MagicMock(return_value={})
             sample = MagicMock()
             sample.text = "hi"
@@ -315,6 +317,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 4, 4),
+            create=True,
         ):
             gen = adapter.generate_model_forward(model=mock_model, inputs=sample)
             collected = []
@@ -373,6 +376,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 2, 2),
+            create=True,
         ):
             gen = adapter.generate_model_forward(model=mock_model, inputs=sample)
             req = next(gen)
@@ -420,6 +424,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 3, 3),
+            create=True,
         ):
             gen = adapter.generate_model_forward(model=mock_model, inputs=sample)
             req = next(gen)
@@ -470,6 +475,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 4, 4),
+            create=True,
         ):
             gen = adapter.generate_model_forward(model=mock_model, inputs=sample)
             req = next(gen)
@@ -511,6 +517,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 3, 3),
+            create=True,
         ):
             gen = adapter.generate_model_forward(model=mock_model, inputs=sample)
             list(gen)
@@ -648,6 +655,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeThinkerTextDecoderLayer",
             return_value=nn.Linear(64, 64),
+            create=True,
         ), patch.object(nn.Linear, "reset_parameters", lambda self: None):
             adapter._get_state_dict = MagicMock(
                 return_value={"weight": torch.randn(64, 64), "bias": torch.randn(64)}
@@ -673,6 +681,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeThinkerTextDecoderLayer",
             return_value=nn.Linear(64, 64),
+            create=True,
         ), patch.object(nn.Linear, "reset_parameters", lambda self: None):
             adapter._get_state_dict = MagicMock(
                 return_value={"weight": torch.randn(64, 64), "bias": torch.randn(64)}
@@ -738,6 +747,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 2, 2),
+            create=True,
         ):
             gen = adapter.generate_model_forward(model=mock_model, inputs=sample)
             list(gen)
@@ -802,6 +812,7 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         with patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 2, 2),
+            create=True,
         ):
             gen = adapter.generate_model_forward(model=mock_model, inputs=sample)
             list(gen)

@@ -36,13 +36,6 @@ try:
 except ImportError:
     raise ImportError("Please install qwen_omni_utils by: pip install qwen_omni_utils")
 
-
-from transformers import Qwen3OmniMoeProcessor
-from transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe import (
-    Qwen3OmniMoeThinkerTextDecoderLayer
-)
-from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
-
 from msmodelslim.core.const import DeviceType
 from msmodelslim.app.naive_quantization.model_info_interface import ModelInfoInterface
 from msmodelslim.core.base.protocol import ProcessRequest
@@ -76,6 +69,11 @@ class Qwen3OmniMoeThinkerModelAdapter(
         self._processor = None
         self._tokenizer = None
         super().__init__(model_type, model_path, trust_remote_code)
+        from transformers import Qwen3OmniMoeProcessor
+        from transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe import (
+            Qwen3OmniMoeThinkerTextDecoderLayer
+        )
+        from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
 
     def get_model_pedigree(self) -> str:
         """Return model pedigree for best practice matching"""

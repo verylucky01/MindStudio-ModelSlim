@@ -154,15 +154,16 @@ def mock_processor():
         video_second_per_grid=None,
     )
     with patch(
-        "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.Qwen2_5OmniProcessor.from_pretrained",
-        return_value=processor,
-    ), patch(
+        "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.Qwen2_5OmniProcessor",
+        create=True,
+    ) as mock_cls, patch(
         "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.process_mm_info",
         return_value=([], [], []),
     ), patch(
         "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.get_valid_read_path",
         side_effect=lambda p, **kwargs: p,
     ):
+        mock_cls.from_pretrained.return_value = processor
         yield processor
 
 
@@ -270,6 +271,7 @@ class TestQwen2_5OmniThinkerModelAdapter:
         with patch(
             "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 3, 3),
+            create=True,
         ):
             requests = _run_forward_generator_to_end(adapter.generate_model_forward(model, inputs))
         names = [r.name for r in requests]
@@ -289,9 +291,11 @@ class TestQwen2_5OmniThinkerModelAdapter:
         with patch(
             "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 3, 3),
+            create=True,
         ), patch(
             "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.create_sliding_window_causal_mask",
             return_value=torch.ones(1, 1, 3, 3),
+            create=True,
         ):
             requests = _run_forward_generator_to_end(adapter.generate_model_forward(model, inputs))
         assert any(r.name == "model.layers.0" for r in requests)
@@ -307,6 +311,7 @@ class TestQwen2_5OmniThinkerModelAdapter:
         with patch(
             "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.create_causal_mask",
             return_value=torch.ones(1, 1, 3, 3),
+            create=True,
         ):
             _run_forward_generator_to_end(adapter.generate_model_forward(model, inputs))
         assert hasattr(model, "rope_deltas")
@@ -385,6 +390,7 @@ class TestQwen2_5OmniThinkerModelAdapter:
         with patch(
             "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.Qwen2_5OmniDecoderLayer",
             return_value=fake_decoder,
+            create=True,
         ), patch.object(adapter, "_get_state_dict", return_value=fake_decoder.state_dict()):
             result = adapter._load_decoder_if_not_exist(model=model, name="model.layers.0", idx=0)
         assert result is fake_decoder
