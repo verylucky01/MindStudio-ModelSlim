@@ -1,14 +1,17 @@
 # 大模型支持矩阵
 
 **说明：**
+
 - 点击“模型类别”列中的链接，即可跳转到msModelSlim为您推荐的最佳实践页面，里面详细介绍了量化命令和配置说明。
 - √ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - \- 表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 - 标记了“一键量化”的“模型名称-量化模式（w8a8s等）”组合可在[安装](../getting_started/install_guide.md)后使用如下[一键量化](../feature_guide/quick_quantization_v1/usage.md)命令行执行模型量化。
 - 因 Qwen 系列推出能力更强的新版本，Qwen1.5-14B/32B/72B 模型已超维护周期，后续将对该系列老模型实施日落处理，其现网版本量化模式不再提供维护支持。
+
 ```bash
 msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type ${模型名称} --quant_type ${量化模式} --trust_remote_code True
 ```
+
 - 未标记“一键量化”的最佳实践请阅读对应模型类别的最佳实践页面并在 [example](https://gitcode.com/Ascend/msmodelslim/tree/master/example) 目录下对应模型类别的子目录中执行命令，如 [DeepSeek](https://gitcode.com/Ascend/msmodelslim/tree/master/example/DeepSeek)、[Qwen3](https://gitcode.com/Ascend/msmodelslim/tree/master/example/Qwen)。
 
 ## 量化模式命名规范
@@ -367,33 +370,6 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
       <td>transformers==5.2.0</td>
       <td>-</td>
       <td>√(一键量化)</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td rowspan="2"><strong><a href="https://gitcode.com/Ascend/msmodelslim/blob/master/example/Qwen3-Omni/README.md">Qwen3-Omni系列</a></strong></td>
-      <td>Qwen3-Omni-30B-A3B-Thinking</td>
-      <td>transformers==4.57.3</td>
-      <td>-</td>
-      <td>√</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td>Qwen3-Omni-30B-A3B-Instruct</td>
-      <td>transformers==4.57.3</td>
-      <td>-</td>
-      <td>√</td>
       <td>-</td>
       <td>-</td>
       <td>-</td>
@@ -786,6 +762,7 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
 </div>
 
 **注释说明：**
+
 - <sup>1</sup> 仅MindIE支持w8a16量化模式。
 - <sup>2</sup> kvcache量化和fa3量化都纳入c8，两者均量化LLM中的k和v缓存；仅MindIE支持c8量化模式，包括w8a8c8和w4a8c8。
 - <sup>3</sup> 压缩后配合Atlas 300I Duo系列产品解压缩特性更佳；仅MindIE支持稀疏量化模式，包括w8a8s和w16a16s。
@@ -834,6 +811,21 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
       <td>Qwen3-VL-235B-A22B</td>
       <td>transformers==4.57.1, flax</td>
       <td>√(一键量化)</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><strong><a href="https://gitcode.com/Ascend/msmodelslim/blob/master/example/multimodal_vlm/Qwen3-Omni/README.md">Qwen3-Omni系列</a></strong></td>
+      <td>Qwen3-Omni-30B-A3B-Thinking</td>
+      <td>transformers==4.57.3</td>
+      <td>√</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>Qwen3-Omni-30B-A3B-Instruct</td>
+      <td>transformers==4.57.3</td>
+      <td>√</td>
       <td>-</td>
       <td>-</td>
     </tr>
@@ -964,4 +956,5 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
 </div>
 
 **注释说明：**
+
 - <sup>1</sup> 压缩后配合Atlas 300I Duo系列产品解压缩特性更佳；仅MindIE支持稀疏量化模式。
