@@ -79,7 +79,7 @@ def _build_quant_tips(tips_type: TipsType, model_type: str, quant_type: QuantTyp
         return (f"No quant_type or config_path provided. Default quant_type:{DEFAULT_QUANT_TYPE} will be used."
                 f"The default practice:{config_id} for {DEFAULT_QUANT_TYPE} will be used.")
     elif tips_type == TipsType.Q0C0B1:
-        return (f"No quant_type or config_path provided. Default quant_type{DEFAULT_QUANT_TYPE} will be used."
+        return (f"No quant_type or config_path provided. Default quant_type:{DEFAULT_QUANT_TYPE} will be used."
                 f"The best practice:{config_id} for {DEFAULT_QUANT_TYPE} will be used.")
     elif tips_type == TipsType.Q1C0B0:
         return (f"No best practice found for model_type={model_type} and quant_type={quant_type}. "
