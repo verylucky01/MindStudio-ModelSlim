@@ -43,7 +43,7 @@ msmodelslim analyze [参数选项]
 
 | 参数 | 类型 | 默认值 | 描述 | 示例值 |
 |------|------|--------|------|--------|
-| `--model_type` | `str` | - | 模型类型，用于指定要分析的模型架构，见下面参数详细说明 | `Qwen2.5-7B-Instruct` |
+| `--model_type` | `str` | - | 模型类型，用于指定要分析的模型架构，见[参数详细说明](#参数详细说明) | `Qwen2.5-7B-Instruct` |
 | `--model_path` | `str` | - | 原始模型的路径，建议使用绝对路径 | `/path/Qwen2.5-7B-Instruct` |
 
 #### 可选参数
@@ -55,7 +55,7 @@ msmodelslim analyze [参数选项]
 | `--metrics` | `str` | `"kurtosis"` | 分析使用的度量算法，可选值：`"std"`, `"quantile"`, `"kurtosis"`, `"attention_mse"` | `"kurtosis"` |
 | `--calib_dataset` | `str` | `"boolq.jsonl"` | 校准数据集文件路径，支持JSON/JSONL格式，以.json或.jsonl结尾。支持绝对路径和相对路径。 |`/path/data.jsonl`|
 | `--topk` | `int` | `15` | 输出Top K敏感的层数量，为大于0的整数。推荐范围为10~20。 |  `15` |
-| `--trust_remote_code` | `bool` | `False` | 是否信任远程代码，需要用户自行保障安全性。可选值：`True`, `False`。模型加载时如需依赖 tansformers 库外的文件，则需指定 `--trust_remote_code` 为 `True`，如 DeepSeek-V3 系列模型。 | `False` |
+| `--trust_remote_code` | `bool` | `False` | 是否信任远程代码，需要用户自行保障安全性。可选值：`True`, `False`。模型加载时如需依赖 transformers 库外的文件，则需指定 `--trust_remote_code` 为 `True`，如 DeepSeek-V3 系列模型。 | `False` |
 | `-h, --help` | - | - | 命令行参数帮助信息 | - |
 
 ### 参数详细说明
@@ -78,7 +78,7 @@ msmodelslim analyze [参数选项]
 | DeepSeek-R1-0528 |
 | DeepSeek-V3.1    |
 
-- **不支持的 model_type**：若输入的 model_type 不在所选指标对应的列表中，系统会打印 warning 并可能回退到默认模型，或（如 attention_mse）因适配器未实现接口而报错。
+- **不支持的 model_type**：若输入的 model_type 不在所选指标对应的列表中，系统会打印 warning 并可能回退到默认的模型适配器，或（如 attention_mse）因适配器未实现接口而报错。
 - **建议**：使用上述列表中与 `--metrics` 匹配的 model_type，以获得正确的分析行为和兼容性。
 
 #### 路径和文件要求
@@ -98,7 +98,7 @@ msmodelslim analyze [参数选项]
 
 ### 分析算法说明
 
-#### 1. std (Standard Deviation) - 标准差算法
+#### std (Standard Deviation) - 标准差算法
 
 ##### 算法原理
 
@@ -117,7 +117,7 @@ msmodelslim analyze [参数选项]
   - 标准差越大，score越小（表示该层对量化更不敏感）。
   - 数据范围越大，score越大（表示该层对量化更敏感）。
 
-#### 2. quantile (Quantile-based) - 分位数算法
+#### quantile (Quantile-based) - 分位数算法
 
 ##### 算法原理
 
@@ -136,7 +136,7 @@ msmodelslim analyze [参数选项]
   - IQR越大，score越小（表示分布越分散，对量化越不敏感）。
   - 数据绝对值越大，score越大（表示该层对量化越敏感）。
 
-#### 3. kurtosis (Kurtosis-based) - 峰度算法
+#### kurtosis (Kurtosis-based) - 峰度算法
 
 ##### 算法原理
 
@@ -155,7 +155,7 @@ msmodelslim analyze [参数选项]
   - 峰度值越大，score越大，表示分布越集中，对量化越敏感。
   - 峰度值越接近0，score越小，表示分布接近正态，越不敏感。
 
-#### 4. attention_mse (Attention MSE) - 注意力 MSE 算法
+#### attention_mse (Attention MSE) - 注意力 MSE 算法
 
 ##### 算法原理
 
