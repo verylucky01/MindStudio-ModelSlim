@@ -25,6 +25,7 @@ Pytest config for qwen2_5_omni_thinker tests.
 
 import sys
 import types
+import importlib
 from unittest.mock import MagicMock
 
 _created_modules = {}
@@ -47,8 +48,19 @@ def _setup_mock_modules():
         if not hasattr(transformers_module, attr_name):
             setattr(transformers_module, attr_name, attr_value)
 
-    _original_modules["transformers.models"] = sys.modules["transformers.models"]
-    models_module = sys.modules["transformers.models"]
+    if "transformers.models" not in sys.modules:
+        try:
+            importlib.import_module("transformers.models")
+        except Exception:
+            pass
+
+    if "transformers.models" in sys.modules:
+        _original_modules["transformers.models"] = sys.modules["transformers.models"]
+        models_module = sys.modules["transformers.models"]
+    else:
+        _original_modules["transformers.models"] = None
+        models_module = types.SimpleNamespace()
+        setattr(transformers_module, "models", models_module)
 
     if "transformers.models.qwen2_5_omni" not in sys.modules:
         _original_modules["transformers.models.qwen2_5_omni"] = None

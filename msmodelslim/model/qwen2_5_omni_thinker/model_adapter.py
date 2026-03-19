@@ -65,12 +65,6 @@ class Qwen25OmniThinkerModelAdapter(
         self._processor = None
         self._tokenizer = None
         super().__init__(model_type, model_path, trust_remote_code)
-        from transformers import Qwen2_5OmniProcessor
-        from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import (
-            Qwen2_5OmniDecoderLayer
-        )
-        from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
-
 
     def get_model_pedigree(self) -> str:
         """Return model pedigree for best practice matching"""
@@ -88,7 +82,7 @@ class Qwen25OmniThinkerModelAdapter(
         """
         Prepare calibration dataset for Qwen2.5-Omni.
         """
-
+        from transformers import Qwen2_5OmniProcessor
         # 1. Init processor (once)
         self._processor = Qwen2_5OmniProcessor.from_pretrained(
             self.model_path,
@@ -321,6 +315,7 @@ class Qwen25OmniThinkerModelAdapter(
         Yields:
             ProcessRequest with forward results
         """
+        from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
         # 1. Initialize sample
         sample = inputs
         
@@ -742,7 +737,9 @@ class Qwen25OmniThinkerModelAdapter(
 
         # 2. 禁用 reset_parameters
         with patch.object(nn.Linear, "reset_parameters", lambda _self: None):
-
+            from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import (
+                Qwen2_5OmniDecoderLayer
+            )
             # 3. 正确创建 Decoder
             decoder = Qwen2_5OmniDecoderLayer(
                 config=model.config.text_config,

@@ -50,13 +50,27 @@ if not hasattr(transformers, "Qwen3OmniMoeProcessor"):
     transformers.Qwen3OmniMoeProcessor = MagicMock()
 if not hasattr(transformers, "Qwen3OmniMoeThinkerForConditionalGeneration"):
     transformers.Qwen3OmniMoeThinkerForConditionalGeneration = MagicMock()
-# Ensure submodules exist for model_adapter imports
-if "transformers.models.qwen3_omni_moe" not in sys.modules:
-    sys.modules["transformers.models.qwen3_omni_moe"] = types.ModuleType("transformers.models.qwen3_omni_moe")
-if "transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe" not in sys.modules:
-    _modeling = types.ModuleType("transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe")
-    _modeling.Qwen3OmniMoeThinkerTextDecoderLayer = MagicMock()
-    sys.modules["transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe"] = _modeling
+
+def _ensure_module_chain(module_name: str):
+    """Ensure module exists in sys.modules and is attached to its parent module."""
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+    module = types.ModuleType(module_name)
+    sys.modules[module_name] = module
+    parent_name, _, child_name = module_name.rpartition(".")
+    if parent_name and parent_name in sys.modules:
+        setattr(sys.modules[parent_name], child_name, module)
+    return module
+
+# Ensure qwen3 omni moe module chain exists without relying on transformers version details.
+if hasattr(transformers, "models") and "transformers.models" not in sys.modules:
+    sys.modules["transformers.models"] = transformers.models
+qwen3_mod = _ensure_module_chain("transformers.models.qwen3_omni_moe")
+modeling_mod = _ensure_module_chain("transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe")
+if not hasattr(qwen3_mod, "modeling_qwen3_omni_moe"):
+    setattr(qwen3_mod, "modeling_qwen3_omni_moe", modeling_mod)
+if not hasattr(modeling_mod, "Qwen3OmniMoeThinkerTextDecoderLayer"):
+    modeling_mod.Qwen3OmniMoeThinkerTextDecoderLayer = MagicMock()
 # masking_utils: add mocks if missing
 _masking = sys.modules.get("transformers.masking_utils")
 if _masking is None:
@@ -110,6 +124,16 @@ def _make_thinker_config(
         num_experts = _experts
         num_attention_heads = 8
         num_key_value_heads = 8
+        hidden_size = 64
+        intermediate_size = 128
+        rms_norm_eps = 1e-6
+        vocab_size = 1000
+        pad_token_id = 0
+        bos_token_id = 1
+        eos_token_id = 2
+        attention_bias = False
+        attention_dropout = 0.0
+        hidden_act = "silu"
 
     class AudioConfig:
         num_hidden_layers = _audio_layers
@@ -183,13 +207,12 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         mock_processor.return_value = mock_inputs
 
         with patch(
-            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeProcessor",
-            create=True,
-        ) as mock_cls, patch(
+            "transformers.Qwen3OmniMoeProcessor.from_pretrained",
+            return_value=mock_processor,
+        ), patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.process_mm_info",
             return_value=([], [], []),
         ):
-            mock_cls.from_pretrained.return_value = mock_processor
             adapter._collect_inputs_to_device = MagicMock(return_value={"input_ids": mock_inputs["input_ids"]})
             sample = MagicMock()
             sample.text = "hello"
@@ -209,16 +232,15 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         mock_processor.apply_chat_template.return_value = "text"
         mock_processor.return_value = {"input_ids": torch.tensor([[1]])}
         with patch(
-            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeProcessor",
-            create=True,
-        ) as mock_cls, patch(
+            "transformers.Qwen3OmniMoeProcessor.from_pretrained",
+            return_value=mock_processor,
+        ), patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.process_mm_info",
             return_value=([], [], []),
         ), patch(
             "msmodelslim.model.qwen3_omni_moe.model_adapter.get_valid_read_path",
             side_effect=lambda x: x,
         ):
-            mock_cls.from_pretrained.return_value = mock_processor
             adapter._collect_inputs_to_device = MagicMock(return_value={})
             sample = MagicMock()
             sample.text = "hi"
@@ -651,15 +673,33 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         mock_model = MagicMock()
         mock_model.get_submodule.side_effect = AttributeError("no layers")
         mock_model.config.text_config = adapter.config.thinker_config.text_config
-        mock_model.model.layers = nn.ModuleList()
-        with patch(
-            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeThinkerTextDecoderLayer",
-            return_value=nn.Linear(64, 64),
+        mock_model.model = types.SimpleNamespace(layers=nn.ModuleList())
+
+        class _DummyDecoder(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.input_layernorm = nn.LayerNorm(64)
+                self.self_attn = nn.Module()
+                self.self_attn.q_proj = nn.Linear(64, 64)
+                self.self_attn.k_proj = nn.Linear(64, 64)
+                self.self_attn.v_proj = nn.Linear(64, 64)
+                self.self_attn.o_proj = nn.Linear(64, 64, bias=False)
+                self.mlp = nn.Module()
+                self.mlp.gate_proj = nn.Linear(64, 128, bias=False)
+                self.mlp.up_proj = nn.Linear(64, 128, bias=False)
+                self.mlp.down_proj = nn.Linear(128, 64, bias=False)
+                self.post_attention_layernorm = nn.LayerNorm(64)
+
+        real_decoder = _DummyDecoder()
+        mock_state_dict = {name: torch.randn_like(param) for name, param in real_decoder.named_parameters()}
+        real_decoder.load_state_dict = MagicMock(return_value=None)
+        with patch.object(
+            sys.modules["transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe"],
+            "Qwen3OmniMoeThinkerTextDecoderLayer",
+            return_value=real_decoder,
             create=True,
         ), patch.object(nn.Linear, "reset_parameters", lambda self: None):
-            adapter._get_state_dict = MagicMock(
-                return_value={"weight": torch.randn(64, 64), "bias": torch.randn(64)}
-            )
+            adapter._get_state_dict = MagicMock(return_value=mock_state_dict)
             result = adapter._load_decoder_if_not_exist(model=mock_model, name="model.layers.0", idx=0)
         self.assertIsInstance(result, nn.Module)
         self.assertEqual(len(mock_model.model.layers), 1)
@@ -677,15 +717,33 @@ class TestQwen3OmniMoeThinkerModelAdapter(unittest.TestCase):
         mock_model = MagicMock()
         mock_model.get_submodule.return_value = mock_decoder
         mock_model.config.text_config = adapter.config.thinker_config.text_config
-        mock_model.model.layers = nn.ModuleList([nn.Linear(1, 1)])
-        with patch(
-            "msmodelslim.model.qwen3_omni_moe.model_adapter.Qwen3OmniMoeThinkerTextDecoderLayer",
-            return_value=nn.Linear(64, 64),
+        mock_model.model = types.SimpleNamespace(layers=nn.ModuleList([nn.Linear(1, 1)]))
+
+        class _DummyDecoder(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.input_layernorm = nn.LayerNorm(64)
+                self.self_attn = nn.Module()
+                self.self_attn.q_proj = nn.Linear(64, 64)
+                self.self_attn.k_proj = nn.Linear(64, 64)
+                self.self_attn.v_proj = nn.Linear(64, 64)
+                self.self_attn.o_proj = nn.Linear(64, 64, bias=False)
+                self.mlp = nn.Module()
+                self.mlp.gate_proj = nn.Linear(64, 128, bias=False)
+                self.mlp.up_proj = nn.Linear(64, 128, bias=False)
+                self.mlp.down_proj = nn.Linear(128, 64, bias=False)
+                self.post_attention_layernorm = nn.LayerNorm(64)
+
+        real_decoder = _DummyDecoder()
+        mock_state_dict = {name: torch.randn_like(param) for name, param in real_decoder.named_parameters()}
+        real_decoder.load_state_dict = MagicMock(return_value=None)
+        with patch.object(
+            sys.modules["transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe"],
+            "Qwen3OmniMoeThinkerTextDecoderLayer",
+            return_value=real_decoder,
             create=True,
         ), patch.object(nn.Linear, "reset_parameters", lambda self: None):
-            adapter._get_state_dict = MagicMock(
-                return_value={"weight": torch.randn(64, 64), "bias": torch.randn(64)}
-            )
+            adapter._get_state_dict = MagicMock(return_value=mock_state_dict)
             result = adapter._load_decoder_if_not_exist(model=mock_model, name="model.layers.0", idx=0)
         self.assertIsInstance(result, nn.Module)
         adapter._get_state_dict.assert_called_once()

@@ -69,11 +69,6 @@ class Qwen3OmniMoeThinkerModelAdapter(
         self._processor = None
         self._tokenizer = None
         super().__init__(model_type, model_path, trust_remote_code)
-        from transformers import Qwen3OmniMoeProcessor
-        from transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe import (
-            Qwen3OmniMoeThinkerTextDecoderLayer
-        )
-        from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
 
     def get_model_pedigree(self) -> str:
         """Return model pedigree for best practice matching"""
@@ -91,6 +86,7 @@ class Qwen3OmniMoeThinkerModelAdapter(
         """
         Prepare calibration dataset for Qwen3-Omni-Moe.
         """
+        from transformers import Qwen3OmniMoeProcessor
         # 1. Init processor (once)
         self._processor = Qwen3OmniMoeProcessor.from_pretrained(
             self.model_path,
@@ -302,6 +298,8 @@ class Qwen3OmniMoeThinkerModelAdapter(
         Yields:
             ProcessRequest with forward results
         """
+        from transformers.masking_utils import create_causal_mask
+        
         # 1. Extract first sample for calibration
         if isinstance(inputs, list):
             sample = inputs[0]
@@ -704,7 +702,9 @@ class Qwen3OmniMoeThinkerModelAdapter(
 
         # 2. 禁用 reset_parameters
         with patch.object(nn.Linear, "reset_parameters", lambda _self: None):
-
+            from transformers.models.qwen3_omni_moe.modeling_qwen3_omni_moe import (
+                Qwen3OmniMoeThinkerTextDecoderLayer
+            )
             # 3. 正确创建 Decoder
             decoder = Qwen3OmniMoeThinkerTextDecoderLayer(
                 config=model.config.text_config,

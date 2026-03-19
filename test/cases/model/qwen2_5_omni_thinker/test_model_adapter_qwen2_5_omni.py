@@ -36,15 +36,33 @@ def _build_mock_model(hidden_layers: int = 2, has_sliding_layers: bool = False):
     layers = nn.ModuleList([_DummyDecoderLayer() for _ in range(hidden_layers)])
     model = MagicMock()
     model.eval.return_value = model
+    layer_types = ["sliding_attention"] * hidden_layers if has_sliding_layers else ["full_attention"] * hidden_layers
+    sliding_window = 4096 if has_sliding_layers else None
+    rope_params = {"rope_type": "default", "rope_theta": 1000000.0, "mrope_section": [8, 12, 12]}
     model.config = SimpleNamespace(
         text_config=SimpleNamespace(
             num_hidden_layers=hidden_layers,
             num_attention_heads=8,
             num_key_value_heads=8,
+            hidden_size=64,
+            intermediate_size=128,
+            rms_norm_eps=1e-6,
+            max_position_embeddings=32768,
+            layer_types=layer_types,
+            use_sliding_window=has_sliding_layers,
+            sliding_window=sliding_window,
+            attention_dropout=0.0,
+            hidden_act="silu",
+            rope_parameters=rope_params,
+            rope_scaling=rope_params,
+            rope_theta=1000000.0,
+            _attn_implementation="eager",
         ),
         num_attention_heads=8,
         num_key_value_heads=8,
         use_cache=False,
+        sliding_window=sliding_window,
+        _attn_implementation="eager",
     )
     model.model = SimpleNamespace(
         config=model.config,
@@ -114,6 +132,19 @@ def adapter(tmp_path: Path):
                 num_hidden_layers=2,
                 num_attention_heads=8,
                 num_key_value_heads=8,
+                hidden_size=64,
+                intermediate_size=128,
+                rms_norm_eps=1e-6,
+                max_position_embeddings=32768,
+                layer_types=["full_attention", "full_attention"],
+                use_sliding_window=False,
+                sliding_window=None,
+                attention_dropout=0.0,
+                hidden_act="silu",
+                rope_parameters={"rope_type": "default", "rope_theta": 1000000.0, "mrope_section": [8, 12, 12]},
+                rope_scaling={"rope_type": "default", "rope_theta": 1000000.0, "mrope_section": [8, 12, 12]},
+                rope_theta=1000000.0,
+                _attn_implementation="eager",
             ),
             audio_config=SimpleNamespace(num_hidden_layers=1),
             vision_config=SimpleNamespace(depth=1),
@@ -154,16 +185,15 @@ def mock_processor():
         video_second_per_grid=None,
     )
     with patch(
-        "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.Qwen2_5OmniProcessor",
-        create=True,
-    ) as mock_cls, patch(
+        "transformers.Qwen2_5OmniProcessor.from_pretrained",
+        return_value=processor,
+    ), patch(
         "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.process_mm_info",
         return_value=([], [], []),
     ), patch(
         "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.get_valid_read_path",
         side_effect=lambda p, **kwargs: p,
     ):
-        mock_cls.from_pretrained.return_value = processor
         yield processor
 
 
@@ -388,7 +418,7 @@ class TestQwen2_5OmniThinkerModelAdapter:
         model.get_submodule = MagicMock(return_value=broken_layer)
         fake_decoder = _DummyDecoderLayer()
         with patch(
-            "msmodelslim.model.qwen2_5_omni_thinker.model_adapter.Qwen2_5OmniDecoderLayer",
+            "transformers.models.qwen2_5_omni.modeling_qwen2_5_omni.Qwen2_5OmniDecoderLayer",
             return_value=fake_decoder,
             create=True,
         ), patch.object(adapter, "_get_state_dict", return_value=fake_decoder.state_dict()):
