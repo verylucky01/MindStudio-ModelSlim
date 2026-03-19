@@ -27,6 +27,7 @@ class DeviceType(str, Enum):
 
 
 class QuantType(str, Enum):
+    W4A4 = "w4a4"  # 权重INT4量化，激活值INT4量化
     W4A8 = "w4a8"  # 权重INT4量化，激活值INT8量化
     W4A8C8 = "w4a8c8"  # 权重INT4量化，激活值INT8量化，KVCache INT8量化
     W8A16 = "w8a16"  # 权重INT8量化，激活值不量化

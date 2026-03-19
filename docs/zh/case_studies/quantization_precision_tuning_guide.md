@@ -5,6 +5,7 @@
 本文档提供了一套系统化的量化精度调优方法论，遵循“确认精度问题可信→调整离群值抑制算法→调整量化策略→调整校准集→量化回退”的递进路径。
 
 **核心要点**：
+
 - **优先使用Iterative Smooth、Flex Smooth Quant等离群值抑制算法抑制激活离群值**。
 - **根据场景选择minmax/ssz/gptq/autoround等量化方法**。
 - **通过优化校准集和敏感层回退进一步提升精度**。
@@ -15,7 +16,7 @@
 
 精度调优是一个系统性过程，遵循以下递进路径：
 
-```
+```text
 步骤1：确认精度问题可信
     ↓
 步骤2：调整离群值抑制算法（关键步骤）
@@ -62,7 +63,7 @@
 | Flex AWQ SSZ | 结合 AWQ 和 SSZ 思想，使用真实量化器评估 MSE 误差，自动搜索最优 alpha | **INT4 低比特量化必备**。针对低比特权重量化精度敏感的特点，寻找最优参数。精度提升显著，但运行速度较慢 | [flex_awq_ssz.md](../quantization_algorithms/outlier_suppression_algorithms/flex_awq_ssz.md) |
 | QuaRot | 通过对权重和激活进行旋转变换，将离群值"分散"到多个通道，平滑分布 | 可与其他算法叠加使用，作为进一步提升精度的备选方案。对于 W4A4 等极端场景效果显著 | [quarot.md](../quantization_algorithms/outlier_suppression_algorithms/quarot.md) |
 | KV Smooth | 专门针对 KVCache 中的 Key 离群值抑制，将其迁移至 Query | **KVCache 量化必备**。在不改变注意力打分前提下压缩 K 的动态范围，提升生成质量 | [kv_smooth.md](../quantization_algorithms/outlier_suppression_algorithms/kv_smooth.md) |
-| LAOS | 协同优化方案。通过 QuaRot 和 Iterative Smooth 抑制离群值，配合 AutoRound 优化权重舍入 | **W4A4 极致精度方案**。当前主要适配 Qwen3 稠密系列模型 | [laos.md](../quantization_algorithms/quantization_algorithms/laos.md) |
+| LAOS | 协同优化方案。通过 Adapt Rotation（stage1/stage2）完成旋转矩阵优化，配合 AutoRound 优化权重舍入 | **W4A4 极致精度方案**。当前主要适配 Qwen3 稠密系列模型 | [laos.md](../quantization_algorithms/quantization_algorithms/laos.md) |
 
 #### 总结建议
 
@@ -177,6 +178,7 @@
 当通过算法和校准集调整仍无法满足精度要求时，对模型中最敏感的层进行回退，使其保持高精度（FP16/BF16），以挽回量化带来的精度损失。
 
 **使用场景**：
+
 - 通过步骤1-4调整后，精度仍无法满足精度要求
 - 需要在精度和性能之间寻求更精细的平衡
 - 某些特定层对量化极度敏感，需要保持高精度
@@ -188,6 +190,7 @@
 使用msModelSlim提供的敏感层分析工具识别量化敏感层。详细使用方法请参考[量化敏感层分析使用指南](../feature_guide/sensitive_layer_analysis/analyze_api_usage.md)。
 
 **功能说明**：
+
 - **自动评估**：工具会自动评估模型中线性层对量化操作的敏感程度，并为每个可分析对象生成量化敏感度评分。
 - **决策依据**：用户根据生成的敏感度评分，决定哪些高敏感层需要回退。
 
