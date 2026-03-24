@@ -256,6 +256,7 @@ class NaiveQuantizationApplication:
         has_quant_type = True if quant_type is not None else False
         use_quant_type = quant_type if quant_type is not None else DEFAULT_QUANT_TYPE
         standby_configs: List[PracticeConfig] = []
+        is_default = True if model_pedigree==DEFAULT_PEDIGREE else False
 
         def _check(config: PracticeConfig, model_type: str, qt: QuantType, tag: Optional[List[str]] = None,
                    is_default=False):
@@ -267,7 +268,7 @@ class NaiveQuantizationApplication:
 
         # 场景1：【指定量化方式】在模型适配器的最佳实践目录搜索指定量化类型的最佳实践
         for config in self.practice_manager.iter_config(model_pedigree):
-            result = _check(config, model_type, use_quant_type, tag)
+            result = _check(config, model_type, use_quant_type, tag, is_default)
             if result == ScenarioTagMatch.NO_MATCH:
                 continue
             if result == ScenarioTagMatch.STANDBY:
@@ -301,7 +302,7 @@ class NaiveQuantizationApplication:
 
         # 场景3：【默认量化方式】在模型适配器的最佳实践目录搜索默认量化类型的最佳实践
         for config in self.practice_manager.iter_config(model_pedigree):
-            result = _check(config, model_type, DEFAULT_QUANT_TYPE, tag)
+            result = _check(config, model_type, DEFAULT_QUANT_TYPE, tag, is_default)
             if result == ScenarioTagMatch.NO_MATCH:
                 continue
             if result == ScenarioTagMatch.STANDBY:
