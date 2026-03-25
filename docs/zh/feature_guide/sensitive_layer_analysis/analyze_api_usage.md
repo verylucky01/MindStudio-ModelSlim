@@ -66,7 +66,7 @@ msmodelslim analyze [参数选项]
 
 **线性层衡量算法（std / quantile / kurtosis）支持的 model_type**
 
-线性层衡量算法当前支持的 model_type 与 ModelslimV1 量化一致，具体可参阅 [config.ini](../../../../config/config.ini) 中的 `[ModelAdapter]` 。
+线性层衡量算法当前支持的 model_type 与 ModelslimV1 量化一致，具体可参阅 [config.ini](https://gitcode.com/Ascend/msmodelslim/blob/master/config/config.ini) 中的 `[ModelAdapter]` 。
 
 **attention结构衡量算法（attention_mse）支持的 model_type**
 

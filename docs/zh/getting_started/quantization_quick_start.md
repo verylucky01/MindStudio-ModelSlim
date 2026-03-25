@@ -153,6 +153,7 @@ python3 example/Qwen/quant_qwen.py \
 ├── quant_model_weight_w8a8.safetensors  # 量化权重文件
 ├── tokenizer_config.json                # 原始分词器配置文件
 ├── tokenizer.json                        # 原始分词器词汇表
+├── {model_type}_best_practice.yaml       # 量化配置协议文件 
 └── vocab.json                            # 原始词汇映射文件（部分模型）
 ```
 
@@ -160,6 +161,7 @@ python3 example/Qwen/quant_qwen.py \
 
 - `quant_model_description.json`（或 `quant_model_description_{quant_type}.json`）- 包含量化参数和配置信息，描述了每个权重的量化类型（W8A8、FLOAT 等）
 - `quant_model_weight_{quant_type}.safetensors` - 实际的量化模型权重文件
+- `{model_type}_best_practice.yaml` - 记录本次量化所使用的完整配置信息，可用于复现该量化权重
 - 其他文件为模型推理所需的配置和词汇表文件，来自原始浮点目录
 
 ## 量化后权重的使用
@@ -305,4 +307,4 @@ A: 量化方式选择建议：
 A: 两种方式生成的权重文件格式相同，都可以用于推理。主要区别在于：
 
 - 一键量化使用最佳实践配置，可能包含一些优化
-- 传统量化支持生成MindIE推理框架独占格式，可用于老版本兼容；一键量化支持AscendV1格式（关于该格式的更多信息，请参考 AscendV1Config 中的说明），可用于多框架（MindIE、vllm-ascend、SGLang）使用。
+- 传统量化支持生成MindIE推理框架独占格式，可用于老版本兼容；一键量化支持AscendV1格式（关于该格式的更多信息，请参考 [AscendV1Config](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quant_service/modelslim_v1/save/ascendv1.py#L87) 中的说明），可用于多框架（MindIE、vllm-ascend、SGLang）使用。
