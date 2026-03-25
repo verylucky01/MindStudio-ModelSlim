@@ -15,7 +15,7 @@
 - 使用 `msModelslim` 命令行工具时，请勿在 `msModelslim` 的源码目录下直接运行命令。这可能会因 Python 在导入模块时出现源码路径和安装路径冲突，导致命令执行失败。
 - 若安装 `msmodelslim` 时遇到报错，请先查阅 [FAQ](../appendix/faq.md) 寻找解决方案。如问题仍未解决，欢迎提交 [Issue](https://gitcode.com/Ascend/msmodelslim/issues)，并附上您的运行环境及完整的错误日志，我们将尽快为您排查。
 
-### 基于Atlas A2 训练、推理产品，Atlas A3 训练、推理系列产品安装
+### 基于Atlas A2 训练、推理产品，Atlas A3 训练、推理系列产品、昇腾950代际产品安装
 
 ```shell
 # 1.git clone msmodelslim代码

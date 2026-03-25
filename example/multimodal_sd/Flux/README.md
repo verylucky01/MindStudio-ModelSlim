@@ -4,7 +4,7 @@ FLUX的推理量化依赖于FLUX.1-dev推理工程仓：[MindIE/FLUX.1-dev](http
 
 ## 使用前准备
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../../docs/zh/install_guide.md)。
+- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/getting_started/install_guide/)。
 - 硬件支持：Atlas 800I A2
 - 软件支持：FLUX.1-dev推理工程仓，commit ID `12e09174353b1bd57bf7fcb80386f59b09fbbefe`
 
@@ -25,6 +25,7 @@ FLUX的推理量化依赖于FLUX.1-dev推理工程仓：[MindIE/FLUX.1-dev](http
 | **FLUX** | FLUX.1-dev | [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev/tree/main) | ✅ | ✅ | ✅ | [时间步量化](#flux-timestep-quantization) / [FA3量化](#flux-fa3-quantization) / [异常值抑制量化](#flux-outlier-suppression-quantization) |
 
 **说明：**
+
 - ✅ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - 空格表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 - 点击量化命令列中的链接可跳转到对应的具体量化命令
@@ -47,7 +48,9 @@ for step_id, t in enumerate(timesteps):
     model_output = pipeline(...)
     ...
 ```
+
 例如在FLUX.1-dev/FLUX1dev/pipeline/pipeline_flux.py的FluxPipeline类的__call__函数中，添加如下代码：
+
 ```python
 with self.progress_bar(total=num_inference_steps) as progress_bar:
     for i,t in enumerate(timesteps):
@@ -61,6 +64,7 @@ with self.progress_bar(total=num_inference_steps) as progress_bar:
 ```
 
 #### 量化启动命令
+
 示例的启动命令可参考(请提前确保calib_prompts.txt权限不大于'0o640')：
 
 ```shell
@@ -168,9 +172,23 @@ session_cfg.model_validate(session_cfg)
 quant_model(model, session_cfg)
 ```
 
-### FLUX FA3 量化
+### <span id="flux-fa3-quantization">FLUX FA3+W8A8动态量化</span>
 
-#### 量化启动命令
+该模型的FA3+W8A8动态量化已经集成至一键量化。
+
+#### 使用config_path参数指定配置文件进行一键量化
+
+```bash
+msmodelslim quant \
+    --model_path /path/to/flux1_float_weights \
+    --save_path /path/to/flux1_quantized_weights \
+    --device npu \
+    --model_type FLUX.1-dev \
+    --config_path /lab_pratice/flux1/flux1_w8a8f8_mxfp.yaml \
+    --trust_remote_code True
+```
+
+#### 脚本量化启动命令
 
 我们提供了完整的量化启动脚本示例：[Flux/inference_flux.py](./inference_flux.py)，其启动命令可参考(请提前确保calib_prompts.txt权限不大于'0o640')：
 
@@ -392,6 +410,7 @@ quant_model(model, session_cfg)
 ## 附录
 
 ### 运行参数说明
+
 以下是使用[Flux/inference_flux.py](./inference_flux.py)进行FLUX.1-dev模型推理量化时的参数说明。量化启动命令未涉及参数对应的说明请见FLUX.1-dev推理工程仓[MindIE/FLUX.1-dev](https://modelers.cn/models/MindIE/FLUX.1-dev)
 
 | 参数名 | 含义 | 使用限制 |

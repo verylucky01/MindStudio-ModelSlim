@@ -4,7 +4,7 @@
 
 ## 使用前准备
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../../docs/zh/install_guide.md)。
+- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/getting_started/install_guide/)。
 
 ## 支持的模型版本与量化策略
 
@@ -13,6 +13,7 @@
 | **SD3** | SD3-Medium | [SD3-Medium](https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers) | ✅ |   |   |   |   |   |   | [W8A8](#sd3-medium-w8a8量化) |
 
 **说明：**
+
 - ✅ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - 空格表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 - 点击量化命令列中的链接可跳转到对应的具体量化命令
@@ -22,6 +23,7 @@
 ### <span id="sd3-medium-w8a8量化">SD3-Medium W8A8量化</span>
 
 我们提供了完整的量化启动脚本示例：[SD3/sd3_inference.py](./sd3_inference.py)，其启动命令可参考(请提前确保calib_prompts.txt权限不大于'0o640')：
+
 ```shell
 python /the/absolute/path/of/example/multimodal_sd/SD3/sd3_inference.py \
     --sd3_model_path "/path/to/stable-diffusion-3-medium-diffusers" \
@@ -126,6 +128,7 @@ quant_model(model, session_cfg)
 ## 附录
 
 ### 运行参数说明
+
 以下是使用[SD3/sd3_inference.py](./sd3_inference.py)进行SD3模型推理量化时的参数说明。
 
 | 参数名 | 含义 | 使用限制 |

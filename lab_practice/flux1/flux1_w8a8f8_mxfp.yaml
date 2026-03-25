@@ -1,14 +1,4 @@
 apiversion: multimodal_sd_modelslim_v1
-metadata:
-  config_id: flux1_w8a8c8_mxfp8
-  score: 0.95
-  verified_model_types:
-    - FLUX.1-dev
-  label:
-    w_bit: 8
-    a_bit: 8
-    is_sparse: False
-    kv_cache: True
 
 default_w8a8_dynamic: &default_w8a8_dynamic
   act:

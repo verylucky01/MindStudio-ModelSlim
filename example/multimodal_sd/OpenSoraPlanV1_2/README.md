@@ -4,7 +4,7 @@ Open-Sora-Plan V1.2的推理量化依赖于推理工程仓：[MindIE/open_sora_p
 
 ## 使用前准备
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../../docs/zh/install_guide.md)。
+- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/getting_started/install_guide/)。
 
 ## 支持的模型版本与量化策略
 
@@ -13,6 +13,7 @@ Open-Sora-Plan V1.2的推理量化依赖于推理工程仓：[MindIE/open_sora_p
 | **Open-Sora-Plan** | Open-Sora-Plan v1.2 | [Open-Sora-Plan v1.2](https://huggingface.co/LanguageBind/Open-Sora-Plan-v1.2.0) | ✅ | | | | | | | | | | [W8A8静态量化](#open-sora-plan-v12-w8a8静态量化) |
 
 **说明：**
+
 - ✅ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - 空格表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 - 点击量化命令列中的链接可跳转到对应的具体量化命令
@@ -24,6 +25,7 @@ Open-Sora-Plan V1.2的推理量化依赖于推理工程仓：[MindIE/open_sora_p
 #### 量化启动命令
 
 我们提供了完整的量化启动脚本示例：[OpenSoraPlanV1_2/inference.py](./inference.py)，其启动命令可参考(请提前确保calib_prompts.txt权限不大于'0o640')：
+
 ```shell
 # 根据使用卡数进行配置多卡环境变量和nproc_per_node，以下使用8卡为例
 export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
@@ -134,6 +136,7 @@ session_cfg.model_validate(session_cfg)
 quant_model(model, session_cfg)
 
 ```
+
 ## 附录
 
 ### 运行参数说明

@@ -1,11 +1,12 @@
 # Hunyuan 量化说明
 
 ## 模型介绍
+
 - [Tencent-Hunyuan-Large](https://github.com/Tencent/Tencent-Hunyuan-Large) 目前业界开源的基于 Transformer 的最大 MoE 模型，拥有 3890 亿个参数、520 亿个活跃参数，且其具备高质量合成数据增强训练、KV 缓存压缩、专家特定学习率缩放、长上下文处理能力强（预训练模型支持 256K 文本序列，Instruct 模型支持 128K）。
 
 ## 使用前准备
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../docs/zh/install_guide.md)。
+- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/getting_started/install_guide/)。
 - transformers版本需要配置>=4.48.2
 
 ## 支持的模型版本与量化策略
@@ -15,16 +16,17 @@
 | **Hunyuan** | Tencent-Hunyuan-Large | [Tencent-Hunyuan-Large](https://huggingface.co/tencent/Tencent-Hunyuan-Large/tree/main/Hunyuan-A52B-Instruct) | ✅ |   |   |   |  |   |   | [W8A8混合量化](#hunyuan-large-w8a8-混合量化-experts层-w8a8-dynamic量化其余层-w8a8量化)                                                                                                                                                            |
 
 **说明：**
+
 - ✅ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - 空格表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 - 点击量化命令列中的链接可跳转到对应的具体量化命令
-
 
 ## 量化权重生成
 
 - 量化权重可使用 [quant_hunyuan.py](./quant_hunyuan.py) 脚本生成，以下提供Hunyuan模型量化权重生成快速启动命令。
 
 ### quant_hunyuan.py 量化参数说明
+
 | 参数名 | 含义 | 默认值 | 使用方法 | 
 | ------ | ---- | --- | -------- | 
 | model_path | 浮点权重路径 | 无默认值 | 必选参数；<br>输入HunYuan权重目录路径。 |
@@ -36,7 +38,7 @@
 | device_type | device类型 | npu | 可选值：['cpu', 'npu']。 |
 | fraction | 模型权重稀疏量化过程中被保护的异常值占比  |0.01| 取值范围[0.01,0.1]。|
 | act_method | 激活值量化方法 | 1 |(1) 1代表Label-Free场景的min-max量化方式。 <br>(2) 2代表Label-Free场景的histogram量化方式。 <br>(3) 3代表Label-Free场景的自动混合量化方式，LLM大模型场景下推荐使用。|
-| co_sparse	| 是否开启稀疏量化功能 | False | True: 使用稀疏量化功能；<br>False: 不使用稀疏量化功能。 |
+| co_sparse | 是否开启稀疏量化功能 | False | True: 使用稀疏量化功能；<br>False: 不使用稀疏量化功能。 |
 | anti_method | 离群值抑制参数 | 无默认值 |'m1': SmoothQuant算法。<br>'m2': SmoothQuant加强版算法，推荐使用。<br>'m3': AWQ算法。<br>'m4': smooth优化算法 。<br>'m5': CBQ量化算法。|
 | disable_level | L自动回退等级 | L0 | 配置示例如下：<br>'L0'：默认值，不执行回退。<br>'L1'：回退1层。<br>'L2'：回退2层。<br>'L3'：回退3层。<br>'L4'：回退4层。<br>'L5'：回退5层。|
 | do_smooth | 是否启动smooth量化功能 | False | True: 开启smooth量化功能；<br>False: 不开启smooth量化功能。 |
@@ -60,33 +62,40 @@
 | trust_remote_code | 是否信任自定义代码 | False | 指定`trust_remote_code=True`让修改后的自定义代码文件能够正确地被加载(请确保所加载的自定义代码文件来源可靠，避免潜在的安全风险)。 |
 | mindie_format | 非多模态模型量化后的权重配置文件是否兼容MindIE现有版本 | False | 开启`mindie_format`时保存的量化权重格式能够兼容MindIE 2.1.RC1及之前的版本。 |
 
-- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
-  以及量化参数配置类 [Calibrator](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)
-
+- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig/)
+  以及量化参数配置类 [Calibrator](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator/)
 
 ## 使用示例
+
 - 请将{浮点权重路径}和{量化权重路径}替换为用户实际路径。
 - 如果需要使用NPU多卡量化，请先配置环境变量，支持多卡量化：
+
   ```shell
   export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
   export PYTORCH_NPU_ALLOC_CONF=expandable_segments:False
   ```
-- 若加载自定义模型，调用`from_pretrained`函数时要指定`trust_remote_code=True`让修改后的自定义代码文件能够正确的被加载。(请确保加载的自定义代码文件的安全性)
 
+- 若加载自定义模型，调用`from_pretrained`函数时要指定`trust_remote_code=True`让修改后的自定义代码文件能够正确的被加载。(请确保加载的自定义代码文件的安全性)
 
 ### Hunyuan-Large
 
 #### 运行前必检
+
 Hunyuan-Large模型较大，且存在需要手动适配的点，为了避免浪费时间，还请在运行脚本前，请根据以下必检项对相关内容进行更改。
 
 - 1、需安装更新transformers版本（>=4.48.2）
 
 #### <span id="hunyuan-large-w8a8-混合量化-experts层-w8a8-dynamic量化其余层-w8a8量化">Hunyuan-Large W8A8 混合量化 (experts层: W8A8 Dynamic量化，其余层: W8A8量化)</span>
+
 注：需进入当前脚本目录下执行命令行
+
 - 生成Hunyuan-Large模型 W8A8 混合量化权重
+
   ```shell
   python3 quant_hunyuan.py --model_path {浮点权重路径} --save_directory {量化权重路径} --anti_method m4 --trust_remote_code True
   ```
+
 #### Hunyuan-Large量化QA
+
 - Q：modeling_utils.py报错 if metadata.get("format") not in ["pt", "tf", "flax", "mix"]: AttributeError: "NoneType" object has no attribute 'get';
 - A：说明输入的权重中缺少metadata字段，需安装更新transformers版本（>=4.48.2）

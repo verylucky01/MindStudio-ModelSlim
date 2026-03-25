@@ -793,7 +793,7 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
       <th>模型名称</th>
       <th>依赖库</th>
       <th>w8a8</th>
-      <th>w8a8c8</th>
+      <th>w8a8c8/w8a8f8</th>
       <th>w8a8s(稀疏量化)<sup>1</sup></th>
     </tr>
   </thead>
@@ -929,7 +929,7 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
       <td>-</td>
     </tr>
     <tr>
-      <td rowspan="5"><strong><a href="https://gitcode.com/Ascend/msmodelslim/blob/master/example/multimodal_sd/README.md">多模态生成模型</a></strong></td>
+      <td rowspan="7"><strong><a href="https://gitcode.com/Ascend/msmodelslim/blob/master/example/multimodal_sd/README.md">多模态生成模型</a></strong></td>
       <td>SD3-Medium</td>
       <td>diffusers</td>
       <td>√</td>
@@ -947,14 +947,14 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
       <td>FLUX.1-dev</td>
       <td>-</td>
       <td>√</td>
-      <td>√</td>
+      <td>√(一键量化)</td>
       <td>-</td>
     </tr>
     <tr>
       <td>HunyuanVideo</td>
       <td>-</td>
       <td>√</td>
-      <td>√</td>
+      <td>√(一键量化)</td>
       <td>-</td>
     </tr>
     <tr>
@@ -962,6 +962,20 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
       <td>-</td>
       <td>√(一键量化)</td>
       <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>Wan2.2</td>
+      <td>-</td>
+      <td>-</td>
+      <td>√(一键量化)</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>Qwen-Image-Edit</td>
+      <td>-</td>
+      <td>-</td>
+      <td>√(一键量化)</td>
       <td>-</td>
     </tr>
   </tbody>
@@ -972,3 +986,4 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
 **注释说明：**
 
 - <sup>1</sup> 压缩后配合Atlas 300I Duo系列产品解压缩特性更佳；仅MindIE支持稀疏量化模式。
+- <sup>2</sup> 其中FLUX.1-dev、HunyuanVideo、Wan2.2、Qwen-Image-Edit-2509支持在昇腾950代际产品上运行的w8a8f8 mxfp量化，详情点击查看具体量化命令。当前量化工具在昇腾950代际产品上仅支持以上模型的最佳实践配置。
