@@ -25,6 +25,7 @@
 ### 实现
 
 算法实现在 [`msmodelslim/core/quantizer/impl/gptq.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quantizer/impl/gptq.py) 中：
+
   - `per_channel`实现类：`WeightPerChannelGPTQ`
   - `per_group`实现类：`WeightPerGroupGPTQ`
 
@@ -75,7 +76,7 @@ spec:
           ext: # 可选，扩展参数
             percdamp: 0.01     # 可选，阻尼系数，默认值0.01
             block_size: 128    # 可选，分块大小，默认值128
-            group_size: 256    # 可选，分组大小，默认值256
+            group_size: 128    # 可选，分组大小，默认值128
 ```
 
 ### YAML配置字段详解
@@ -96,7 +97,7 @@ spec:
 |------------|--------|---------|----------------------------------------------|-----------|
 | percdamp   | 阻尼系数   | `float` | percdamp 用于平滑梯度更新，减少量化引入的噪声对训练的影响            | 默认值`0.01` |
 | block_size | 迭代分块大小 | `int`   | 分组量化的大小，必须能被待量化nn.Linear层的out_features维度整除   | 默认值`128`  |
-| group_size | 量化分组大小 | `int`   | 分组量化的大小，必须能被待量化nn.Linear层的input_features维度整除 | 默认值`256`  |
+| group_size | 量化分组大小 | `int`   | 分组量化的大小，必须能被待量化nn.Linear层的input_features维度整除 | 默认值`128`  |
 
 ## 模型适配
 
@@ -127,3 +128,26 @@ class WeightPerChannelGPTQ(AutoWeightQuantizer):
     3. 初始化权重：调用init_weight方法设置待量化的权重。
     4. 计算海森矩阵：调用forward方法收集激活值信息，计算hessian矩阵。
     5. 量化结果：通过get_q_storage和get_q_param触发权重量化，返回量化权重和量化参数。
+
+## FAQ
+
+### 1. GPTQ算法中percdamp、block_size和group_size三个超参数的含义和用途是什么？
+
+- **percdamp**：
+  - **含义**：阻尼百分比（damping percentage），用于在逆 Hessian 矩阵计算中加入一个小的对角阻尼，防止数值不稳定。
+  - **用途**：GPTQ 在更新权重时需要求解一个线性方程组，该过程涉及 Hessian 矩阵的逆。当 Hessian 矩阵接近奇异时，直接求逆会导致数值爆炸。percdamp
+    通过在 Hessian 对角线上添加一个微小量（通常为 max(diag(H)) * percdamp）来改善条件数，使得求逆稳定。
+  - **典型值**：0.01（即 1% 的阻尼）。
+  - **影响**：过大可能导致精度损失，过小可能引起数值不稳定。
+- **block_size**：
+  - **含义**：块大小，指 GPTQ 在一次迭代中同时处理的列数（即权重矩阵的列块）。
+  - **用途**：GPTQ 是逐层、逐块进行量化的。block_size 决定了每次计算 Hessian
+    逆并更新权重的列组大小。较大的块可以提高并行计算效率，但会占用更多显存；较小的块则更精细但可能减慢速度。
+  - **典型值**：128。
+  - **影响**：block_size 影响量化速度和内存占用，但对最终量化精度影响较小。
+- **group_size**：
+  - **含义**：分组大小，用于分组量化（group-wise quantization）。
+  - **用途**：在 GPTQ 中，权重可以按组共享量化参数（scale 和 zero point）。group_size 指定每个组包含的连续元素个数。例如
+    group_size=128 表示每128 个权重使用一组量化参数。较小的 group_size 能更好地适应权重的局部分布，提高量化精度，但会额外存储更多缩放因子，增加模型体积。
+  - **典型值**：128。
+  - **影响**：group_size 越小，量化精度越高，但模型文件会略大。通常 128 是精度与压缩率的较好平衡点。

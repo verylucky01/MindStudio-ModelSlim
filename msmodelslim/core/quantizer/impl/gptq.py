@@ -38,7 +38,7 @@ PERCDAMP_DEFAULT = 0.01  # 默认percdamp值
 BLOCK_SIZE_KEY = "block_size"  # blockSize值配置key
 BLOCK_SIZE_DEFAULT = 128  # 默认blockSize值
 GROUP_SIZE_KEY = "group_size"  # groupSize值配置key
-GROUP_SIZE_DEFAULT = 256  # 默认groupSize值
+GROUP_SIZE_DEFAULT = 128  # 默认groupSize值
 
 
 def get_ext_value(config: Optional[QConfig], attrName: str, default):
@@ -97,7 +97,7 @@ def _validate_ext_config(config: QConfig):
     GPTQ参数配置校验
     """
     if config.ext is None:
-        pass
+        return
     if "percdamp" in config.ext:
         greater_than_zero(config.ext["percdamp"], "percdamp")
     if "block_size" in config.ext:
@@ -200,7 +200,7 @@ class WeightPerChannelGPTQ(AutoWeightQuantizer):
 
     def __gptq_per_channel_quantize(self):
         """GPTQ量化单个线性层"""
-        weight_tensor = self.weight.value
+        weight_tensor = self.weight.value.clone()
         # 计算w_q_param
         self.w_q_param = self.__calculate_w_q_param()
         # 对海森矩阵进行分解重构
@@ -328,6 +328,11 @@ class WeightPerGroupGPTQ(AutoWeightQuantizer):
     def init_weight(
             self, weight: QStorage, bias: Optional[torch.Tensor] = None
     ) -> None:
+        if weight.value.shape[1] % self.group_size != 0:
+            raise SpecError(
+                "Input channels must be divisible by group_size in per-group GPTQ",
+                action=f"Please set group_size to divide input channels ({weight.value.shape[1]})"
+            )
         self.weight = weight
         self.bias = bias
 
@@ -416,7 +421,7 @@ class WeightPerGroupGPTQ(AutoWeightQuantizer):
     def __calculate_group_q_param(self, weight_tensor: torch.Tensor, current_idx: int) -> QParam:
         if current_idx % self.group_size == 0:
             start_idx = (current_idx // self.group_size) * self.group_size
-            end_idx = min(start_idx + self.block_size, weight_tensor.shape[1])
+            end_idx = min(start_idx + self.group_size, weight_tensor.shape[1])
             group_weight_tensor = weight_tensor[:, start_idx:end_idx].clone()
             # 使用MinMax观察器计算权重的统计信息
             self.minmax_observer.reset()
