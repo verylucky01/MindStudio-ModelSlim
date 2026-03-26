@@ -62,7 +62,25 @@ pre_run阶段在Runner开始逐层调度前执行，主要完成以下操作：
 
 **导出全局旋转信息（可选）：**
 
-- 若配置项`export_extra_info`为 True，则向首个旋转目标模块注册`QuaRotExtraInfoHookIR`。注入相应 HookIR 后，若使用 ascend_v1_saver 时，会在量化权重路径下生成 optional 目录保存额外的 safetensors，其中包含了 QuaRot 算法所应用的全局旋转矩阵，同时会在量化权重路径下的 quant_model_description.json 中追加额外的描述字段；若为 False 则不注入该 Hook，不导出上述信息。
+- 若配置项`export_extra_info`为 True，则向首个旋转目标模块注册`QuaRotExtraInfoHookIR`，在保存阶段额外导出 QuaRot 全局旋转矩阵信息。
+- 导出后在量化保存目录中会新增：
+  - `optional/quarot.safetensors`：包含 key 为 `global_rotation` 的 tensor，该 tensor 即 QuaRot 使用的全局旋转矩阵 `Q`。
+  - `quant_model_description.json` 中新增 `optional.quarot` 域：用于描述上述额外导出件，便于推理侧按描述加载。
+- `optional.quarot` 的结构如下：
+
+```jsonc
+{
+  "optional": { // 可选导出件总入口
+    "quarot": { // QuaRot 额外导出域
+      "rotation_map": { // 旋转信息映射表
+        "global_rotation": "optional/quarot.safetensors" // 全局旋转矩阵文件（相对路径）
+      }
+    }
+  }
+}
+```
+
+- 若 `export_extra_info` 为 False，则不注入该 Hook，也不会导出上述信息。
 
 **在线旋转初始化（可选）：**
 
@@ -233,14 +251,14 @@ class QuaRotInterface:
                            eye_step: tuple = (-1,)) -> torch.Tensor:
         """
         创建旋转矩阵
-        
+
         Args:
             mode: 旋转模式（如HADAMARD、BLOCK_HADAMARD等）
             size: 矩阵大小
             block_size: 块大小，-1表示不使用块对角矩阵
             rot_step: 旋转步长
             eye_step: 单位矩阵步长
-            
+
         Returns:
             旋转矩阵
         """
@@ -250,7 +268,7 @@ class QuaRotInterface:
     def get_ln_fuse_map(self) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
         """
         获取LayerNorm与Linear层的融合映射
-        
+
         Returns:
             包含两个字典的元组：
             - pre_run_fused_ln (Dict[str, List[str]]): pre_run阶段的融合映射
@@ -263,10 +281,10 @@ class QuaRotInterface:
     def get_bake_names(self) -> Tuple[List[str], List[str]]:
         """
         获取需要mean融合的Linear层名称列表
-        
+
         当模型使用nn.LayerNorm时，需要在LayerNorm之前的Linear层进行mean融合。
         通常不需要配置。
-        
+
         Returns:
             包含两个列表的元组：
             - pre_run_bake_names (List[str]): pre_run阶段的bake名称列表
