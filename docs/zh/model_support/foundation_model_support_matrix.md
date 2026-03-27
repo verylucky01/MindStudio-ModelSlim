@@ -290,7 +290,7 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
       <td>Qwen3-30B-A3B</td>
       <td>transformers==4.51.0</td>
       <td>-</td>
-      <td>√</td>
+      <td>√(一键量化)</td>
       <td>√(一键量化)</td>
       <td>-</td>
       <td>-</td>
