@@ -42,7 +42,7 @@
 
 ## 量化权重生成
 
-- 量化权重统一使用[quant_qwen.py](./quant_qwen.py)脚本生成，以下提供Qwen模型量化权重生成快速启动命令。
+- Qwen 系列历史 v0 示例可使用 [quant_qwen.py](./quant_qwen.py) 脚本生成；已集成一键量化或已提供 `lab_practice` 配置的场景，推荐直接使用 `msmodelslim quant`。以下提供各模型的快速启动命令。
 
 ### W4A4 Flatquant Dynamic量化专用参数说明 (w4a4.py)
 
@@ -309,14 +309,18 @@
 
 #### <span id="qwq-32b-w8a8量化">QwQ-32b W8A8量化</span>
 
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization_v1/usage.md)。
+
   ```shell
-  python3 quant_qwen.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl --w_bit 8 --a_bit 8 --device_type npu --anti_method m1
+  msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8量化权重路径} --device npu --model_type QwQ-32B --quant_type w8a8 --trust_remote_code True
   ```
 
 ##### <span id="qwq-32b-稀疏量化">QwQ-32b 稀疏量化</span> 
 
+该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization_v1/usage.md)。
+
   ```shell
-  python3 quant_qwen.py --model_path {浮点权重路径} --save_directory {W8A8s量化权重路径} --calib_file ../common/cn_en.jsonl --w_bit 4 --a_bit 8 --device_type npu --fraction 0.011 --use_sigma True --is_lowbit True
+  msmodelslim quant --model_path {浮点权重路径} --save_path {W8A8s量化权重路径} --device npu --model_type QwQ-32B --quant_type w8a8s --trust_remote_code True
   ```
 
 ## 附录

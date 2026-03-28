@@ -181,3 +181,180 @@ class TestQwqModelAdapter(unittest.TestCase):
             result = adapter.handle_dataset(dataset='', device=DeviceType.CPU)
 
             self.assertEqual(result, [])
+
+    def test_get_hidden_dim_when_config_has_hidden_size_then_return_hidden_size(self):
+        """测试get_hidden_dim方法：应返回hidden_size"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ):
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.config = type("Config", (), {"hidden_size": 4096})()
+
+            result = adapter.get_hidden_dim()
+
+            self.assertEqual(result, 4096)
+
+    def test_get_head_dim_when_config_has_head_dim_then_return_head_dim(self):
+        """测试get_head_dim方法：配置中有head_dim时直接返回"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ):
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.config = type("Config", (), {"head_dim": 128})()
+
+            result = adapter.get_head_dim()
+
+            self.assertEqual(result, 128)
+
+    def test_get_head_dim_when_head_dim_missing_then_return_derived_value(self):
+        """测试get_head_dim方法：head_dim缺失时回退到hidden_size/num_attention_heads"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ):
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.config = type(
+                "Config", (), {"hidden_size": 4096, "num_attention_heads": 32}
+            )()
+
+            result = adapter.get_head_dim()
+
+            self.assertEqual(result, 128)
+
+    def test_get_num_attention_heads_when_config_has_heads_then_return_heads(self):
+        """测试get_num_attention_heads方法：应返回注意力头数"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ):
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.config = type("Config", (), {"num_attention_heads": 40})()
+            adapter.model_path = self.model_path
+
+            result = adapter.get_num_attention_heads()
+
+            self.assertEqual(result, 40)
+
+    def test_load_tokenizer_when_called_then_use_qwen_tokenizer_settings(self):
+        """测试_load_tokenizer方法：应使用Qwen系tokenizer参数"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ), patch(
+            "msmodelslim.model.qwq.model_adapter.SafeGenerator.get_tokenizer_from_pretrained",
+            return_value=MagicMock(name="tokenizer"),
+        ) as mock_get_tokenizer:
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.model_path = self.model_path
+
+            tokenizer = adapter._load_tokenizer(trust_remote_code=True)
+
+            self.assertIsNotNone(tokenizer)
+            mock_get_tokenizer.assert_called_once_with(
+                model_path=str(self.model_path),
+                use_fast=False,
+                legacy=False,
+                padding_side="left",
+                pad_token="<|extra_0|>",
+                eos_token="<|endoftext|>",
+                trust_remote_code=True,
+            )
+
+    def test_get_ln_fuse_map_when_called_then_return_expected_mapping(self):
+        """测试get_ln_fuse_map方法：应返回QwQ的LayerNorm融合映射"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ):
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.config = type("Config", (), {"num_hidden_layers": 2})()
+
+            pre_run, fused_map = adapter.get_ln_fuse_map()
+
+            self.assertEqual(pre_run, {})
+            self.assertIn("model.layers.0.input_layernorm", fused_map)
+            self.assertIn("model.layers.0.post_attention_layernorm", fused_map)
+            self.assertIn("model.norm", fused_map)
+            self.assertEqual(
+                fused_map["model.layers.0.input_layernorm"],
+                [
+                    "model.layers.0.self_attn.q_proj",
+                    "model.layers.0.self_attn.k_proj",
+                    "model.layers.0.self_attn.v_proj",
+                ],
+            )
+            self.assertEqual(fused_map["model.norm"], ["lm_head"])
+
+    def test_get_adapter_config_for_subgraph_when_called_then_return_expected_configs(
+        self,
+    ):
+        """测试get_adapter_config_for_subgraph方法：应返回iter_smooth需要的子图配置"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ):
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.config = type("Config", (), {"num_hidden_layers": 2})()
+
+            adapter_configs = adapter.get_adapter_config_for_subgraph()
+
+            self.assertEqual(len(adapter_configs), 6)
+            self.assertEqual(adapter_configs[0].subgraph_type, "norm-linear")
+            self.assertEqual(adapter_configs[1].subgraph_type, "norm-linear")
+            self.assertEqual(adapter_configs[2].subgraph_type, "up-down")
+            self.assertEqual(
+                adapter_configs[0].mapping.source, "model.layers.0.input_layernorm"
+            )
+            self.assertEqual(
+                adapter_configs[2].mapping.targets, ["model.layers.0.mlp.down_proj"]
+            )
+
+    def test_get_rotate_map_when_called_then_return_pre_run_and_rotate_pairs(self):
+        """测试get_rotate_map方法：应返回预旋转和层内旋转映射"""
+        with patch(
+            "msmodelslim.model.qwq.model_adapter.DefaultModelAdapter.__init__",
+            return_value=None,
+        ):
+            adapter = QwqModelAdapter(
+                model_type=self.model_type, model_path=self.model_path
+            )
+            adapter.config = type(
+                "Config",
+                (),
+                {
+                    "num_hidden_layers": 2,
+                    "hidden_size": 128,
+                    "num_attention_heads": 8,
+                    "head_dim": 16,
+                },
+            )()
+
+            pre_run_list, rot_pairs_list = adapter.get_rotate_map(block_size=8)
+
+            self.assertIsInstance(pre_run_list, list)
+            self.assertEqual(len(pre_run_list), 1)
+            self.assertIn("model.embed_tokens", pre_run_list[0].right_rot)
+
+            self.assertIsInstance(rot_pairs_list, list)
+            self.assertEqual(len(rot_pairs_list), 2)
+            self.assertIn("lm_head", rot_pairs_list[0].right_rot)
+            self.assertIn("model.layers.0.self_attn.o_proj", rot_pairs_list[0].left_rot)
+            self.assertIn(
+                "model.layers.0.self_attn.o_proj", rot_pairs_list[1].right_rot
+            )
