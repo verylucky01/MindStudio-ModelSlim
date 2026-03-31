@@ -25,16 +25,10 @@
 
 Qwen-Image-Edit-2509 的 Transformer 部分基于扩散与 Transformer 结构，msModelSlim 支持对其线性层等进行量化，并配合 **online_quarot** 与 **FA3** 等流程；支持逐层量化，有利于降低量化过程中的内存占用。
 
-### 已验证的量化类型
-
-| 量化类型 | 描述 | 适用场景 | 配置示例 |
-|----------|------|----------|----------|
-| w8a8f8_mxfp_dynamic | 权重 mxfp8 per-block 对称量化，激活值 mxfp8 动态量化，FA fp8 动态量化 | 昇腾 950 代际产品 | [qwen-image-edit-w8a8f8-mxfp.yaml](../../../lab_practice/qwen_image_edit/qwen-image-edit-w8a8f8-mxfp.yaml) |
-
 ### 量化特性
 
 - **逐层量化**: 支持逐层处理，大幅降低内存占用
-- **单卡量化**: 结合逐层量化特性，可实现在Atlas 800I/800T A2(64G)设备、昇腾950代际产品上的单卡量化
+- **单卡量化**: 结合逐层量化特性，可实现在Atlas 800I/800T A2(64G)设备上的单卡量化
 
 ## 量化命令
 

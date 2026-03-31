@@ -986,4 +986,4 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
 **注释说明：**
 
 - <sup>1</sup> 压缩后配合Atlas 300I Duo系列产品解压缩特性更佳；仅MindIE支持稀疏量化模式。
-- <sup>2</sup> 其中FLUX.1-dev、HunyuanVideo、Wan2.2、Qwen-Image-Edit-2509支持在昇腾950代际产品上运行的w8a8f8 mxfp量化，详情点击查看具体量化命令。当前量化工具在昇腾950代际产品上仅支持以上模型的最佳实践配置。
+- <sup>2</sup> 其中FLUX.1-dev、HunyuanVideo、Wan2.2、Qwen-Image-Edit-2509支持[MXFP量化](https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf)。
