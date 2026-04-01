@@ -269,11 +269,6 @@ class Qwen3_5ModelAdapter(
         # This prevents KeyError when layers access ALL_ATTENTION_FUNCTIONS[config._attn_implementation]
         self.config.text_config._attn_implementation = 'eager'
         
-        # Load full state_dict for the first layer + vision encoder + lm_head
-        get_logger().info("Loading weights for vision encoder, first decoder layer, and lm_head...")
-        state_dict = self._get_state_dict(model)
-        model.load_state_dict(state_dict)
-        
         # CRITICAL: Copy text_config attention heads to model.config for OV smoothing
         # BaseSmoothProcessor._apply_standard_ov_smooth() reads from model.config, not model.config.text_config
         # This must be done AFTER model is loaded
