@@ -11,13 +11,16 @@ Qwen3-VL-MoE 是阿里云 Qwen 团队推出的大规模多模态视觉语言 Mix
 
 ## 使用前准备
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../../docs/zh/install_guide.md)。
+- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../../docs/zh/getting_started/install_guide.md)。
 - 注意：由于高版本transformers的特殊性，PyTorch及torch_npu需要配置安装为2.7.1版本
 - 针对 Qwen3-VL-MoE，transformers 版本需要 4.57.1：
+
   ```bash
   pip install transformers==4.57.1
   ```
+
 - 还需要安装 flax 依赖：
+
   ```bash
   pip install flax
   ```
@@ -31,23 +34,27 @@ Qwen3-VL-MoE 是阿里云 Qwen 团队推出的大规模多模态视觉语言 Mix
 注：[Qwen3-VL-30B-A3B](https://huggingface.co/Qwen/Qwen3-VL-30B-A3B-Instruct/tree/main) 尚未验证过量化精度，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 
 **说明：**
+
 - 点击量化命令列中的链接可跳转到对应的具体量化命令
 - W8A8 混合量化：Attention 和常规 MLP 层使用静态量化，MoE experts 使用动态量化
 
 ## 量化特性
 
 ### MoE 专家层自动转换
+
 - **3D 权重拆分**: 自动将融合的 3D 专家权重 `(num_experts, hidden_size, expert_dim)` 拆分为独立的 `nn.Linear` 层
 - **逐层处理**: 结合 v1 框架的逐层加载机制，在加载每一层时自动完成 MoE 转换
 - **内存友好**: 转换过程采用 in-place 策略，及时释放原始 3D 权重，大幅降低内存占用
 
 ### 异常值抑制 (Iterative Smooth)
+
 - **QuaRot 算法**: 使用基于旋转的离群值抑制算法显著平滑数据的分布，有效降低量化误差
 - **iter_smooth 算法**: 使用迭代平滑算法抑制激活值异常点，提升量化精度
 - **多种子图类型**: 支持 norm-linear、ov 等多种子图融合
 - **自适应配置**: 自动识别 MoE 层结构，为不同层类型应用合适的平滑策略
 
 ### 混合量化策略
+
 - **Attention 层**: W8A8 静态量化 (激活per_tensor)，适合激活分布稳定的层
 - **MoE Experts**: W8A8 动态量化 (激活per_token)，适应不同 token 的激活差异，保持精度
 - **语言部分 MLP Gate 层**: 不进行量化，保持浮点精度，确保专家路由准确性
@@ -55,6 +62,7 @@ Qwen3-VL-MoE 是阿里云 Qwen 团队推出的大规模多模态视觉语言 Mix
 - **视觉部分 merger、deepstack 层**: 精度敏感，不进行量化，保持浮点精度
 
 ### 逐层量化
+
 - **内存优化**: 支持逐层加载、量化、offload 的流程，显著降低显存占用
 - **单卡支持**: 结合逐层量化特性，可在 Atlas 800I A2 (64G) 设备上完成大模型量化
 
@@ -64,7 +72,7 @@ Qwen3-VL-MoE 是阿里云 Qwen 团队推出的大规模多模态视觉语言 Mix
 
 ### <span id="qwen3-vl-moe-w8a8-混合量化">Qwen3-VL-235B-A22B W8A8 混合量化</span>
 
-该模型的量化已经集成至[一键量化](../../../docs/zh/feature_guide/quick_quantization/usage.md#参数说明)。
+该模型的量化已经集成至[一键量化](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#参数说明)。
 
 ```shell
 msmodelslim quant \
@@ -76,12 +84,12 @@ msmodelslim quant \
     --trust_remote_code True
 ```
 
-
 ## FAQ
 
 ### Q1: 为什么 MoE experts 使用动态量化？
 
 **A**: MoE experts 的激活分布在不同 token 间差异较大：
+
 - **静态量化** (per_tensor): 所有 token 共享一个 scale → 精度损失大
 - **动态量化** (per_token): 每个 token 独立 scale → 精度更高
 
@@ -90,19 +98,21 @@ msmodelslim quant \
 ### Q2: 如何自定义校准数据集？
 
 **A**: 有以下几种方式：
+
 1. 使用 `lab_calib/calibImages/` 目录，并统一自定义所有图像的文本prompt：通过yaml配置文件中default_text字段配置文本prompt；
-2. 使用 `lab_calib/calibImages/` 目录，并自定义每个图像的文本prompt：在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md#dataset---校准数据路径配置)；
+2. 使用 `lab_calib/calibImages/` 目录，并自定义每个图像的文本prompt：在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置)；
 3. 使用自定义图像目录，并统一自定义所有图像的文本prompt：在yaml配置文件中修改 `dataset` 字段为自定义图像目录，并通过yaml配置文件中default_text字段配置文本prompt；
-4. 使用自定义图像目录，并自定义每个图像的文本prompt：在yaml配置文件中修改 `dataset` 字段为自定义图像目录，在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md#dataset---校准数据路径配置)。
+4. 使用自定义图像目录，并自定义每个图像的文本prompt：在yaml配置文件中修改 `dataset` 字段为自定义图像目录，在图像目录添加一个JSON/JSONL文件，具体示例可参考[dataset - 校准数据路径配置](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置)。
 
 建议使用与实际应用场景相似的图像作为校准集，数量一般不超过30张。
 
 ## 附录
+
 ### 相关资源
 
-- [multimodal_vlm_modelslim_v1 量化服务配置详解](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md#multimodal_vlm_modelslim_v1-量化服务配置详解)
-- [一键量化配置协议说明](../../../docs/zh/feature_guide/quick_quantization/configuration_protocols.md)
-- [逐层量化特性说明](../../../docs/zh/feature_guide/quick_quantization/layer_wise_quantization.md)
-- [QuaRot 算法说明](../../../docs/zh/algorithms_instruction/quarot.md)
-- [Iterative Smooth 算法说明](../../../docs/zh/algorithms_instruction/iterative_smooth.md)
-- [LinearQuantProcess 线性层量化处理器说明](../../../docs/zh/feature_guide/quick_quantization/linear_quant.md)
+- [multimodal_vlm_modelslim_v1 量化服务配置详解](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#multimodal_vlm_modelslim_v1-配置详解)
+- [一键量化配置协议说明](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#量化配置协议详解)
+- [逐层量化特性说明](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#逐层量化及分布式逐层量化)
+- [QuaRot 算法说明](../../../docs/zh/quantization_algorithms/outlier_suppression_algorithms/quarot.md)
+- [Iterative Smooth 算法说明](../../../docs/zh/quantization_algorithms/outlier_suppression_algorithms/iterative_smooth.md)
+- [LinearQuantProcess 线性层量化处理器说明](../../../docs/zh/quantization_algorithms/quantization_algorithms/linear_quant.md)

@@ -1,6 +1,7 @@
 # LLM大模型接入指南
 
 ## 简介
+
 本文档面向需要将自有模型接入 msModelSlim 的开发者。  
 msModelSlim认识到量化机制和算法都有适用范围和局限性，而新的模型结构层出不穷，不存在一劳永逸的模型量化方法。  
 为了尽可能简化自有模型量化流程，msModelSlim将量化机制和算法生效所依赖的模型条件抽取出来，以接口形式描述。  
@@ -24,7 +25,7 @@ msModelSlim认识到量化机制和算法都有适用范围和局限性，而新
 
 以下内容将以 [`Qwen3-32B`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3/model_adapter.py) W8A8动态量化场景（简称“场景示例”）的模型接入为例：
 
-###  1. 新建模型适配器`py`文件
+### 1. 新建模型适配器`py`文件
 
 建议放在[`msmodelslim/model/`](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/model) 下，命名如 `qwen3.py`。
 
@@ -118,6 +119,7 @@ wan2_1 = msmodelslim.model.wan2_1.model_adapter:Wan2Point1Adapter
 qwen3_next = msmodelslim.model.qwen3_next.model_adapter:Qwen3NextModelAdapter
 wan2_2 = msmodelslim.model.wan2_2.model_adapter:Wan2Point2Adapter
 ```
+
 ## 量化自有模型
 
 当完成模型适配器的编写与注册后，即可使用一键量化能力对自有模型进行量化。
@@ -165,7 +167,7 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 
 ## 附录
 
-### 可用算法接口适配指导 {#可用算法接口适配指导}
+### 可用算法接口适配指导
 
 | 算法               | 算法介绍       | 适配指导       |
 | ------------------ | ------------- | ------------- |

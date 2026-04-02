@@ -5,7 +5,8 @@
 [Open-Sora-Plan v1.2](https://github.com/PKU-YuanGroup/Open-Sora-Plan) 是一个开源的多模态视频生成模型，由北大-兔展AIGC联合实验室共同发起，专注于高效视频生成任务。
 
 ## 使用前准备
-请参考 [多模态视图生成推理优化工具](../../docs/zh/feature_guide/scripts_based_quantization_and_other_features/pytorch/inference_optimization_for_multimodal_generative_model.md#使用前准备) 完成环境配置。
+
+请参考 [多模态视图生成推理优化工具](../../docs/zh/feature_guide/traditional_quantization_v0/inference_optimization_for_multimodal_generative_model.md#使用前准备) 完成环境配置。
 
 ## 支持的模型版本与优化策略
 
@@ -14,23 +15,26 @@
 | **Open-Sora-Plan** | v1.2 | [Open-Sora-Plan v1.2](https://github.com/PKU-YuanGroup/Open-Sora-Plan) | ✅ | ✅ | [采样优化](#采样优化) / [DiT缓存优化](#dit缓存优化) |
 
 **说明：**
+
 - ✅ 表示该优化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - 空格表示该优化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但优化效果和功能稳定性无法得到官方保证。
 - 点击优化命令列中的链接可跳转到对应的具体优化命令
 
 ### 已验证优化方法
+
 | 优化类型 | 支持场景 | 加速效果 | 精度损失 |
 |---------|---------|---------|---------|
 | 采样优化 | 29帧480p | 2x | <1% |
 | DiT缓存优化 | 29帧480p/93帧720p | 1.3x | <1% |
-
 
 ## 使用说明
 
 ### <span id="采样优化">采样优化</span>
 
 #### 1. 生成校准视频
+
 使用原始模型生成一批视频，用于后续优化步骤的质量评估基准。
+
 ```bash
 torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     -m example.osp1_2.sample_t2v_sp \
@@ -54,7 +58,9 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     --sample_method EulerAncestralDiscrete \
     --model_type "dit"
 ```
+
 完整示例脚本: [`generate_baseline_t2v_sp.sh`](generate_baseline_t2v_sp.sh)
+
 - **参数介绍**:
 
     | 参数 | 说明 |
@@ -79,7 +85,9 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     | `--model_type` | 模型类型，默认值："dit" |
 
 #### 2. 搜索优化采样步骤
+
 根据生成的校准视频，搜索最优的采样时间步组合，以在保证质量的同时减少采样步数。
+
 ```bash
 torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     -m example.osp1_2.search_t2v_sp \
@@ -106,8 +114,11 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     --neighbour_type "uniform" \
     --monte_carlo_iters 5
 ```
+
 完整示例脚本: [`search_t2v_sp.sh`](search_t2v_sp.sh)
+
 - **参数介绍**:
+
 其他参数同生成校准视频步骤，新增以下参数：
 
     | 参数 | 说明 |
@@ -119,7 +130,9 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     | `--monte_carlo_iters` | Monte Carlo 采样的迭代次数 |
 
 #### 3. 使用优化配置进行推理
+
 使用第2步搜索到的优化时间步配置文件进行推理，以验证加速效果和生成质量。
+
 ```bash
 torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     -m example.osp1_2.sample_t2v_sp \
@@ -144,8 +157,11 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     --model_type "dit" \
     --schedule_timestep "/path/of/schedule/timestep/file.txt"
 ```
+
 完整示例脚本: [`sample_t2v_sp.sh`](sample_t2v_sp.sh)
+
 - **参数介绍**:
+
 其他参数同生成校准视频步骤，新增以下参数：
 
     | 参数 | 说明 |
@@ -155,7 +171,9 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
 ### <span id="dit缓存优化">DiT缓存优化</span>
 
 #### 1. 搜索缓存配置
+
 搜索最优的 DiT 缓存配置，包括缓存的起始层、缓存层数、缓存起始时间步和时间步间隔。
+
 ```bash
 torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     -m example.osp1_2.search_t2v_sp \
@@ -181,8 +199,11 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     --cache_ratio 1.3 \
     --cache_save_path /path/to/save/the/searched/config
 ```
+
 完整示例脚本: [`dit_cache_search_t2v_sp.sh`](dit_cache_search_t2v_sp.sh)
+
 - **参数介绍**:
+
 其他参数同生成校准视频步骤，新增以下参数：
 
     | 参数 | 说明 |
@@ -192,7 +213,9 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     | `--cache_save_path` | 保存搜索到的缓存配置文件的路径 |
 
 #### 2. 使用缓存配置进行推理
+
 使用第1步搜索到的缓存配置文件进行推理，以验证加速效果和生成质量。
+
 ```bash
 torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     -m example.osp1_2.sample_t2v_sp \
@@ -217,8 +240,11 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
     --model_type "dit" \
     --dit_cache_config "/path/of/cache/config/file"
 ```
+
 完整示例脚本: [`dit_cache_sample_t2v_sp.sh`](dit_cache_sample_t2v_sp.sh)
+
 - **参数介绍**:
+
 其他参数同生成校准视频步骤，新增以下参数：
 
     | 参数 | 说明 |

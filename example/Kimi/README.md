@@ -6,7 +6,7 @@ Kimi-K2-Instruct-0905是月之暗面（Moonshot AI）开发的高效指令遵循
 
 ## 环境配置
 
-- 环境配置请参考[安装指南](../../docs/安装指南.md)。
+- 环境配置请参考[安装指南](../../docs/zh/getting_started/install_guide.md)。
 - 对于Kimi系列模型，由于模型比较大，请先完成"
   运行前必检"（[Kimi运行前必检](#运行前必检)）。
 - 由于模型量化（Model Quantization）对显存要求较高，请确保在单卡显存不低于64G的环境下执行。

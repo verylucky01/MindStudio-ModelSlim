@@ -20,7 +20,8 @@
   - **per-head**：对每个注意力头独立计算量化参数。
 
 算法流程：
-```
+
+```text
 1. 收集每个 head 的激活统计数据：
    - 输入：激活张量 x，shape 为 (B, H, S, D)
      其中 B=batch_size, H=num_heads, S=seq_len, D=head_dim
@@ -67,7 +68,6 @@
      - 调用 `calculate_qparam()` 计算对称量化参数。
      - 创建 IR 替换监听器。
 
-
 ## 适用要求
 
 - **模型结构要求**：
@@ -80,7 +80,6 @@
   - 量化参数在校准后固定，尚不支持动态调整。
 
 ## 功能介绍
-
 
 ### 模型支持
 
@@ -117,7 +116,7 @@ spec:
 | include | 包含的注意力层 | array[string] | ["*"]  | 支持通配符匹配，指定要执行FA3量化的注意力层。      |
 | exclude | 排除的注意力层 | array[string] | []     | 支持通配符匹配，优先级高于 include。               |
 
-## 模型适配 {#模型适配}
+## 模型适配
 
 ### 接口与数据结构
 
@@ -147,4 +146,3 @@ class ModelAdapter(FA3QuantAdapterInterface):
     2. 遍历模型，通过 `should_inject`在注意力层中选择性注入占位器 FA3QuantPlaceHolder 作为子模块。
     3. 定位Q、K、V 激活流向 Attention 计算的临界位置，该位置即为需要插入 FA3 量化的节点。
     4. 包裹注意力层的 forward 方法，在定位到的临界位置插入对 FA3 量化的调用。
-

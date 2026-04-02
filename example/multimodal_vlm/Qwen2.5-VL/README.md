@@ -11,12 +11,11 @@
 
 ## 使用前准备
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../../docs/zh/install_guide.md)。
+- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../../docs/zh/getting_started/install_guide.md)。
 - 还需要执行以下命令安装qwen_vl_utils依赖
     - pip install qwen_vl_utils
 - 针对Qwen2.5-VL，transformers版本需要配置安装为4.49.0
     - pip install transformers==4.49.0
-
 
 ## Qwen2.5-VL模型当前已验证的量化方法
 
@@ -28,6 +27,7 @@
 | Qwen2.5-VL-72B-Instruct | [Qwen2.5-VL-72B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct/tree/main) | W4A8动态量化 | MindIE当前不支持<br>vLLM Ascend当前不支持 | [W4A8动态量化](#13-qwen25-vl-w4a8动态量化-异常值抑制算法使用m4) |
 
 **说明：**
+
 - 点击量化命令列中的链接可跳转到对应的具体量化命令。
 
 ## 生成量化权重
@@ -35,16 +35,22 @@
 - 量化权重统一使用[quant_qwen2_5vl.py](./quant_qwen2_5vl.py)脚本生成，以下提供Qwen2.5-VL模型量化权重生成快速启动命令。
 
 ## 使用示例
+
 - 如果需要使用NPU多卡量化(特别是Qwen2.5-VL-72B这种大模型)，请先配置多卡环境变量（Atlas 300I Duo 系列产品不支持多卡量化）：
+
   ```shell
   export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
   export PYTORCH_NPU_ALLOC_CONF=expandable_segments:False
   ```
+
 - 若加载自定义模型，调用`from_pretrained`函数时要指定`trust_remote_code=True`，让修改后的自定义代码文件能够正确地被加载。(请确保加载的自定义代码文件的安全性)
   
 ### 1. Qwen2.5-VL系列
+
 #### 1.1 Qwen2.5-VL W8A8静态量化 异常值抑制算法使用m2
+
 生成Qwen2.5-VL模型量化权重，异常值抑制使用m2算法，在NPU上运行，请将{浮点权重路径}和{量化权重路径}替换为用户实际路径。{校准图片路径}默认为"../calibImages"，以当前"../calibImages"目录中2张图片为例，实际量化时为保证精度需要从COCO数据集中扩充到30张图片。此外，用户可根据实际场景替换为其他图片。
+
   ```shell
   # 用于MindIE部署
   python quant_qwen2_5vl.py  --model_path {浮点权重路径} --calib_images {校准图片路径}  --save_directory {量化权重保存路径} --w_bit 8 --a_bit 8 --device_type npu --trust_remote_code True --anti_method m2 --mindie_format
@@ -54,7 +60,9 @@
   ```
 
 #### 1.2 Qwen2.5-VL W8A8静态量化 异常值抑制算法使用m4
+
 生成Qwen2.5-VL模型量化权重，异常值抑制使用m4算法，在NPU上运行，请将{浮点权重路径}和{量化权重路径}替换为用户实际路径。{校准图片路径}默认为"../calibImages"，以当前"../calibImages"目录中2张图片为例，实际量化时为保证精度需要从COCO数据集中扩充到30张图片。此外，用户可根据实际场景替换为其他图片。
+
   ```shell
   # 用于MindIE部署
   python quant_qwen2_5vl.py  --model_path {浮点权重路径} --calib_images {校准图片路径}  --save_directory {量化权重保存路径} --w_bit 8 --a_bit 8 --device_type npu --trust_remote_code True --anti_method m4 --mindie_format
@@ -64,12 +72,17 @@
   ```
 
 #### 1.3 Qwen2.5-VL W4A8动态量化 异常值抑制算法使用m4
+
 生成Qwen2.5-VL模型量化权重，使用4bit per-group量化权重，8bit per-token量化激活值，异常值抑制使用m4算法，在NPU上运行，请将{浮点权重路径}和{量化权重路径}替换为用户实际路径。{校准图片路径}默认为"../calibImages"，以当前"../calibImages"目录中2张图片为例，实际量化时为保证精度需要从COCO数据集中扩充到30张图片。此外，用户可根据实际场景替换为其他图片。
+
   ```shell
   python quant_qwen2_5vl.py  --model_path {浮点权重路径} --calib_images {校准图片路径}  --save_directory {量化权重保存路径} --w_bit 4 --a_bit 8 --act_method 1 --device_type npu --trust_remote_code True --anti_method m4 --open_outlier False --is_dynamic True --is_lowbit True --group_size 256
   ```
+
 ## 附录
+
 ### 量化参数说明
+
 | 参数名 | 含义 | 默认值 | 使用方法 | 
 | ------ | ---- | --- | -------- | 
 | model_path | 浮点权重路径 | 无默认值 | 必选参数；<br>输入Qwen2.5-VL原始浮点权重目录路径。 |
@@ -88,5 +101,5 @@
 | group_size | per-group量化的分组数量 | 64 | <br>设置为64，128，256，512。 <br>在`w4a8_dynamic per-group`量化场景下仅支持256。|
 | mindie_format | 多模态理解模型量化后的权重配置文件是否兼容MindIE现有版本 | False | 开启`mindie_format`时保存的量化权重格式能够兼容MindIE当前的版本，不开启`mindie_format`时保存的量化权重可用于vLLM Ascend部署。 |
 
-- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
-  以及量化参数配置类 [Calibrator](../../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)
+- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../../docs/zh/python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
+  以及量化参数配置类 [Calibrator](../../../docs/zh/python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)

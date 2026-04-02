@@ -6,8 +6,7 @@
 
 ## 使用前准备
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../docs/zh/install_guide.md)。
-
+- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../docs/zh/getting_started/install_guide.md)。
 
 ## 支持的模型版本与量化策略
 
@@ -25,10 +24,10 @@
 | | LLaMA3.1-70B-Instruct | [LLaMA3.1-70B-Instruct](https://github.com/meta-llama/llama3) |   |   |   |   |   |   | ✅ | [W4A8_DYNAMIC](#llama31-70b-instruct-w4a8_dynamic量化) |
 
 **说明：**
+
 - ✅ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - 空格表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 - 点击量化命令列中的链接可跳转到对应的具体量化命令。
-
 
 ## 量化权重生成
 
@@ -78,82 +77,109 @@
 | trust_remote_code | 是否信任自定义代码 | False | 指定`trust_remote_code=True`让修改后的自定义代码文件能够正确地被加载(请确保所加载的自定义代码文件来源可靠，避免潜在的安全风险)。 |
 | mindie_format | 非多模态模型量化后的权重配置文件是否兼容MindIE现有版本 | False | True：开启`mindie_format`时保存的量化权重格式能够兼容MindIE 2.1.RC1及之前的版本。 |
 
-- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
-  以及量化参数配置类 [Calibrator](../../docs/zh/python_api/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)
+- 更多参数配置要求，请参考量化过程中配置的参数 [QuantConfig](../../docs/zh/python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_QuantConfig.md)
+  以及量化参数配置类 [Calibrator](../../docs/zh/python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_Calibrator.md)
 
 ## 使用示例
+
 - 请将{浮点权重路径}和{量化权重路径}替换为用户实际路径。
 - 如果需要使用NPU多卡量化，请先配置环境变量，支持多卡量化：
+
   ```shell
   export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
   export PYTORCH_NPU_ALLOC_CONF=expandable_segments:False
   ```
+
 - 若加载自定义模型，调用`from_pretrained`函数时要指定`trust_remote_code=True`让修改后的自定义代码文件能够正确地被加载。(请确保所加载的自定义代码文件来源可靠，避免潜在的安全风险)
 
 ### LLaMA
+
 #### <span id="llama-65b-w8a16量化">LLaMA-65B W8A16量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A16量化权重路径} --calib_file ../common/teacher_qualification.jsonl --w_bit 8 --a_bit 16 --act_method 3 --trust_remote_code True
   ```
+
 #### <span id="llama-33b-稀疏量化配置">LLaMA 33B 稀疏量化配置</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8S量化权重路径} --calib_file ../common/boolq.jsonl --act_method 2 --do_smooth True --use_sigma True --is_lowbit True --co_sparse True --w_bit 4 --trust_remote_code True
   ```
+
 ### LLaMA2
+
 #### <span id="llama2-7b13b-w8a8量化">LLaMA2-7B/13B W8A8量化</span>
+
 - 生成llama2-7b量化权重，antioutlier使用m1算法配置，使用min-max量化方式，校准数据集使用50条BoolQ数据，在CPU上进行运算
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl --device_type cpu --disable_level L0 --anti_method m1 --act_method 1 --trust_remote_code True
   ```
 
 - 生成llama2-13b量化权重，antioutlier使用m2算法配置，使用min-max量化方式，校准数据集使用50条BoolQ数据，在CPU上进行运算
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type cpu --disable_level L0 --anti_method m2 --act_method 1 --trust_remote_code True
   ```
 
 #### <span id="llama2-7b13b-稀疏量化配置">LLaMA2 7B/13B 稀疏量化配置</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W4A8S量化权重路径} --calib_file ../common/teacher_qualification.jsonl --w_bit 4 --a_bit 8 --fraction 0.011 --co_sparse True --trust_remote_code True
   ```
 
 #### <span id="llama2-70b-npu多卡w8a8量化">LLaMA2-70B NPU多卡W8A8量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L5 --trust_remote_code True
   ```
 
-
 #### <span id="llama2-70b-w8a16量化">LLaMA2-70B W8A16量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A16量化权重路径} --calib_file ../common/teacher_qualification.jsonl --w_bit 8 --a_bit 16 --act_method 3 --trust_remote_code True
   ```
 
 ### LLaMA3
+
 #### <span id="llama3-70b-w8a16量化">LLaMA3-70B W8A16量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A16量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --a_bit 16 --w_sym False --mm_tensor False --anti_method m3 --act_method 3 --model_type llama3 --trust_remote_code True
   ```
+
 ### LLaMA3.1
+
 #### <span id="llama31-8b-w8a8量化">LLaMA3.1-8B W8A8量化：</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L0 --anti_method m1 --act_method 1 --trust_remote_code True
   ```
+
 #### <span id="llama31-70b-w8a8量化">LLaMA3.1-70B W8A8量化：</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L5 --anti_method m3 --act_method 3 --trust_remote_code True
   ```
 
 #### <span id="llama31-70b-w8a8量化搭配-kv-cache-int8量化">LLaMA3.1-70B W8A8量化搭配 KV cache int8量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L5 --anti_method m3 --act_method 3 --use_kvcache_quant True --trust_remote_code True
   ```
+
 #### <span id="llama31-70b-w8a8量化搭配attention量化">LLaMA3.1-70B W8A8量化搭配Attention量化</span>
+
 - 当前仅支持基于BF16权重生成量化权重
-- 需修改`modeling_llama.py`文件和`config.json`文件，配置方法参考[FA量化使用说明](../../docs/zh/feature_guide/scripts_based_quantization_and_other_features/pytorch/fa_quantization_usage.md)。 
+- 需修改`modeling_llama.py`文件和`config.json`文件，配置方法参考[FA量化使用说明](../../docs/zh/quantization_algorithms/quantization_algorithms/fa3_quant.md)。 
 - 相比于W8A8量化，需额外设置`use_fa_quant`参数为True
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl --w_bit 8 --a_bit 8 --device_type npu --disable_level L5 --anti_method m4 --act_method 3 --use_fa_quant True --trust_remote_code True
   ```
+
 #### <span id="llama31-70b-w8a8-pdmix量化prefill阶段-w8a8动态量化-decode阶段-w8a8量化-搭配-kv-cache-int8量化">LLaMA3.1-70B W8A8-pdmix量化(prefill阶段 W8A8动态量化, decode阶段 W8A8量化) 搭配 KV cache int8量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} \
   --save_directory {W8A8-pdmix量化权重路径} \
@@ -169,14 +195,13 @@
   ```
 
 #### <span id="llama31-8b-instruct-w4a8_dynamic量化">LLaMA3.1-8B-Instruct W4A8_DYNAMIC量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {量化权重路径} --w_bit 4 --device_type npu --anti_method m3 --act_method 1 --model_type llama3.1_instruct --is_lowbit True --mm_tensor False --open_outlier False --group_size 32 --is_dynamic True --anti_calib_file ../common/llama_anti_prompt.json --trust_remote_code True
   ```
 
 #### <span id="llama31-70b-instruct-w4a8_dynamic量化">LLaMA3.1-70B-Instruct W4A8_DYNAMIC量化</span>
+
   ```shell
   python3 quant_llama.py --model_path {浮点权重路径} --save_directory {量化权重路径} --w_bit 4 --device_type npu --anti_method m3 --act_method 1 --model_type llama3.1_instruct --is_lowbit True --mm_tensor False --open_outlier False --group_size 32 --is_dynamic True --anti_calib_file ../common/llama_anti_prompt.json --trust_remote_code True
   ```
-
-
-
