@@ -321,8 +321,7 @@ quant_config = QuantConfig(
 #使用Calibrator接口，输入加载的原模型、量化配置和校准数据，定义校准
 calibrator = Calibrator(model, quant_config, calib_data=dataset_calib, disable_level='L0')  
 calibrator.run()     #使用run()执行量化
-calibrator.save('./quant_weight', save_type=['numpy', 'safe_tensor'])   #使用save()保存模型量化参数，请根据实际情况修改路径
-及保存的格式
+calibrator.save('./quant_weight', save_type=['numpy', 'safe_tensor'])   #使用save()保存模型量化参数，请根据实际情况修改路径及保存的格式
 print('Save quant weight success!')
 ```
 
