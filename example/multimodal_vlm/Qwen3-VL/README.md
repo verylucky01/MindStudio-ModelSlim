@@ -73,7 +73,7 @@ Atlas 300I DUO 使用以下方法稀疏量化
   torchrun --nproc_per_node {TP数} -m examples.convert.model_slim.sparse_compressor --model_path {W8A8S量化权重路径} --save_directory {W8A8SC量化权重路径}
   ```
 
-#### 量化参数说明
+###### 量化参数说明
 
 | 参数名 | 含义 | 默认值 | 使用方法 |
 | ------ | ---- | --- | -------- |
