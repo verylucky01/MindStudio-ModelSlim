@@ -111,7 +111,7 @@ msmodelslim quant \
 ### 相关资源
 
 - [multimodal_vlm_modelslim_v1 配置详解](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#multimodal_vlm_modelslim_v1-配置详解)
-- [一键量化配置协议说明](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md)
+- [一键量化配置协议说明](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#量化配置协议详解)
 - [逐层量化特性说明](../../../docs/zh/feature_guide/quick_quantization_v1/usage.md#逐层量化及分布式逐层量化)
 - [QuaRot 算法说明](../../../docs/zh/quantization_algorithms/outlier_suppression_algorithms/quarot.md)
 - [Iterative Smooth 算法说明](../../../docs/zh/quantization_algorithms/outlier_suppression_algorithms/iterative_smooth.md)
