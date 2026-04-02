@@ -79,7 +79,9 @@ dump_data_path = os.path.join(DUMP_CALIB_FOLDER, get_rank_suffix_file(base_name=
                                                                       is_distributed=is_distributed, rank=rank))
 
 ############################ 加载模型 ############################
-def load_t2v_checkpoint():
+model_path = './model' #模型路径
+
+def load_t2v_checkpoint(model_path):
     pass
 
 
@@ -88,6 +90,10 @@ pipeline = load_t2v_checkpoint(model_path)  # 加载模型
 model = pipeline.transformer
 
 ############################ dump 校准数据 ############################
+def run_model_and_save_images(pipeline, ...):
+    # 原始模型推理过程
+    pass
+
 if not os.path.exists(dump_data_path):  # 检查校准数据是否已存在，不存在则dump
     # 添加forward hook用于dump model的forward输入
     dumper_manager = DumperManager(model, capture_mode='args')
