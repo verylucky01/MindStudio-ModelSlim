@@ -16,13 +16,13 @@
 Flex AWQ SSZ算法使用以下公式计算平滑缩放因子：
 
 ```text
-scales = (A_scale**alpha / W_scale**beta).clamp(min=1e-5)
+scales = (Act_Mean_Abs**alpha / Weight_Max_Abs**beta).clamp(min=1e-5)
 ```
 
 其中：
 
-- `A_scale`：激活值的缩放因子（使用均值计算：`mean(abs(act))`）。
-- `W_scale`：权重的缩放因子（取每列的最大值）。
+- `Act_Mean_Abs`：激活值的均值绝对值（使用均值计算：`mean(abs(act))`）。
+- `Weight_Max_Abs`：权重的最大绝对值（取每列的最大值）。
 - `alpha`：激活缩放的系数，控制激活对缩放因子的影响程度（0-1之间），可通过自动搜索或手动配置。
 - `beta`：权重缩放的系数，固定为0。
 
@@ -33,12 +33,12 @@ scales = (A_scale**alpha / W_scale**beta).clamp(min=1e-5)
 3. **Beta固定为0**：算法固定beta为0，简化参数搜索空间，专注于alpha参数的优化。
 4. **自动参数搜索**：如果未提供alpha参数，算法会在[0.0, 1.0]范围内以0.05为步长搜索最优alpha，选择使量化误差（MSE）最小的参数。
 
-**Alpha参数搜索流程**
+**Alpha参数搜索流程：**
 
 1. **初始化**：创建FlexAWQSSZAlphaBetaSearcher，使用配置的qconfig。
 2. **网格搜索**：在[0.0, 1.0]范围内以0.05为步长遍历alpha值。
 3. **量化误差评估**：对每个alpha值：
-   - 计算缩放因子：`scale = max(abs(act)) ** alpha`
+   - 计算缩放因子：`scale = max(abs(Act_Mean_Abs)) ** alpha`
    - 应用缩放：`scaled_act = act / scale`，`scaled_weight = weight * scale`
    - 创建实际量化器（LinearQuantizer）并部署
    - 计算量化结果与浮点结果的归一化MSE误差
@@ -48,7 +48,7 @@ scales = (A_scale**alpha / W_scale**beta).clamp(min=1e-5)
 
 Flex AWQ SSZ算法支持与Flex Smooth Quant相同的四种标准子图类型：
 
-#### 1. NormLinearSubgraph（归一化-线性子图）
+#### NormLinearSubgraph（归一化-线性子图）
 
 适用于包含归一化层和多个线性层的结构，如：
 
@@ -64,7 +64,7 @@ y = torch.cat([linear(x) for linear in linears], dim=-1)
 - 对每个线性层应用正向缩放。
 - 对归一化层应用反向缩放（1/scales）。
 
-#### 2. LinearLinearSubgraph（线性-线性子图）
+#### LinearLinearSubgraph（线性-线性子图）
 
 适用于两个连续线性层的结构：
 
@@ -79,7 +79,7 @@ y = linear2(linear1(x))
 - 对linear2应用正向缩放。
 - 对linear1应用反向缩放（1/scales）。
 
-#### 3. OVSubgraph（注意力输出-值子图）
+#### OVSubgraph（注意力输出-值子图）
 
 适用于注意力机制中的输出投影和值投影：
 
@@ -94,7 +94,7 @@ y = linear2(linear1(x))
 - 对o_proj应用正向缩放。
 - 对v_proj应用反向缩放（1/scales）。
 
-#### 4. UpDownSubgraph（上投影-下投影子图）
+#### UpDownSubgraph（上投影-下投影子图）
 
 适用于MLP门控机制：
 
@@ -111,9 +111,15 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 ### 实现
 
-算法在 `msmodelslim/processor/anti_outlier/flex_smooth/processor.py` 中实现，处理流程分两阶段：
+Flex AWQ SSZ算法核心：
 
-#### 1) 预处理阶段（preprocess）
+- 使用激活值的均值（mean）计算激活缩放因子：`Act_Mean_Abs = mean(abs(act))`。
+- 使用实际量化器（LinearQuantizer）评估不同alpha参数下的量化误差。
+- 自动搜索或使用配置的alpha参数，beta固定为0。
+
+算法在 [msmodelslim/processor/anti_outlier/flex_smooth/processor.py](../../../../msmodelslim/processor/anti_outlier/flex_smooth/processor.py) 中实现，处理流程分两阶段：
+
+#### 预处理阶段（preprocess）
 
 **子图发现与构建：**
 
@@ -127,7 +133,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
   - **激活张量数据**：收集完整的激活张量，用于后续平滑计算。
   - **使用第一个linear的激活统计信息**：Flex AWQ SSZ使用子图targets中第一个线性层的激活统计信息。
 
-#### 2) 后处理阶段（postprocess）
+#### 后处理阶段（postprocess）
 
 **按优先级处理子图：**
 
@@ -140,12 +146,6 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - **Linear-Linear子图**：对两个线性层应用平滑，调整权重和偏置。
 - **OV子图**：处理注意力机制中的输出投影（Output projection）和值投影（Value projection）之间的连接关系，支持QKV融合模式。
 - **Up-Down子图**：处理MLP门控机制，对上下投影层应用平滑。
-
-**Flex AWQ SSZ算法核心：**
-
-- 使用激活值的均值（mean）计算激活缩放因子：`act_scales = mean(abs(act))`。
-- 使用实际量化器（LinearQuantizer）评估不同alpha参数下的量化误差。
-- 自动搜索或使用配置的alpha参数，beta固定为0。
 
 **资源清理：**
 
@@ -226,16 +226,40 @@ spec:
 
 ### YAML配置字段详解
 
+**整体字段说明：**
+
 | 字段名 | 作用 | 说明 |
 |--------|------|------|
-| type | 处理器类型标识 | 固定值"flex_awq_ssz"，用于标识这是一个灵活激活感知权重量化平滑处理器。 |
-| alpha | 激活缩放权重系数 | 0-1之间的浮点数，控制激活对缩放因子的影响程度，默认None（自动搜索）。 |
-| qconfig | 量化配置 | 必填参数，包含激活值（act）和权重（weight）的量化配置，用于实际量化器评估。 |
-| qconfig.act | 激活值量化配置 | 包含scope、dtype、symmetric、method等字段，指定激活值的量化方式。 |
-| qconfig.weight | 权重量化配置 | 包含scope、dtype、symmetric、method、ext等字段，指定权重的量化方式，通常使用SSZ方法。 |
-| enable_subgraph_type | 开启的子图类型 | 支持的子图类型列表，包括"norm-linear"、"linear-linear"、"ov"、"up-down" 。|
-| include | 包含的层 | 支持通配符匹配。 |
-| exclude | 排除的层 | 支持通配符匹配。 |
+| `type` | 处理器类型标识 | 固定为 `"flex_awq_ssz"`，用于标识这是一个灵活激活感知权重量化平滑处理器。 |
+| `alpha` | 激活缩放权重系数 | 取值范围为 \[0, 1\] 的浮点数，控制激活对缩放因子的影响程度，默认值为 `None`（自动搜索）。 |
+| `qconfig` | 量化配置 | 必填参数，包含激活值（`act`）和权重（`weight`）的量化配置，用于实际量化器评估。 |
+| `qconfig.act` | 激活值量化配置 | 包含 `scope`、`dtype`、`symmetric`、`method` 等字段，指定激活值的量化方式。 |
+| `qconfig.weight` | 权重量化配置 | 包含 `scope`、`dtype`、`symmetric`、`method`等字段，指定权重的量化方式，通常结合 SSZ 方法使用。 |
+| `enable_subgraph_type` | 开启的子图类型 | 支持的子图类型列表，包括 `"norm-linear"`、`"linear-linear"`、`"ov"`、`"up-down"`。|
+| `include` | 包含的层 | 通过通配符匹配需要参与处理的模块名。 |
+| `exclude` | 排除的层 | 通过通配符匹配需要从处理流程中排除的模块名。 |
+
+#### `qconfig.act`（激活值量化配置）
+
+**作用**：配置激活值的量化参数。
+
+| 参数名 | 作用 | 可选值                                       | 说明                                                                                                               | 默认值 |
+|--------|------|-------------------------------------------|------------------------------------------------------------------------------------------------------------------|--------|
+| `scope` | 量化范围 | `"per_tensor"`，`"per_token"`，`"pd_mix"` | `per_tensor`：整个张量使用相同参数<br/>`per_token`：每个 token 独立参数（动态量化）<br/>`pd_mix`：prefilling 时 `per_token`，decoding 时 `per_tensor` | `"per_tensor"` |
+| `dtype` | 量化数据类型 | `"int8"`，`"int4"`                        | 8 位 / 4 位整数量化                                                                                                  | `"int8"` |
+| `symmetric` | 是否对称量化 | `true`，`false`                           | `true`：对称量化，零点为 0<br/>`false`：非对称量化，零点可调整                                                                | `false` |
+| `method` | 量化方法 | `"minmax"`，`"histogram"`                 | `minmax`：最小最大值量化<br/>`histogram`：直方图量化                                                                   | `"minmax"` |
+
+#### `qconfig.weight`（权重量化配置）
+
+**作用**：配置权重的量化参数。
+
+| 参数名 | 作用 | 可选值 | 说明 | 默认值 |
+|--------|------|--------|------|--------|
+| `scope` | 量化范围 | `"per_tensor"`，`"per_channel"` | `per_tensor`：整个张量使用相同参数<br/>`per_channel`：每个通道独立参数 | `"per_channel"` |
+| `dtype` | 量化数据类型 | `"int8"`，`"int4"` | 8 位 / 4 位整数量化 | `"int8"` |
+| `symmetric` | 是否对称量化 | `true`，`false` | `true`：对称量化，零点为 0<br/>`false`：非对称量化，零点可调整 | `true` |
+| `method` | 量化方法 | `"minmax"`，`"ssz"`，`"gptq"` | `minmax`：最小最大值量化<br/>`ssz`：SSZ 权重量化<br/>`gptq`：GPTQ 权重量化 | `"minmax"` |
 
 ## 模型适配
 
@@ -305,7 +329,7 @@ class FlexSmoothQuantInterface(ABC):
    - **Linear-Linear子图**：连续线性层的映射
 3. **指定模块路径**：使用完整的模块路径，如 `model.layers.{i}.self_attn.q_proj`。
 
-**参考实现：** 可参考 `msmodelslim/model/qwen3/model_adapter.py` 中的 `Qwen3ModelAdapter` 实现。
+**参考实现：** 可参考 [msmodelslim/model/qwen3/model_adapter.py](../../../../msmodelslim/model/qwen3/model_adapter.py) 中的 `Qwen3ModelAdapter` 实现。
 
 ### 配置示例
 
@@ -365,32 +389,32 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 
 ## FAQ
 
-### 1. 模块名不匹配
+### 模块名不匹配
 
 **现象**: `include/exclude` 未命中时，日志提示未匹配模式。  
 **解决方案**: 核对完整模块名是否与 `named_modules()` 返回的路径一致。  
 
-### 2. 子图配置错误
+### 子图配置错误
 
 **现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。  
 **解决方案**: 检查配置中的 `source` 和 `targets` 字段是否正确。   
 
-### 3. 模块不存在
+### 模块不存在
 
 **现象**: 配置中指定的模块名称在模型中不存在。  
 **解决方案**: 通过 `model.named_modules()` 验证模块是否确实存在。
 
-### 4. 子图类型不支持
+### 子图类型不支持
 
 **现象**: 配置的子图类型不被支持。  
-**解决方案**: 确保配置的子图类型在 `ENABLE_SUBGRAPH_TYPES` 列表中。
+**解决方案**: 确保配置的子图类型在支持列表中，当前支持 `norm-linear`、`linear-linear`、`ov`、`up-down`四种子图类型。
 
-### 5. qconfig配置缺失
+### qconfig配置缺失
 
 **现象**: 报错提示qconfig为必填参数。  
 **解决方案**: 在YAML配置中添加qconfig字段，包含act和weight的量化配置。
 
-### 6. 映射关系错误
+### 映射关系错误
 
 **现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。  
 **解决方案**: 检查 `MappingConfig` 中的 `source` 和 `targets` 是否指向正确的模块。
