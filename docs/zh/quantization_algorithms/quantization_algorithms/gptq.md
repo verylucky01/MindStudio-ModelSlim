@@ -3,7 +3,7 @@
 ## 简介
 
 - **问题**：传统量化方法（如MinMax）在权重分布不均匀时，量化误差较大，影响模型精度。
-- **目标**：通过逐列优化方式，将量化误差在后续未权重中进行补偿，进而达到最小化量化误差，提升量化模型的精度。
+- **目标**：通过逐列优化方式，将当前列的量化误差在后续未量化列的权重中进行补偿，进而达到最小化整体量化误差，提升量化模型的精度。
 
 ## 使用前准备
 
@@ -81,6 +81,8 @@ spec:
 
 ### YAML配置字段详解
 
+#### qconfig.weight (权重量化配置)
+
 | 参数名       | 作用     | 可选值                            | 说明                                            | 默认值                         |
 |-----------|--------|--------------------------------|-----------------------------------------------|-----------------------------|
 | scope     | 量化范围   | `"per_channel"`, `"per_group"` | per_channel: 每个通道独立参数<br/>per_group: 每个分组独立参数 | `"per_channel"`             |
@@ -93,45 +95,15 @@ spec:
 
 **作用**: 配置GPTQ算法特有的参数。
 
-| 参数名        | 作用     | 类型      | 说明                                           | 示例值       |
-|------------|--------|---------|----------------------------------------------|-----------|
-| percdamp   | 阻尼系数   | `float` | percdamp 用于平滑梯度更新，减少量化引入的噪声对训练的影响            | 默认值`0.01` |
-| block_size | 迭代分块大小 | `int`   | 分组量化的大小，必须能被待量化nn.Linear层的out_features维度整除   | 默认值`128`  |
-| group_size | 量化分组大小 | `int`   | 分组量化的大小，必须能被待量化nn.Linear层的input_features维度整除 | 默认值`128`  |
-
-## 模型适配
-
-### 接口与数据结构
-
-```python
-# GPTQ量化器类
-class WeightPerChannelGPTQ(AutoWeightQuantizer):
-    def __init__(self, config: QConfig): ...
-
-    def forward(self, x: Optional[torch.Tensor] = None) -> torch.Tensor: ...
-
-    def init_weight(self, weight: QStorage, bias: Optional[torch.Tensor] = None) -> None: ...
-
-    def get_q_storage(self) -> QStorage: ...
-
-    def get_q_param(self) -> QParam: ...
-```
-
-### 适配步骤
-
-- **前置要求**：
-    - 权重必须为2D张量（如线性层的权重）。
-    - 需要提供正确的量化配置（dtype、scope、method、symmetric）。
-- **步骤**：
-    1. 创建GPTQ量化配置：指定量化数据类型、范围、方法和对称性。
-    2. 创建量化器实例：使用配置初始化WeightPerChannelGPTQ。
-    3. 初始化权重：调用init_weight方法设置待量化的权重。
-    4. 计算海森矩阵：调用forward方法收集激活值信息，计算hessian矩阵。
-    5. 量化结果：通过get_q_storage和get_q_param触发权重量化，返回量化权重和量化参数。
+| 参数名        | 作用     | 类型      | 说明                                          | 示例值       |
+|------------|--------|---------|---------------------------------------------|-----------|
+| percdamp   | 阻尼系数   | `float` | percdamp 用于平滑梯度更新，减少量化引入的噪声对训练的影响           | 默认值`0.01` |
+| block_size | 迭代分块大小 | `int`   | 迭代分块大小，必须能被待量化nn.Linear层的out_features维度整除   | 默认值`128`  |
+| group_size | 量化分组大小 | `int`   | 量化分组大小，必须能被待量化nn.Linear层的input_features维度整除 | 默认值`128`  |
 
 ## FAQ
 
-### 1. GPTQ算法中percdamp、block_size和group_size三个超参数的含义和用途是什么？
+### GPTQ算法中percdamp、block_size和group_size三个超参数的含义和用途是什么？
 
 - **percdamp**：
   - **含义**：阻尼百分比（damping percentage），用于在逆 Hessian 矩阵计算中加入一个小的对角阻尼，防止数值不稳定。
