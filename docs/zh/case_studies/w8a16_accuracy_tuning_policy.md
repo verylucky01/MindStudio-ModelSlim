@@ -157,10 +157,10 @@ for idx, item in enumerate(res):
 
 在调用Calibrator.run()方法后，构建Calibrator时传入的model会被替换为伪量化模型，可以直接调用进行前向推理，用来测试对话效果，如果伪量化结果不理想，可以参考以下的方法进行调优。
 
-
 ## W8A16量化模型的精度调优步骤
 
 ### 1 调整离群值抑制
+
  msModelSlim工具使用AntiOutlierConfig生成离群值抑制配置，以使用离群值抑制功能。原理：通过抑制量化过程当中的异常值，从而提高量化模型的精度。W8A16量化建议使用m3，m3为AWQ算法，也是仅权重量化算法，可以理解为抑制权重中出现的异常值，但逻辑和激活值异常抑制算法是一样的。设置方式为：
 
 ```python
@@ -168,10 +168,11 @@ anti_config = AntiOutlierConfig(anti_method="m3", dev_type="npu", dev_id=device_
 anti_outlier = AntiOutlier(model, calib_data=dataset_calib, cfg=anti_config)
 anti_outlier.process()
 ```
+
 补充：其中anti_method有六种算法，m3是用于权重量化的，另外五种是用于激活值量化的场景，如果是激活值精度调优建议从m1到m6逐一尝试。
 
-
 ### 2 量化参数选择
+
 ```python
 quant_config = QuantConfig(
     a_bit=16,
@@ -184,6 +185,7 @@ quant_config = QuantConfig(
     mm_tensor=False
 )
 ```
+
 W8A16场景下，大部分模型采用最简单的MinMax算法精度就能控制在0.5%以内的精度损失。调优过程：MinMax->HQQ->GPTQ(耗时长，非必要情况不推荐)。
 MinMax算法就是把简单的浮点数直接映射到int8的数据范围。
 HQQ是一种无需训练数据，就能快速量化大型模型，且压缩质量与基于训练的方法相当的算法。
@@ -191,8 +193,8 @@ GPTQ是一种针对大规模预训练模型的高效后量化算法。
 权重量化通常选择对称量化(w_sym=True)和per-channel量化(mm_tensor=False)。
 增加回退层（建议最后进行调整），可以按照一定的经验，通过disable_names手动设置。
 
-
 ### 3 校准集调整
+
 1.当算法层面无法提升精度时，可以增大校准数据集(10~50条)。  
 正常情况下，可以增加数据得到精度提升，但是到一定数据后，提高数据对精度影响有限。有些场景下，减少数据反而得到精度提升, 例如长数据场景。
 2.针对特定场景切换成应用场景的数据作为校准集。  
@@ -215,9 +217,11 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
         calib_dataset.append([inputs.data['input_ids'].to(device), inputs.data['attention_mask'].to(device)])       
     return calib_dataset
 ```
+
 注： [Precision Tool 使用方法说明及数据集下载链接](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#精度定位方法)  
 
 ### 4 量化回退
+
 量化回退的原因：某些网络层对于量化比较敏感，量化后会带来较大的精度损失，这些层是不太适合量化的，应该使用浮点数进行计算，这个过程称之为回退（回退的都是线性层），可以通过设置disable_names控制哪些层应该被回退。
 为什么回退的都是线性层：大模型中的线性层层数多、权重数量庞大且存在矩阵相乘（计算量大），通过量化线性层的权重和激活值，可以达到降低模型大小，减少计算量，降低内存占用，提升推理速度。  
 怎么判定敏感：终端的日志中会显示每一层算子激活量化输入的range_parm数值，range_parm数值越大越敏感。  
@@ -264,9 +268,11 @@ disable_names=[
 ]
 
 ```
+
 ### 5 KV Cache int8量化
 
-可在QuantConfig后调用kv_quant函数来开启KV Cache int8量化。  
+可在QuantConfig后调用kv_quant函数来开启KV Cache int8量化。 
+
 ```python
 quant_config = QuantConfig(
     a_bit=16,
@@ -277,13 +283,7 @@ quant_config = QuantConfig(
 ).kv_quant()
 
 ```
+
 长序列场景下KV Cache占用显存空间较大，通过KV Cache量化可以节约显存占用，增加并发数。  
 调用kv_quant函数会自动将QuantConfig中use_kvcache_quant设置为True。  
 use_kvcache_quant=True启用KV Cache量化，支持与W8A8、W8A16和稀疏量化同时使用。
-
-
-
-
-
-
-

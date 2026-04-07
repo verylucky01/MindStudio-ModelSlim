@@ -1,14 +1,17 @@
-## AntiOutlierConfig
+# AntiOutlierConfig
 
-### 功能说明
+## 功能说明
+
 构建用于异常值抑制的config。
 
-### 函数原型
+## 函数原型
+
 ```python
 AntiOutlierConfig(w_bit=8, a_bit=8, anti_method="m2", dev_type="cpu", dev_id=None, w_sym=True)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | w_bit | 输入 | 权重量化bit。| 可选。<br>数据类型：int。<br>默认为8，不支持修改。 |
@@ -20,8 +23,10 @@ AntiOutlierConfig(w_bit=8, a_bit=8, anti_method="m2", dev_type="cpu", dev_id=Non
 | dev_id | 输入 | Device ID。| 可选。<br>数据类型：int。<br>默认值为None。<br>仅在“dev_type”配置为“npu”时生效。“dev_id”指定的Device ID优先级高于环境变量配置的Device ID。 |
 | w_sym | 输入 | 权重是否对称量化。| 可选。<br>数据类型：bool。<br>默认为True。<br>anti_method设置为m3时，可以选择为False，需与QuantConfig中的w_sym参数设置一致。 |
 
-### 调用示例
+## 调用示例
+
 根据实际需求，在QuantConfig初始化中完成所有参数的配置。
+
 ```python
 from msmodelslim.pytorch.llm_ptq.llm_ptq_tools import Calibrator
 from msmodelslim.pytorch.llm_ptq.anti_outlier import AntiOutlier, AntiOutlierConfig
@@ -34,6 +39,7 @@ calibrator.save(quant_weight_save_path)
 ```
 
 anti_method=m6时调用示例：
+
 ```python
 from msmodelslim.pytorch.llm_ptq.llm_ptq_tools import Calibrator
 from msmodelslim.pytorch.llm_ptq.anti_outlier import AntiOutlier, AntiOutlierConfig

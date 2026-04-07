@@ -1,14 +1,17 @@
-## QuantConfig
+# QuantConfig
 
-### 功能说明
+## 功能说明
+
 量化参数配置类，保存量化过程中配置的参数。
 
-### 函数原型
+## 函数原型
+
 ```python
 QuantConfig(a_bit=8, w_bit=8, disable_names=None, dev_type='cpu', dev_id=None, act_method=1, pr=1.0, w_sym=True, mm_tensor=True, w_method='MinMax', co_sparse=False, fraction=0.01, nonuniform=False, is_lowbit =False, do_smooth=False, use_sigma=False, sigma_factor=3, disable_last_linear: bool=True, use_kvcache_quant=False, is_dynamic=False, open_outlier=True, group_size=64, percdamp=0.01, pdmix=False)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | a_bit | 输入 | 激活值量化bit。| 可选。<br>数据类型：int。<br>可选值为4，8和16，默认为8。<br>大模型量化场景下，可配置为4，8或16。per-group的场景下需配置为8或16（a_bit=8 当前仅在 w4a8 量化中使用）。is_dynamic参数配置为True，使用per-token动态量化场景下，需配置为4或8。<br>大模型稀疏量化场景下，需配置为8。 <br>w4a4场景仅支持per-token动态量化，仅支持配置is_dynamic为True，其他参数不适用，该场景目前仅支持Qwen3系列稠密模型，并且不建议使用异常值抑制功能。|
@@ -36,15 +39,19 @@ QuantConfig(a_bit=8, w_bit=8, disable_names=None, dev_type='cpu', dev_id=None, a
 | percdamp | 输入 | GPTQ算法的矩阵正定偏置系数，用于保障计算过程的稳定性。当GPTQ运行出现非正定矩阵导致的报错时，可以适当增大该参数。|可选。<br>数据类型：float。<br>取值范围为[0,1]，默认值为0.01。<br>说明：仅适用于w_method为GPTQ算法的情况。|
 | pdmix | 输入 | 是否同时提供动态量化参数和静态量化参数。|可选。<br>数据类型：bool。<br>默认为False。<br>True：同时生成动态量化参数和静态量化参数。False：仅生成单一类型的量化参数。<br>说明：设置为True时，会同时提供动态量化参数和静态量化参数，便于在推理时根据实际需求选择使用哪种参数类型。设置is_dynamic=True时，不支持此功能。|
 
-### 调用示例一
+## 调用示例一
+
 根据实际需求，在QuantConfig初始化中完成所有参数的配置。
+
 ```python
 from msmodelslim.pytorch.llm_ptq.llm_ptq_tools import Calibrator, QuantConfig
 quant_config = QuantConfig(pr=1.0, mm_tensor=False)
 ```
 
-### 调用示例二
+## 调用示例二
+
 在QuantConfig初始化中完成核心参数（w_bit，a_bit，disable_names，disable_last_linear，dev_type，dev_id）的配置后，再根据不同量化场景，配置表中的参数。目前支持的量化场景有稀疏量化、权重量化、kvcache量化、权重激活量化和模拟多卡量化，具体参数配置情况和调用示例请参考下表。
+
 | 量化类型 | 需配置参数列表 | 调用示例 |
 | --- | --- | --- |
 | weight_quant<br>权重量化的参数初始化，即 w8a16。<br>说明：使用多模态模型时，会自动将conv层回退，不进行量化处理。| w_method，mm_tensor，w_sym，group_size  | quant_config = QuantConfig(w_bit=8,disable_names=disable_names,dev_type='npu',dev_id=0).weight_quant (w_sym=False) |

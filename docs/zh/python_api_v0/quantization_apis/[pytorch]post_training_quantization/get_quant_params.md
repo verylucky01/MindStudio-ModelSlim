@@ -1,14 +1,17 @@
-## get_quant_params
+# get_quant_params
 
-### 功能说明 
+## 功能说明
+
 用于获取Conv2dQuantizer, LinearQuantizer的输入和权重的量化参数，该量化参数用于后续推理。包括量化输入尺度 (input_scale)、量化输入偏移量(input_offset)、量化权重尺度(weight_scale)、量化权重偏移量(weight_offset) 以及量化权重 (quant_weight)。最后，将这些参数以字典的形式返回。
 
-### 函数原型
+## 函数原型
+
 ```python
 get_quant_params()
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | input_scale | 返回值 | 输入量化尺度。| 数据类型：dict。 |
@@ -17,8 +20,8 @@ get_quant_params()
 | weight_offset | 返回值 | 量化权重偏移量。| 数据类型：dict。 |
 | quant_weight | 返回值 | 量化权重。| 数据类型：dict。 |
 
+## 调用示例
 
-### 调用示例
 ```python
 from msmodelslim.pytorch.quant.ptq_tools import QuantConfig, Calibrator
 disable_names = []

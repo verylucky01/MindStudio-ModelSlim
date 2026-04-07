@@ -764,6 +764,6 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,
 - [模型接入指南](integrating_models.md)：大模型基础接入指导
 - [Qwen2.5-Omni模型适配器](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen2_5_omni_thinker/model_adapter.py)：端到端多模态（文本/图像/音频/视频）适配示例
 - [Qwen3-VL-MoE模型适配器](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)：完整实现示例
-- [VLM数据集加载器](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/vlm_dataset_loader.py)与[dataset_loader](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/)：校准数据加载处理
+- [VLM数据集加载器](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)与[dataset_loader](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/)：校准数据加载处理
 - [多模态VLM量化服务](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/core/quant_service/multimodal_vlm_v1)：服务层实现
 - [一键量化使用说明](../feature_guide/quick_quantization_v1/usage.md)：命令行参数详解

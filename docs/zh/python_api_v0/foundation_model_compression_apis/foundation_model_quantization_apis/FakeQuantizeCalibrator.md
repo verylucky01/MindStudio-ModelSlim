@@ -1,14 +1,17 @@
-## FakeQuantizeCalibrator
+# FakeQuantizeCalibrator
 
-### 功能说明
+## 功能说明
+
 基于量化权重将浮点模型转换为伪量化模型。
 
-### 函数原型
+## 函数原型
+
 ```python
 FakeQuantizeCalibrator(model, dev_id, dev_type, description, safetensor)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | model | 输入 | 模型。| 必选。<br>数据类型：nn.Module。 |
@@ -17,8 +20,10 @@ FakeQuantizeCalibrator(model, dev_id, dev_type, description, safetensor)
 | description | 输入 | 量化后生成的json描述文件。| 必选。<br>数据类型：dict。 |
 | safetensor | 输入 | 量化后生成的safetensors格式的权重文件。| 必选。<br>数据类型：dict。 |
 
-### 调用示例
+## 调用示例
+
 根据实际需求，在QuantConfig初始化中完成所有参数的配置。
+
 ```python
 import torch
 import json

@@ -1,15 +1,19 @@
-## process()
+# process()
 
-### 功能说明
+## 功能说明
+
 使用校准集，执行异常值抑制过程，修改模型中的权重，提升后续模型量化精度，无传入值。
 
-### 函数原型
+## 函数原型
+
 ```python
 process()
 ```
 
-### 调用示例
+## 调用示例
+
 根据实际需求，在AntiOutlierConfig初始化中完成所有参数的配置。
+
 ```python
 from msmodelslim.pytorch.llm_ptq.anti_outlier import AntiOutlierConfig
 from msmodelslim.pytorch.mindspeed_adapter import ModelAdapter, AntiOutlierAdapter, CalibratorAdapter

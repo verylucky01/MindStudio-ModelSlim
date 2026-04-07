@@ -1,14 +1,17 @@
-## QatConfig
+# QatConfig
 
-### 功能说明 
+## 功能说明
+
 量化参数配置类，保存量化过程中配置的参数。
 
-### 函数原型
+## 函数原型
+
 ```python
 QatConfig(w_bit=8, a_bit=8, a_sym=False, amp_num=0, steps=1, ema=0.99, is_forward=False, ignore_head_tail_node=False, disable_names=None, has_init_quant=False, quant_mode=True, grad_scale=0.0, compressed_model_checkpoint=None, opset_version=11, save_params=False, input_names=None, output_names=None, save_onnx_name=None)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名     | 输入/返回值 | 含义                                                       | 使用限制                                            |
 |---------| ------ |----------------------------------------------------------|-------------------------------------------------|
 | w_bit   | 输入 | 权重量化bit。                                                 | 可选。<br> 数据类型：int。<br>默认为8，不支持修改。                |
@@ -30,8 +33,8 @@ QatConfig(w_bit=8, a_bit=8, a_sym=False, amp_num=0, steps=1, ema=0.99, is_forwar
 |output_names|输入|ONNX的输出名称。| 可选。<br>数据类型：list[str]<br>默认为None。               |
 |save_onnx_name|输入|伪量化模型权重。| 可选。<br>数据类型：str。<br>默认为None。                    |
 
+## 调用示例
 
-### 调用示例
 ```python
 from msmodelslim.pytorch.quant.qat_tools import QatConfig
 quant_config = QatConfig(grad_scale=0.001)

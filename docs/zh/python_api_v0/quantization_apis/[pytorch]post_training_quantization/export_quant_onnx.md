@@ -1,14 +1,17 @@
-## export_quant_onnx
+# export_quant_onnx
 
-### 功能说明
+## 功能说明
+
 量化参数配置类，通过calibrator类封装量化算法来保存量化后的onnx模型。
 
-### 函数原型
+## 函数原型
+
 ```python
 export_quant_onnx(model_arch, save_path, input_names=None, fuse_add=True, save_fp=False)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 |model_arch|输入|模型结构名称。|必选。<br>数据类型：String。 |
@@ -17,7 +20,8 @@ export_quant_onnx(model_arch, save_path, input_names=None, fuse_add=True, save_f
 |fuse_add|输入|导出的量化模型是否融合量化bias。|可选。<br>数据类型：bool。<br>默认为True。 |
 |save_fp|输入|是否保留量化前onnx模型。|可选。<br>数据类型：bool。<br>默认为False。 |
 
-### 调用示例
+## 调用示例
+
 ```python
 from msmodelslim.pytorch.quant.ptq_tools import QuantConfig, Calibrator
 disable_names = []
