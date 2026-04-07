@@ -1,14 +1,17 @@
-## QuantConfig
+# QuantConfig
 
-### 功能说明
+## 功能说明
+
 量化参数配置类，保存量化过程中配置的参数。
 
-### 函数原型
+## 函数原型
+
 ```python
 QuantConfig(quant_mode=1, is_signed_quant=True, is_per_channel=True, calib_data=None, calib_method=0, quantize_nodes=None, exclude_nodes=None, amp_num=0, is_optimize_graph=True, is_quant_depthwise_conv=True, input_shape=None, is_dynamic_shape=False)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | quant_mode | 输入 | 量化模式。| 可选。<br>数据类型：int。<br>可选值[0, 1]，默认值为1。<br>1表示Label-Free量化。0表示Data-Free量化。|
@@ -24,8 +27,8 @@ QuantConfig(quant_mode=1, is_signed_quant=True, is_per_channel=True, calib_data=
 | input_shape | 输入 | 当输入模型支持动态shape时，用户需指定input_shape参数，用以生成量化时的校准数据。|可选，当模型支持动态shape时必须指定。<br>数据类型：list [list]。<br>默认值：[]。<br>当模型有多个输入时，按照顺序指定input_shape，例如：\[[1, 3,224, 224], [1, 3, 640, 640]]。|
 | is_dynamic_shape | 输入 | 指定输入的模型是否支持动态shape。|可选。输入模型支持动态shape时，另一配置参数input_shape也必须指定。<br>数据类型：bool。<br>默认为False。<br>True：输入的模型支持动态shape。False：输入的模型为静态shape。|
 
+## 调用示例
 
-### 调用示例
 ```python
 from msmodelslim.onnx.post_training_quant import QuantConfig
 def custom_read_data():

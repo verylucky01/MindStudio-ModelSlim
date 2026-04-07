@@ -62,7 +62,7 @@ structure_configs:
       - "*mlp*"
 ```
 
-##  使用示例
+## 使用示例
 
 对应于自动调优配置文件中的 `strategy` 字段
 

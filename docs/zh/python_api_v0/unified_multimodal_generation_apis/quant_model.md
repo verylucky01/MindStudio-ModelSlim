@@ -1,20 +1,23 @@
-## quant_model()
+# quant_model()
 
-### 功能说明
+## 功能说明
+
 在多模态生成模型量化中，需要调用统一的量化接口进行量化，此函数用于根据量化会话配置调用量化核心逻辑完成量化。
 
-### 函数原型
+## 函数原型
+
 ```python
 quant_model(model: nn.Module, session_cfg: SessionConfig)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名 | 输入/返回值 | 含义 | 使用限制 |
 | ------ | ---------- | ---- | -------- |
 | model | 输入 | 多模态生成模型需要量化的部分。 | 必选。<br>数据类型：nn.Module，当前仅支持对多模态生成模型的transformer部分进行量化，加载完整pipeline后，选择pipeline.transformer作为model。|
 | session_cfg | 输入 | 量化会话配置类，用于配置量化相关的参数、校准数据以及运行设备。| 必选。<br>数据类型：SessionConfig。|
 
-### 调用示例
+## 调用示例
 
 ```python
 import torch

@@ -87,22 +87,27 @@ class FakeQuantDynamicCache(AutoFakeQuantDynamicCache):
   - **DynamicCache**：Transformers 标准动态缓存，完全支持。
   - **自定义Cache**：自定义模型内部需要实现 `update(key_states, value_states, layer_idx)` 接口，要求如下：
   1. **接口要求**：
-   ```python
-   class CustomCache:
-       def update(self, key_states: torch.Tensor, value_states: torch.Tensor, 
-                  layer_idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-           # 返回更新后的 key_states 和 value_states
-           pass
-   ```
+
+      ```python
+      class CustomCache:
+          def update(self, key_states: torch.Tensor, value_states: torch.Tensor, 
+                      layer_idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+              # 返回更新后的 key_states 和 value_states
+              pass
+      ```
+
   2. **钩子注册**：
+
      - 缓存对象必须作为参数传递给注意力模块的 `forward` 方法。
      - 系统会自动检测 `cache.update` 调用并注册量化钩子。
 
   3. **参数传递**：
+
      - 注意力模块需要通过 `layer_idx` 参数指示当前层索引。
      - 支持嵌套调用和递归量化。
   
 ## 功能介绍
+
 ### 使用说明
 
 作为 Processor 使用
@@ -149,6 +154,7 @@ spec:
 | exclude | 排除的注意力层 | array[string] | [] | 支持通配符匹配，优先级高于include。 |
 
 ## 已验证模型列表
+
 - Qwen2.5系列
 - Qwen3系列
 
@@ -156,12 +162,12 @@ spec:
 
 1. 缓存未被量化
 
-问题现象：缓存未被量化。
+    问题现象：缓存未被量化。
 
-解决方案：确认注意力前向接受了一个 `cache` 参数并正确调用 `cache.update()`。
+    解决方案：确认注意力前向接受了一个 `cache` 参数并正确调用 `cache.update()`。
 
 2. 新缓存类型不支持
 
-问题现象：新缓存类型不支持。
+    问题现象：新缓存类型不支持。
 
-解决方案：确认自定义缓存实现了标准的 `update` 接口，并正确处理返回值。 
+    解决方案：确认自定义缓存实现了标准的 `update` 接口，并正确处理返回值。 

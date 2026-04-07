@@ -1,14 +1,17 @@
-## QuantConfig
+# QuantConfig
 
-### 功能说明
+## 功能说明
+
 量化参数配置类，保存量化过程中配置的参数。
 
-### 函数原型
+## 函数原型
+
 ```python
 QuantConfig(w_bit=8, a_bit=8, w_signed=True, a_signed=False, w_sym=True, a_sym=False, input_shape=None, act_quant=True, act_method=0, quant_mode=0, disable_names=None, amp_num=0, squant_mode='squant' , keep_acc=None, sigma=25, is_fp=False, disable_first_layer=True, disable_last_layer=True, is_optimize_graph=True, is_dynamic_shape=False, use_onnx=True, num_input=0, quant_param_ops=None, atc_input_shape=None, graph_optimize_level=0, shut_down_structures=None, device_id=0, om_method='aoe')
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | w_bit | 输入 | 权重量化bit。| 可选。<br>数据类型：int。<br>默认为8，暂不支持其他bit量化，不支持修改。|
@@ -40,7 +43,8 @@ QuantConfig(w_bit=8, a_bit=8, w_signed=True, a_signed=False, w_sym=True, a_sym=F
 | device_id | 输入 | 昇腾AI处理器的DEVICE ID。| 可选。<br>数据类型：int。<br>取值范围[0,7]，默认值为0。|
 | om_method | 输入 | onnx模型转换为om模型的方式。| 可选。<br>数据类型：String。<br>支持配置为'aoe'和'atc'，默认为'aoe'，即通过aoe工具进行转换。|
 
-### 调用示例
+## 调用示例
+
 ```python
 from msmodelslim.onnx.squant_ptq import QuantConfig 
 config = QuantConfig(disable_names=[],

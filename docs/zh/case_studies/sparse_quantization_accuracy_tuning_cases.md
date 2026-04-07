@@ -1,6 +1,7 @@
 # 稀疏量化精度调试案例
 
 ## 概述
+
 本文将会提供稀疏量化的示例代码，并介绍稀疏量化的调优策略。
 
 ## 前期准备
@@ -11,7 +12,7 @@
 
 ## 代码示例
 
-```
+```config
 import json
 import torch
 import argparse

@@ -31,14 +31,14 @@
 
 ### 实现
 
-算法在 [msmodelslim/processor/adapt_rotation/](../../../../msmodelslim/processor/adapt_rotation/) 中实现，核心类包括：
+算法在 [msmodelslim/processor/adapt_rotation/](../../../../msmodelslim/processor/adapt_rotation) 中实现，核心类包括：
 
 - `AdaptRotationProcessor`：顶层处理器，根据 `stage` 分发到 Stage1 或 Stage2。
 - `AdaptRotationStage1Processor`：Stage1，收集激活并优化旋转矩阵。
 - `AdaptRotationStage2Processor`：Stage2，继承 `QuaRotProcessor`，使用 Stage1 优化后的旋转矩阵覆盖原始旋转。
 - `HadamardOptimizer`：用于迭代优化 Hadamard 旋转以获得正交极因子。
 
-**1) Stage1 处理流程**
+**1. Stage1 处理流程**
 
 Stage1 在 prior 阶段运行，整体流程为：
 
@@ -46,7 +46,7 @@ Stage1 在 prior 阶段运行，整体流程为：
 - **激活收集**：为匹配 `layer_type` 的 Linear 层注册前向钩子，在 Runner 调度前向传播时收集校准数据上的激活。
 - **优化与传递**：汇总各层激活并按 `max_samples` 采样，运行 Hadamard 优化得到优化后的旋转矩阵，将结果写入 Context，供 Stage2 使用。
 
-**2) Stage2 处理流程**
+**2. Stage2 处理流程**
 
 Stage2 在主阶段运行，与 QuaRot 共用同一套层融合、旋转流程：
 

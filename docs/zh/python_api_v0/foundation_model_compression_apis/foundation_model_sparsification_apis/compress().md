@@ -1,19 +1,23 @@
-## compress()
+# compress()
 
-### 功能说明
+## 功能说明
+
 运行权重稀疏算法，初始化Compressor之后，通过compress()函数来执行权重稀疏。
 
-### 函数原型
+## 函数原型
+
 ```python
 prune_compressor.compress(dataset)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | dataset | 输入 | 稀疏校准数据集。| 必选。<br>数据类型：list。 |
 
-### 调用示例
+## 调用示例
+
 ```python
 import torch
 import torch_npu

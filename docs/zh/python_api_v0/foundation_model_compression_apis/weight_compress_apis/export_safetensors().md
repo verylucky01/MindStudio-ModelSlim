@@ -1,24 +1,29 @@
-## export_safetensors()
+# export_safetensors()
 
-### 功能说明
+## 功能说明
+
 将压缩后的权重保存为safetensors格式的文件，并生成对应的描述文件。
 
 说明:Compressor中的选择weight、quant_model_description参数时，需要用此函数导出。
 
-### 函数原型
+## 函数原型
+
 ```python
 Compressor.export_safetensors(path, safetensors_name=None, json_name=None)
 ```
 
-### 参数说明
+## 参数说明
+
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
-| path | 输入 |压缩结果的保存路径。| 必选。<br>数据类型：String。 |
-| safetensors_name | 输入 |	safetensors格式压缩权重文件的名称。| 可选。<br>数据类型：String。<br>本参数默认为None，输出文件名为quant_model_weight_w8a8sc.safetensors。 |
+| path | 输入 |压缩结果的保存路径。| 必选。<br>数据类型：String。|
+| safetensors_name |输入|safetensors格式压缩权重文件的名称。| 可选。<br>数据类型：String。<br>本参数默认为None，输出文件名为quant_model_weight_w8a8sc.safetensors。|
 | json_name | 输入 |safetensors格式压缩权重json描述文件的名称。| 可选。<br>数据类型：String。<br>本参数默认为None，输出文件名为quant_model_description_w8a8sc.json。 |
 
-### 调用示例
+## 调用示例
+
 - 调用Compressor的run()方法进行权重压缩。
+
 ```python
 from safetensors.torch import load_file
 import json

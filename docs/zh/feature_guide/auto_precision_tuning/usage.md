@@ -66,7 +66,7 @@ msmodelslim tune --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --config ${
 |-------------------|-----------|-------------------|--------------------------------------------------------------------------------------|
 | model_path        | 模型路径      | 必选                | 类型：Str                                                                               |
 | save_path         | 调优结果保存路径  | 必选                | 类型：Str                                                                               |
-| config            | 调优配置文件路径  | 必选                | 1. 类型：Str <br>2. 配置文件路径，必须为完整的文件路径 <br>3. 配置文件格式为yaml，配置协议说明见[自动调优配置协议说明](configuration_protocols.md)，示例配置见 [example](example/) |
+| config            | 调优配置文件路径  | 必选                | 1. 类型：Str <br>2. 配置文件路径，必须为完整的文件路径 <br>3. 配置文件格式为yaml，配置协议说明见[自动调优配置协议说明](configuration_protocols.md)，示例配置见 [example](example) |
 | device            | 量化设备      | 可选                | 1. 类型：Str <br>2. 参考值：'npu','npu:0,1,2,3','cpu' <br>3. 默认值为"npu"（单设备）<br>4. 指定多个设备时（如：'npu:0,1,2,3'），系统可启动分布式逐层量化（DP）。算法支持范围与配置方式详见[逐层量化及分布式逐层量化](../quick_quantization_v1/usage.md#逐层量化及分布式逐层量化) |
 | model_type        | 模型名称      | 可选                | 1. 类型：Str <br>2. 默认值为"default" <br>3. 大小写敏感，请参考[大模型支持矩阵](../../model_support/foundation_model_support_matrix.md) |
 | timeout           | 调优超时时间    | 可选                | 1. 类型：Str <br>2. 格式：`<天数>D`、`<小时数>H` 或 `<天数>D<小时数>H` <br>3. 示例：'1D'、'2H'、'3D4H' <br>4. 默认值：None（无超时限制） |
@@ -165,7 +165,7 @@ ${SAVE_PATH}/
 
 ## 相关资料
 
-- **配置协议**：调优配置文件的详细说明，可以参考[自动调优配置协议说明](configuration_protocols.md)。完整的配置文件示例，可以参考 [example](example/)。
+- **配置协议**：调优配置文件的详细说明，可以参考[自动调优配置协议说明](configuration_protocols.md)。完整的配置文件示例，可以参考 [example](example)。
 - **调优算法**：对于自动调优支持的多种策略和算法，可以参考相关文档：
 - [Standing High 调优算法](../../quantization_algorithms/auto_tuning_strategies/standing_high.md)：基于量化回退层选择和离群值抑制策略的自动调优算法
 - [Standing High With Experience 调优算法](../../quantization_algorithms/auto_tuning_strategies/standing_high_with_experience.md)：基于专家经验的摸高算法策略

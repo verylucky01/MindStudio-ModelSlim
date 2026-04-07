@@ -1,14 +1,17 @@
-## run()
+# run()
 
-### 功能说明
+## 功能说明
+
 运行量化算法，初始化Calibrator后通过run()函数来执行量化。
 
-### 函数原型
+## 函数原型
+
 ```python
 calibrator.run()
 ```
 
-### 调用示例
+## 调用示例
+
 ```python
 from msmodelslim.mindspore.llm_ptq import Calibrator, QuantConfig
 quant_config = QuantConfig(disable_names=["lm_head"], fraction=0.01)
