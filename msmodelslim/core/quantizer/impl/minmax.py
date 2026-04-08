@@ -49,7 +49,12 @@ class ActPerTensorMinmax(AutoActQuantizer):
     def __init__(self, config: QConfig):
         super().__init__()
         self.config = config
-        minmax_config = MinMaxObserverConfig.model_validate({})
+        aggregation_type = config.ext.get("aggregation_type", "max")
+        minmax_config = MinMaxObserverConfig(
+            dim=[],
+            keepdim=False,
+            aggregation_type=aggregation_type
+        )
         self.minmax_observer = MsMinMaxObserver(minmax_config)
         self.q_param: Optional[QParam] = None
 
@@ -85,7 +90,11 @@ class ActPerTokenMinmax(AutoActQuantizer):
     def __init__(self, config: QConfig):
         super().__init__()
         self.config = config
-        minmax_config = MinMaxObserverConfig.model_validate({})
+        minmax_config = MinMaxObserverConfig(
+            dim=[],
+            keepdim=False,
+            aggregation_type="max"
+        )
         self.minmax_observer = MsMinMaxObserver(minmax_config)
         self.q_param: Optional[QParam] = None
 
@@ -128,7 +137,12 @@ class ActPerChannelMinmax(AutoActQuantizer):
     def __init__(self, config: QConfig):
         super().__init__()
         self.config = config
-        minmax_config = MinMaxObserverConfig(dim=0, keepdim=False)
+        aggregation_type = config.ext.get("aggregation_type", "max")
+        minmax_config = MinMaxObserverConfig(
+            dim=[0],
+            keepdim=False,
+            aggregation_type=aggregation_type
+        )
         self.minmax_observer = MsMinMaxObserver(minmax_config)
         self.q_param: Optional[QParam] = None
 
@@ -165,9 +179,19 @@ class ActPDMixMinmax(AutoActQuantizer):
     def __init__(self, config: QConfig):
         super().__init__()
         self.config = config
-        minmax_config = MinMaxObserverConfig.model_validate({})
-        self.prefilling_observer = MsMinMaxObserver(minmax_config)
-        self.decoding_observer = MsMinMaxObserver(minmax_config)
+        aggregation_type = config.ext.get("aggregation_type", "max")
+        prefilling_config = MinMaxObserverConfig(
+            dim=[],
+            keepdim=False,
+            aggregation_type="max"
+        )
+        decoding_config = MinMaxObserverConfig(
+            dim=[],
+            keepdim=False,
+            aggregation_type=aggregation_type
+        )
+        self.prefilling_observer = MsMinMaxObserver(prefilling_config)
+        self.decoding_observer = MsMinMaxObserver(decoding_config)
         self.q_param: Optional[QParam] = None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -215,7 +239,11 @@ class ActPDMixMinmax(AutoActQuantizer):
 class WeightPerChannelMinmax(AutoWeightQuantizer):
     def __init__(self, config: QConfig):
         super().__init__()
-        minmax_config = MinMaxObserverConfig(dim=0, keepdim=False)
+        minmax_config = MinMaxObserverConfig(
+            dim=[0],
+            keepdim=False,
+            aggregation_type="max"
+        )
         self.config = config
         self.minmax_observer = MsMinMaxObserver(minmax_config)
         self.weight: Optional[QStorage] = None

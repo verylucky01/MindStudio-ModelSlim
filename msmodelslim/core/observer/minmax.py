@@ -20,7 +20,7 @@ See the Mulan PSL v2 for more details.
 """
 
 
-from typing import Optional, Tuple, Union, List
+from typing import Optional, Tuple, Union, List, Literal
 
 import torch
 from pydantic import BaseModel
@@ -33,10 +33,29 @@ from msmodelslim.utils.exception import SpecError
 class MinMaxObserverConfig(BaseModel):
     dim: Union[int, List[int]] = []
     keepdim: bool = False
+    aggregation_type: Literal["max", "mean"] = "max"
 
 
 class MsMinMaxObserver(nn.Module):
+    def __init__(self, config: MinMaxObserverConfig):
+        super().__init__()
+        self.config = config
+        if config.aggregation_type == "max":
+            self._impl = _MaxMinMaxObserver(config)
+        else:
+            self._impl = _MeanMinMaxObserver(config)
 
+    def update(self, x: torch.Tensor, sync: bool = False, group: Optional[dist.ProcessGroup] = None):
+        self._impl.update(x, sync, group)
+
+    def reset(self):
+        self._impl.reset()
+
+    def get_min_max(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        return self._impl.get_min_max()
+
+
+class _MaxMinMaxObserver(nn.Module):
     def __init__(self, config: MinMaxObserverConfig):
         super().__init__()
         self.config = config
@@ -44,16 +63,17 @@ class MsMinMaxObserver(nn.Module):
         self.max_val = None
 
     def update(self, x: torch.Tensor, sync: bool = False, group: Optional[dist.ProcessGroup] = None):
-
+        current_min = torch.amin(x, self.config.dim, self.config.keepdim)
+        current_max = torch.amax(x, self.config.dim, self.config.keepdim)
         if self.min_val is None:
-            self.min_val = torch.amin(x, self.config.dim, self.config.keepdim)
+            self.min_val = current_min
         else:
-            self.min_val = torch.min(self.min_val, torch.amin(x, self.config.dim, self.config.keepdim))
+            self.min_val = torch.min(self.min_val, current_min)
 
         if self.max_val is None:
-            self.max_val = torch.amax(x, self.config.dim, self.config.keepdim)
+            self.max_val = current_max
         else:
-            self.max_val = torch.max(self.max_val, torch.amax(x, self.config.dim, self.config.keepdim))
+            self.max_val = torch.max(self.max_val, current_max)
 
         if sync and dist.is_initialized():
             sync_base_operation(self.min_val, op='min')
@@ -70,6 +90,66 @@ class MsMinMaxObserver(nn.Module):
                 "maybe you are quantifying a moe expert, but this expert has never been activated.",
                 action="Please check your model and quant config.")
         return self.min_val, self.max_val
+
+
+class _MeanMinMaxObserver(nn.Module):
+    def __init__(self, config: MinMaxObserverConfig):
+        super().__init__()
+        self.config = config
+        self.min_sum = None 
+        self.max_sum = None 
+        self.batch_count = 0
+        self.mean_min = None
+        self.mean_max = None 
+        self._orig_dtype = None 
+
+    def update(self, x: torch.Tensor, sync: bool = False, group: Optional[dist.ProcessGroup] = None):
+        current_min = torch.amin(x, self.config.dim, self.config.keepdim)
+        current_max = torch.amax(x, self.config.dim, self.config.keepdim)
+        if self._orig_dtype is None:
+            self._orig_dtype = current_min.dtype
+        self.batch_count += 1
+        if self.min_sum is None:
+            self.min_sum = current_min.to(torch.float64)
+            self.max_sum = current_max.to(torch.float64)
+        else:
+            self.min_sum.add_(current_min.to(torch.float64))
+            self.max_sum.add_(current_max.to(torch.float64))
+        self.mean_min = (self.min_sum / self.batch_count).to(self._orig_dtype)
+        self.mean_max = (self.max_sum / self.batch_count).to(self._orig_dtype)
+
+        if sync and dist.is_initialized():
+            if self.min_sum is not None and self.max_sum is not None:
+                temp_min_sum = self.min_sum.clone()
+                temp_max_sum = self.max_sum.clone()
+                sync_base_operation(temp_min_sum, op='sum')
+                sync_base_operation(temp_max_sum, op='sum')
+                batch_count_tensor = torch.tensor(
+                    [self.batch_count],
+                    device=x.device,
+                    dtype=torch.int64
+                )
+                sync_base_operation(batch_count_tensor, op='sum')
+                global_batch_count = batch_count_tensor.item()
+                if global_batch_count > 0:
+                    self.mean_min = (temp_min_sum / global_batch_count).to(self._orig_dtype)
+                    self.mean_max = (temp_max_sum / global_batch_count).to(self._orig_dtype)
+
+    def reset(self):
+        self.min_sum = None
+        self.max_sum = None
+        self.batch_count = 0
+        self.mean_min = None
+        self.mean_max = None
+        self._orig_dtype = None
+
+    def get_min_max(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        if self.mean_min is None or self.mean_max is None:
+            raise SpecError(
+                "Trying to get stats but no any update_stats invoked,"
+                "maybe you are quantifying a moe expert, but this expert has never been activated.",
+                action="Please check your model and quant config.")
+        return self.mean_min, self.mean_max
 
 
 class MinMaxBlockObserverConfig(BaseModel):
