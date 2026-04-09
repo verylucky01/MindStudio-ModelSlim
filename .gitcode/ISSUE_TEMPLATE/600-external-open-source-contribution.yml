@@ -1,0 +1,171 @@
+# 外部开源贡献登记 Issue 模板
+# 用于社区成员登记与 msModelSlim 相关的外部开源贡献，并便于后续 SIG 等渠道沟通。
+
+name: 🌐 External open source contribution
+description: Register your external open-source contributions related to the msModelSlim ecosystem (accuracy/performance, docs, plugins, authorization, SIG communication, etc.); starring the main msModelSlim repository is appreciated.
+title: "[开源贡献] "
+labels: ["contribution", "community"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 说明
+        本模板用于**登记或分享**您在与 **msModelSlim** 相关场景下的**外部开源贡献**（例如独立仓库、上游 PR、插件、算法实现或文档等）。
+        请尽量填写完整，便于社区了解价值并安排后续交流。感谢您的贡献 🎉
+
+        ---
+        ## Instructions
+        Use this template to **register or share** your **external open-source contributions** related to the **msModelSlim** ecosystem (e.g. standalone repos, upstream PRs, plugins, algorithms, or docs).
+        The more detail you provide, the easier it is for the community to evaluate and follow up. Thank you 🎉
+
+        ---
+        ## 支持本项目 | Support the project
+        若您认可 msModelSlim，欢迎为**主仓库点 Star**，便于更多开发者发现本项目并支持社区持续维护。
+
+        If you find the project useful, please consider **starring** the main repository so more developers can discover it and support ongoing maintenance.
+
+        **主仓库 | Main repository:** <https://gitcode.com/Ascend/msmodelslim>
+
+  - type: textarea
+    id: contribution_summary
+    attributes:
+      label: 开源贡献说明（必填） | Open source contribution summary（required）
+      description: |
+        请说明您做了哪些开源贡献：主要改动或功能、与 msModelSlim 的关联（如适配某模型、新增某量化格式、解决某BUG）等。
+        Please describe your open-source contribution: key changes/features and how it relates to msModelSlim (e.g. model adaptation, new quantization format, bug fixes).
+      placeholder: |
+        例：
+        - 贡献内容：对于Qwen3-Next-80B-A3B-Instruct模型实现了W4A8最佳量化实践，在AIME24数据集上精度为xx%，权重压缩率为xx%，推理性能提升xx%。
+        Example:
+        - Contribution: Implemented a W4A8 best-practice quantization workflow for Qwen3-Next-80B-A3B-Instruct, achieving xx% on AIME24, xx% weight compression, and xx% inference performance gain.
+    validations:
+      required: true
+
+  - type: textarea
+    id: accuracy_and_performance
+    attributes:
+      label: 量化精度与性能收益（选填） | Quantization accuracy & performance（optional）
+      description: |
+        请给出可复现的对比结论：基线（如 FP16/W8A8 等）、量化配置、评测集与指标、相对误差或任务表现变化；性能方面请说明吞吐/时延/显存或 NPU 侧收益（含测试环境与版本）。
+        Please provide reproducible comparisons: baseline (e.g. FP16/W8A8), quantization config, datasets/metrics, relative error or task-performance changes; for performance, include throughput/latency/memory or NPU-side gains, with environment and version details.
+      placeholder: |
+        例：
+        - 精度：AIME24 FP16 xx% → 量化后 xx%（或 perplexity / 其他指标）
+        - 性能：推理吞吐 xx → xx tokens/s；或单 batch 时延 xx ms → xx ms
+        Example:
+        - Accuracy: AIME24 FP16 xx% -> quantized xx% (or perplexity / other metrics)
+        - Performance: throughput xx -> xx tokens/s; or single-batch latency xx ms -> xx ms
+    validations:
+      required: false
+
+  - type: textarea
+    id: technical_docs
+    attributes:
+      label: 技术文档（选填） | Technical documentation（optional）
+      description: |
+        请提供具体技术文档链接或路径：设计说明、API 说明、使用指南、RFC、博客、README 中的技术章节等；若文档在仓库内，请写明相对路径或 Release 说明位置。
+        Please provide technical document links/paths: design docs, API references, user guides, RFCs, blogs, or technical README sections; if docs are in-repo, include the relative path or release note location.
+      placeholder: |
+        例：
+        - 设计文档：https://...
+        - 使用说明：仓库 docs/xxx.md
+        - 论文/博客（如有）：https://...
+        Example:
+        - Design doc: https://...
+        - Usage doc: docs/xxx.md
+        - Paper/blog (if any): https://...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: new_plugin
+    attributes:
+      label: 是否涉及新增插件（必填） | New plugin involved（required）
+      description: |
+        若您的贡献包含**新模型支持插件**的发布或登记（例如使用「模型支持插件发布」模板提交的 Issue），请选择「是」，并在下一栏填写对应 Issue 链接。
+        Choose **Yes** if your contribution includes registering or releasing a **model support plugin** (e.g. an issue filed with the plugin release template), and provide that issue URL below.
+      options:
+        - "是，已新增或登记插件 | Yes, new plugin registered/released"
+        - "否 | No"
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_issue_link
+    attributes:
+      label: 插件登记 Issue 链接（必填） | Plugin registration issue URL（required）
+      description: |
+        - 若上一项为 **「是」**：请填写插件发布/登记对应的 **GitCode Issue 完整 URL**（如 `https://gitcode.com/.../issues/数字`）。
+        - 若上一项为 **「否」**：请填写 **无** 或 **N/A**。
+        - **Yes** above → paste the **full plugin registration/release issue URL**.
+        - **No** above → enter **N/A** or **None**.
+      placeholder: "是：https://gitcode.com/.../issues/123 ｜ 否：N/A"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 用户授权 | User authorization
+        以下选项用于确认您是否授权社区使用您提交的材料及在开源鸣谢中的体现方式。请按需选择。
+        The following confirms whether you authorize use of your submitted materials and how you wish to be credited in open-source acknowledgments.
+
+  - type: dropdown
+    id: user_authorization
+    attributes:
+      label: 授权范围（必填） | Authorization scope（required）
+      description: |
+        **文档与材料**：指您在本 Issue 中提供的技术文档、说明文字、链接内容及附件等（以您实际提交为准）。
+        **开源鸣谢**：指在 msModelSlim 相关开源物料（如 README、文档、Release 说明等）中对贡献者或组织的致谢与体现。
+
+        **Documentation and materials**: content you provide in this issue (text, links, attachments, etc.).
+        **Open-source acknowledgment**: credit in msmodelslim open-source materials (e.g. README, docs, release notes).
+      options:
+        - "两项均同意：可使用文档与材料，并可在开源鸣谢中体现本人/本组织 | Both: use of materials and acknowledgment"
+        - "仅同意使用文档与材料，不在开源鸣谢中体现 | Materials only, no acknowledgment"
+        - "仅同意在开源鸣谢中体现，不要求使用文档与材料 | Acknowledgment only"
+        - "均不同意 | I do not authorize either"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: sig_willingness
+    attributes:
+      label: SIG 会交流意向（必填） | Willingness to join SIG sync（required）
+      description: |
+        您是否愿意在后续 **SIG 会**（或社区组织的同步会议）中就本贡献进行简要分享与交流？
+
+        SIG 会议信息与入口：<https://meeting.ascend.osinfra.cn/?sig=sig-sig-msit>
+
+        SIG meeting info: <https://meeting.ascend.osinfra.cn/?sig=sig-sig-msit>
+      options:
+        - "愿意，可配合协调时间 | Yes, I can align on schedule"
+        - "有意向，需先邮件/私信沟通细节 | Interested, prefer to discuss details first"
+        - "暂不参与 SIG，仅做贡献登记 | Not for now, registration only"
+    validations:
+      required: true
+
+  - type: textarea
+    id: contact_optional
+    attributes:
+      label: 联系方式（选填） | Contact（optional）
+      description: |
+        若愿意被社区联系，可留下 GitCode 用户名、邮箱或其他您方便的方式（请勿提交密码等敏感信息）。
+        If you are open to follow-up, please leave your GitCode username, email, or any preferred contact method (do not share passwords or sensitive information).
+      placeholder: "例：GitCode @username 或 email（可选）"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra_notes
+    attributes:
+      label: 其他补充（选填） | Additional notes（optional）
+      description: 许可证、依赖限制、已知问题、希望社区提供的支持等。Licensing, dependency constraints, known issues, or support expected from the community.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        再次感谢您对开源与 msModelSlim 社区的贡献。
+        Thank you again for your contribution to open source and the msModelSlim community.
