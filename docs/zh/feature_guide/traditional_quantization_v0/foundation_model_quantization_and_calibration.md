@@ -118,6 +118,7 @@ https://huggingface.co/datasets/ceval/ceval-exam
 请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。
 
 ```python
+import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig 
 
 from msmodelslim.pytorch.llm_ptq.mix_calibration.calib_select import CalibrationData

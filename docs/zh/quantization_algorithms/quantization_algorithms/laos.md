@@ -126,7 +126,7 @@ spec:
 
 ### YAML配置字段详解
 
-配置字段来自 Adapt Rotation 与 AutoRound 处理器，详见 [Adapt Rotation YAML配置字段详解](../outlier_suppression_algorithms/adapt_rotation.md)、[AutoRound YAML配置字段详解](autoround.md#yaml配置字段详解)。
+配置字段来自 Adapt Rotation 与 AutoRound 处理器，详见 [Adapt Rotation YAML配置字段详解](../outlier_suppression_algorithms/adapt_rotation.md#yaml-配置字段详解)、[AutoRound YAML配置字段详解](autoround.md#yaml配置字段详解)。
 
 ## 模型适配
 

@@ -75,8 +75,8 @@ export PYTORCH_NPU_ALLOC_CONF=expandable_segments:False
 **命令示例：**
 
 ```shell
-# 进入示例目录（或在项目根目录下将下方路径改为 example/multimodal_vlm/Qwen3-VL/deqscale2int64.py）
-cd example/multimodal_vlm/Qwen3-VL
+# 进入示例目录（或在项目根目录下将下方路径改为 example/deqscale2int64.py）
+cd example
 
 # 原地转换（直接覆盖原权重目录中的 safetensors 文件）
 python deqscale2int64.py --model_path {量化权重目录路径}

@@ -29,21 +29,22 @@ SSZ算法基于以下核心思想：
 
 ### 实现
 
-- 算法在 `msmodelslim/core/quantizer/impl/ssz.py` 中实现，核心函数为 `ssz_calculate_qparam`：
+#### 代码实现
+算法在 [msmodelslim/core/quantizer/impl/ssz.py](../../../../msmodelslim/core/quantizer/impl/ssz.py) 中实现，核心函数为 `ssz_calculate_qparam`。
 
-#### 1. 初始化阶段
+#### 初始化阶段
 
     - 使用MinMax观察器计算权重的统计信息（min/max值）。
     - 基于统计信息计算初始的量化参数（scale和offset）。
 
-#### 2. 迭代优化阶段
+#### 迭代优化阶段
 
     - 对称量化：offset固定为0，只优化scale。
     - 非对称量化：同时优化scale和offset。
     - 使用最小二乘法计算最优参数。
     - 贪心更新策略：只保留能改善量化误差的参数。
 
-#### 3. 收敛判断
+#### 收敛判断
 
     - 相对误差变化：`(best_mse - current_mse) / best_mse < threshold`。
     - 绝对误差变化：`|best_mse - current_mse| < threshold`。
@@ -62,24 +63,6 @@ SSZ算法基于以下核心思想：
     - 权重必须是2D张量。
 
 ## 功能介绍
-
-作为量化器使用：
-
-```python
-from msmodelslim.core.quantizer.base import QConfig
-from msmodelslim.core.quantizer.impl.ssz import WeightPerChannelSsz
-
-# 创建SSZ量化配置
-config = QConfig(
-    dtype="int8",           # 量化数据类型
-    scope="per_channel",    # 量化范围：per_channel
-    method="ssz",          # 量化方法：ssz
-    symmetric=true         # 对称量化
-)
-
-# 创建量化器
-quantizer = WeightPerChannelSsz(config)
-```
 
 ### YAML配置示例
 
@@ -104,79 +87,9 @@ spec:
 | symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `true` |
 | method | 量化方法 | `"ssz"` | ssz: ssz权重量化 | `"ssz"` |
 
-## 模型适配
-
-### 接口与数据结构
-
-```python
-# SSZ量化器类
-class WeightPerChannelSsz(AutoWeightQuantizer):
-    def __init__(self, config: QConfig): ...
-    
-    def forward(self, x: Optional[torch.Tensor] = None) -> torch.Tensor: ...
-    
-    def init_weight(self, weight: QStorage, bias: Optional[torch.Tensor] = None) -> None: ...
-    
-    def get_q_storage(self) -> QStorage: ...
-    
-    def get_q_param(self) -> QParam: ...
-
-# 核心算法函数
-def ssz_calculate_qparam(weight: QStorage, q_param: QParam) -> QParam: ...
-```
-
-### 适配步骤
-
-- **前置要求**：
-    - 权重必须是2D张量（如线性层的权重）。
-    - 需要提供正确的量化配置（dtype、scope、method、symmetric）。
-- **步骤**：
-    1. 创建SSZ量化配置：指定量化数据类型、范围、方法和对称性。
-    2. 创建量化器实例：使用配置初始化WeightPerChannelSsz。
-    3. 初始化权重：调用init_weight方法设置待量化的权重。
-    4. 执行量化：调用forward方法进行量化计算。
-    5. 获取结果：通过get_q_storage和get_q_param获取量化结果。
-
-### 完整示例
-
-```python
-import torch
-from msmodelslim.core.quantizer.base import QConfig, AutoWeightQuantizer
-from msmodelslim.ir.qal.qbase import QStorage, QDType
-
-# 1. 创建配置
-config = QConfig(
-    dtype="int8",
-    scope="per_channel", 
-    method="ssz",
-    symmetric=True
-)
-
-# 2. 创建量化器
-quantizer = AutoWeightQuantizer.from_config(config)
-
-# 3. 准备权重数据
-weight_tensor = torch.randn(256, 512)
-weight_storage = QStorage(QDType.FLOAT, weight_tensor)
-
-# 4. 初始化权重
-quantizer.init_weight(weight_storage)
-
-# 5. 执行量化
-dequantized_weight = quantizer.forward()
-
-# 6. 获取量化结果
-q_storage = quantizer.get_q_storage()
-q_param = quantizer.get_q_param()
-
-print(f"原始权重形状: {weight_tensor.shape}")
-print(f"量化后权重形状: {q_storage.value.shape}")
-print(f"量化参数: {q_param}")
-```
-
 ## 算法参数
 
-SSZ算法内部使用以下参数（可通过修改源码调整，`msmodelslim/quant/quantizer/impl/ssz.py`）：
+SSZ算法内部使用以下参数（可通过修改源码调整，[msmodelslim/core/quantizer/impl/ssz.py](../../../../msmodelslim/core/quantizer/impl/ssz.py)）：
 
 ```python
 SCALE_SEARCH_ITER_NUM = 20                    # 最大迭代次数
@@ -184,35 +97,24 @@ SCALE_SEARCH_CONVERGE_THRESHOLD = 1e-10       # 收敛阈值
 SCALE_SEARCH_MIN_SCALE = 1e-5                 # 最小缩放因子
 ```
 
-## 量化配置参数
-
-```python
-QConfig(
-    dtype="int8",           # 量化数据类型：int8
-    scope="per_channel",    # 量化范围：per_channel（每个通道独立量化）
-    method="ssz",          # 量化方法：ssz
-    symmetric=True         # 对称量化：True为对称，False为非对称
-)
-```
-
 ## FAQ
 
-### 1. 权重维度错误
+### 权重维度错误
 
 **现象**：输入的权重维度错误，导致量化失败。  
 **解决方案**：检查权重维度是否正确，确保权重是2D张量。
 
-### 2. 量化配置错误
+### 量化配置错误
 
 **现象**：量化配置错误，导致量化失败。  
 **解决方案**：检查dtype、scope、method、symmetric参数设置是否正确。
 
-### 3. 初始化顺序错误
+### 初始化顺序错误
 
 **现象**：初始化顺序错误，导致量化失败。  
 **解决方案**：必须先调用init_weight，再调用forward。
 
-### 4. 收敛问题
+### 收敛问题
 
 **现象**：如果算法不收敛，可以调整SCALE_SEARCH_CONVERGE_THRESHOLD参数。  
 **解决方案**：调整SCALE_SEARCH_CONVERGE_THRESHOLD参数。

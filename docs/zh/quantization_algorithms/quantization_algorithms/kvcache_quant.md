@@ -22,7 +22,7 @@
 
 ### 实现
 
-- 算法在 `msmodelslim/processor/quant/attention.py` 中实现，处理流程分三阶段：
+- 算法在 [msmodelslim/processor/quant/attention.py](../../../../msmodelslim/processor/quant/attention.py) 中实现，处理流程分三阶段：
   1. **检测阶段（pre_run）**：
      - 自动检测模型中的注意力层，基于模块命名规则识别 `self_attn` 模块。
      - 为每个注意力层创建对应的 `DynamicCacheQuantizer`，配置量化参数。
