@@ -23,7 +23,7 @@ QuantConfig(a_bit=8, w_bit=8, disable_names=None, dev_type='cpu', dev_id=None, a
 | pr | 输入 | 量化选择概率。| 可选。<br>数据类型：float。取值范围：[0,1]。<br>默认值：1.0，建议取值1.0。|
 | w_sym | 输入 | 权重量化是否为对称量化。| 可选。<br>数据类型：bool。默认为True。<br>W8A8和W4A8_DYNAMIC场景仅支持配置为True。<br>不适用于w4a4场景。|
 | mm_tensor | 输入 | 选择进行per-channel量化或per-tensor量化。| 可选。<br>数据类型：bool。默认为True。<br>True: per-tensor量化。<br>False: per-channel量化，建议选择该量化方式。|
-| w_method | 输入 | 选权重量化策略。| 可选。<br>数据类型：str。默认为'MinMax'，可选值：'MinMax','GPTQ','HQQ','NF'。<br>MinMax、HQQ和NF支持Data-Free。<br>GPTQ不支持Data-Free。<br>NF不支持per-tensor,per-channel,per-group,lowbit,通信量化，kvcache量化，离群值抑制混合使用。|
+| w_method | 输入 | 选择权重量化策略。| 可选。<br>数据类型：str。默认为'MinMax'，可选值：'MinMax','GPTQ','HQQ','NF'。<br>MinMax、HQQ和NF支持Data-Free。<br>GPTQ不支持Data-Free。<br>NF不支持per-tensor,per-channel,per-group,lowbit,通信量化，kvcache量化，离群值抑制混合使用。|
 | co_sparse | 输入 | 是否开启稀疏量化功能。| 可选。<br>数据类型：bool。默认值：False，不开启稀疏量化。<br>大模型稀疏量化场景下，优先使用lowbit稀疏量化功能，开启lowbit稀疏量化后，co_sparse参数自动失效。|
 | fraction | 输入 | 模型权重稀疏量化过程中被保护的异常值占比。| 可选。<br>数据类型：float。取值范围[0.01,0.1]。默认值为0.01。|
 | nonuniform | 输入 | 是否在稀疏量化中采用非均匀量化。| 可选。<br>数据类型：bool。默认值为False。|

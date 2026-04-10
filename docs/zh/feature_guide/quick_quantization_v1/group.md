@@ -28,7 +28,7 @@
 
 ### 实现
 
-组合处理器在 `msmodelslim/processor/container/group.py` 中实现。它作为一个容器，顺序调度其 `configs` 列表中的子处理器。
+组合处理器在 [msmodelslim/processor/container/group.py](../../../../msmodelslim/processor/container/group.py) 中实现。它作为一个容器，顺序调度其 `configs` 列表中的子处理器。
 
 ## 功能介绍
 

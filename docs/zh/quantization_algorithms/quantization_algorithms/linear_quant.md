@@ -23,7 +23,7 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
 
 ### 实现
 
-在 msModelSlim 中，线性量化通过 `linear_quant` 处理器实现，支持对模型的线性层（Linear/Dense Layers）进行灵活的量化配置。算法在 `msmodelslim/processor/quant/linear.py` 中实现。
+在 msModelSlim 中，线性量化通过 `linear_quant` 处理器实现，支持对模型的线性层（Linear/Dense Layers）进行灵活的量化配置。算法在 [msmodelslim/processor/quant/linear.py](../../../../msmodelslim/processor/quant/linear.py) 中实现。
 
 ### 算法分类
 
@@ -113,6 +113,24 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
   include: [ "*" ]             # 包含所有层
 ```
 
+#### W8A8 PDMIX配置
+
+```yaml
+- type: "linear_quant"         # 处理器类型：线性层量化
+  qconfig:
+    act:                       # 激活值量化配置
+      scope: "pd_mix"          # PDMIX量化标识：Prefilling 阶段使用 `per_token`，Decoding 阶段使用 `per_tensor`
+      dtype: "int8"            # 数据类型：int8
+      symmetric: false         # 是否对称量化：false
+      method: "minmax"         # 量化方法：minmax
+    weight:                    # 权重量化配置
+      scope: "per_channel"     # 权重量化粒度：逐通道量化
+      dtype: "int8"            # 数据类型：int8
+      symmetric: true          # 对称量化：true
+      method: "minmax"         # 量化方法：minmax
+  include: [ "*mlp*" ]         # 仅包含包含 mlp 的层
+```
+
 ### YAML配置字段详解
 
 | 字段名 | 作用 | 类型 | 说明 | 示例值 |
@@ -139,7 +157,7 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
 
 | 参数名 | 作用 | 可选值 | 说明 | 默认值 |
 |--------|------|--------|------|--------|
-| scope | 量化范围 | `"per_tensor"`, `"per_channel"` | per_tensor: 整个张量使用相同参数<br/>per_channel: 每个通道独立参数 | `"per_channel"` |
+| scope | 量化范围 | `"per_tensor"`, `"per_channel"`, `"per_group"` | per_tensor: 整个张量使用相同参数<br/>per_channel: 每个通道独立参数<br/>per_group: 每个分组独立参数 | `"per_channel"` |
 | dtype | 量化数据类型 | `"int8"`, `"int4"` | 8位/4位整数量化 | `"int8"` |
 | symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `true` |
 | method | 量化方法 | `"minmax"`, `"ssz"`, `"gptq"` | minmax: 最小最大值量化<br/>ssz: ssz权重量化<br/>gptq: gptq权重量化 | `"minmax"` |

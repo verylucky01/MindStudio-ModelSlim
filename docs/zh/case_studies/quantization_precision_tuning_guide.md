@@ -53,17 +53,7 @@
 
 **解决思路**：使用离群值抑制算法，将激活的量化难度“转移”到权重上。
 
-#### 离群值抑制算法对比
-
-| 算法 | 算法特点 | 适用场景与建议 | 配置示例链接 |
-|------|---------|---------------|-------------|
-| Smooth Quant | 仅对norm-linear子图做平滑处理，支持对称/非对称 | 在Qwen、DeepSeek等热门系列模型上精度较差，不建议使用 | [smooth_quant.md](../quantization_algorithms/outlier_suppression_algorithms/smooth_quant.md) |
-| Iterative Smooth | 解决o_proj、down_proj等层因无相邻LayerNorm而无法转移scale的问题。支持对称/非对称 | **优先使用**。运行快，精度较高。超长序列校准集时优先使用。可调整 `alpha` 参数优化 | [iterative_smooth.md](../quantization_algorithms/outlier_suppression_algorithms/iterative_smooth.md) |
-| Flex Smooth Quant | 通过二阶段网格搜索自动寻找最优alpha和beta参数，实现更精细的平衡 | 当Iterative Smooth不达标、对量化时间不敏感且显存充足时尝试。运行速度较慢 | [flex_smooth_quant.md](../quantization_algorithms/outlier_suppression_algorithms/flex_smooth_quant.md) |
-| Flex AWQ SSZ | 结合 AWQ 和 SSZ 思想，使用真实量化器评估 MSE 误差，自动搜索最优 alpha | **INT4 低比特量化必备**。针对低比特权重量化精度敏感的特点，寻找最优参数。精度提升显著，但运行速度较慢 | [flex_awq_ssz.md](../quantization_algorithms/outlier_suppression_algorithms/flex_awq_ssz.md) |
-| QuaRot | 通过对权重和激活进行旋转变换，将离群值"分散"到多个通道，平滑分布 | 可与其他算法叠加使用，作为进一步提升精度的备选方案。对于 W4A4 等极端场景效果显著 | [quarot.md](../quantization_algorithms/outlier_suppression_algorithms/quarot.md) |
-| KV Smooth | 专门针对 KVCache 中的 Key 离群值抑制，将其迁移至 Query | **KVCache 量化必备**。在不改变注意力打分前提下压缩 K 的动态范围，提升生成质量 | [kv_smooth.md](../quantization_algorithms/outlier_suppression_algorithms/kv_smooth.md) |
-| LAOS | 协同优化方案。通过 Adapt Rotation（stage1/stage2）完成旋转矩阵优化，配合 AutoRound 优化权重舍入 | **W4A4 极致精度方案**。当前主要适配 Qwen3 稠密系列模型 | [laos.md](../quantization_algorithms/quantization_algorithms/laos.md) |
+[离群值抑制算法对比](../quantization_algorithms/README.md#离群值抑制算法)
 
 #### 总结建议
 
@@ -76,14 +66,7 @@
 
 根据量化对象（权重/激活）和比特数选择合适算法。量化算法选择包括权重量化方法选择和激活量化方法选择两部分。
 
-#### 权重量化方法对比
-
-| 量化方法 | 特点 | 量化精度 | 量化速度 | 适用场景与建议 |
-|---------|------|-----|---|---------------|
-| minmax | 统计权重张量的最小值和最大值来确定量化范围，方法简单，计算速度快 | ★ | ★★★ | INT8量化场景优先推荐。方法简单，速度快，通常能获得不错的精度 |
-| ssz | 通过迭代搜索最优的量化参数来最小化量化误差 | ★★ | ★★ | INT4等低比特量化场景优先推荐。相比 `minmax`，通过更精细的搜索可以获得更高的量化精度，但速度稍慢 |
-| autoround | 通过引入可学习的舍入偏移参数，结合SignSGD优化器自适应调整各权重的舍入方向，训练得到最优的取整补偿 | ★★★ | ★ | 当 `ssz` 方法精度不达标时，可以尝试使用 `autoround` 来进一步提升精度，尤其在超低比特条件下寻求最优平衡 |
-| gptq | 通过逐列量化优化方式，最小化量化引入的输出误差，实现高精度低比特量化 | ★★★ | ★ | 当 `ssz` 方法精度不达标时，可以尝试使用 `gptq` 来进一步提升精度 |
+[量化算法对比](../quantization_algorithms/README.md#量化算法)
 
 #### 配置示例 (YAML)
 

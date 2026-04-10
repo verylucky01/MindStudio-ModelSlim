@@ -23,7 +23,7 @@
 
 ### 实现
 
-- 算法在 `msmodelslim/processor/kv_smooth` 中实现，处理流程分两阶段：
+- 算法在 [msmodelslim/processor/kv_smooth](../../../../msmodelslim/processor/kv_smooth/) 中实现，处理流程分两阶段：
     1. **观察阶段（preprocess）**：
         - 通过注入观察器封装 `past_key_values`，在注意力模块调用 `Cache.update()` 时捕获 `key_states`。
         - 使用观测器在维度 [batch, seq] 上聚合 min/max，得到每层每通道的绝对值的最大值，作为缩放的统计基准。
@@ -44,8 +44,6 @@
   `query_states` 做量化，请谨慎评估该方法的适用性。
 
 ## 功能介绍
-
-KVSmooth 算法通过 ModelSlimV1 的 YAML 配置文件使用。
 
 ### YAML配置示例
 
@@ -115,7 +113,7 @@ class KVSmoothFusedInterface(ABC):
     - 目标通路符合 `Linear/Norm → RoPE → KVCache` 的结构。
 - **步骤**：
     1. 模型适配器继承`KVSmoothFusedInterface`接口，并实现所有方法， 可参考
-       `msmodelslim/model/qwen3/model_adapter.py`。
+       [msmodelslim/model/qwen3/model_adapter.py](../../../../msmodelslim/model/qwen3/model_adapter.py)。
     2. 在 `get_kvsmooth_fused_subgraph()` 中，为每层返回 `KVSmoothFusedUnit`，指定：
         - `attention_name`：与 `named_modules()` 一致的完整路径（如 `model.layers.{i}.self_attn`）。
         - `layer_idx`：层索引， 用于 Cache.update()。
@@ -126,19 +124,19 @@ class KVSmoothFusedInterface(ABC):
 
 ## FAQ
 
-1. **回退未命中**
+### **回退未命中**
     - **现象**：告警日志中出现 `are not matched any module` 描述。
     - **解决方案**：核对完整模块名，是否填错 `include` 或 `exclude`。
 
-2. **头维度信息缺失**
+### **头维度信息缺失**
     - **现象**：抛出 `UnsupportedError`，指明 `get_head_dim`、`get_num_key_value_groups`、`get_num_key_value_heads` 缺失。
     - **解决方案**：对应模型适配器确保实现 `KVSmoothFusedInterface` 接口，否则模型不适用算法。
 
-3. **注意力不适用**
+### **注意力不适用**
     - **现象**：日志告警 `past_key_values and past_key_value both are None`。
     - **解决方案**：检查 `Transformers` 中的模型文件，确保 `Attention` 层 `forward` 传入 `past_key_values` 和
       `past_key_value`，否则模型不适用算法。
 
-4. **模块名不一致**
+### **模块名不一致**
     - **现象**：抛出 `ToDoError`，指明 `has no submodule`。
-    - **解决方案**：检查模型适配器，确认 `fused_from_query_states_na
+    - **解决方案**：检查模型适配器，确认 `fused_from_query_states_name` 和 `fused_from_key_states_name` 取值与实际融合子模块命名一致

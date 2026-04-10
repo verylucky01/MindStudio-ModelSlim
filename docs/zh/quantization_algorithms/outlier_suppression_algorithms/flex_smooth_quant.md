@@ -137,12 +137,6 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - **Up-Down子图**：处理MLP门控机制，对上下投影层应用平滑。
 - **非融合子图**：当 `mapping.source` 为 `None` 且 `mapping.targets` 非空时，将目标线性层组成 NonFusionSubgraph，做 alpha/beta 搜索（或使用配置值）后对权重做缩放，并在每层注册输入侧 scale 的 pre-hook。
 
-**Flex Smooth Quant算法核心：**
-
-- 基于收集的激活统计信息计算每通道的缩放因子。
-- 使用 `flex_smooth_quant` 算法对子图进行灵活平滑量化优化。
-- 支持可配置的平滑参数：`alpha`（激活缩放系数）、`beta`（权重缩放系数），若用户不配置的话，采用二阶段网格搜索方法搜索最佳alpha和beta参数。
-
 **资源清理：**
 
 - 清理所有安装的统计钩子。
