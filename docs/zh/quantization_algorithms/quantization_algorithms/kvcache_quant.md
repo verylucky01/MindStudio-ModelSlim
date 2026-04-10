@@ -108,9 +108,9 @@ class FakeQuantDynamicCache(AutoFakeQuantDynamicCache):
   
 ## 功能介绍
 
-### 使用说明
+### YAML配置示例
 
-作为 Processor 使用
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 - type: "dynamic_cache" # 固定为 `dynamic_cache`，用于指定 Processor。
@@ -123,21 +123,6 @@ class FakeQuantDynamicCache(AutoFakeQuantDynamicCache):
     - "*"
   exclude: # 字符串列表，禁止量化的 attention 匹配模式（完整路径，支持 `*` 通配），默认为空。
     - "model.layers.0.self_attn"
-```
-
-### YAML配置示例
-
-```yaml
-spec:
-  process:
-    - type: "dynamic_cache"
-      qconfig:
-        scope: "per_channel"    # 量化粒度：仅支持per_channel。
-        dtype: "int8"          # 量化数据类型，目前支持int8。
-        symmetric: true        # 是否使用对称量化，默认True。
-        method: "minmax"       # 量化方法，目前支持minmax。
-      include: [ "*" ]           # 包含的注意力层。
-      exclude: [ "model.layers.0.self_attn" ] # 排除的注意力层。
 ```
 
 ### YAML配置字段详解

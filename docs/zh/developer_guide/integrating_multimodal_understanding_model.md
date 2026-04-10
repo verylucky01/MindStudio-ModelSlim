@@ -7,7 +7,7 @@
 多模态理解模型通常由视觉编码器、视觉特征投影层和语言模型组成，能够同时处理图像和文本输入。相比纯语言模型，多模态理解模型的量化接入需要额外考虑：
 
 - **多模态校准数据的准备**：支持图像和文本prompt结合等模态融合的校准数据类型
-- **视觉特征与语言特征的融合**：如Merger、DeepStack等特殊架构的适配
+- **视觉特征与语言特征的融合**：如Merger（视觉特征维度压缩与融合模块）、DeepStack（跨层视觉特征注入机制）等特殊架构的适配
 - **视觉部分完整处理**：视觉部分一次性加载并处理，简化多模态融合逻辑
 - **语言模型逐层加载**：语言模型逐层加载和量化，避免对内存和显存的占用过大
 
@@ -31,7 +31,7 @@ flowchart TD
 ```
 
 - **视觉编码器**：将图像转换为视觉特征（如ViT、CLIP等）
-- **视觉特征投影**：将视觉特征映射到语言模型的隐藏空间（如PatchMerger等）
+- **视觉特征投影**：将视觉特征映射到语言模型的隐藏空间（如PatchMerger，即基于patch压缩的视觉特征合并模块）
 - **语言模型**：处理融合后的多模态特征（如Qwen、GLM系列等）
 
 ### 多模态模型适配器
@@ -50,7 +50,7 @@ flowchart TD
 
 ## 多模态模型接入
 
-以下内容将以 [Qwen3-VL-MoE](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py) W8A8混合量化场景（简称"场景示例"）的模型接入为例。
+以下内容将以 [Qwen3-VL-MoE](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)（Mixture of Experts，混合专家架构的多模态模型）W8A8混合量化场景（简称"场景示例"）的模型接入为例。
 
 **Qwen3-VL-MoE的加载策略**：
 
@@ -59,15 +59,15 @@ flowchart TD
 
 **注**：不同模型可根据实际情况选择不同策略。例如，如果视觉部分需要更细粒度的控制，也可以采用逐层方案。如果需要接入其他算法可以见[附录-可用算法接口适配指导](#可用算法接口适配指导)。
 
-### 1. 新建模型适配器目录和文件
+### 新建模型适配器目录和文件
 
 建议在 [`msmodelslim/model/`](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/model) 下创建独立目录，如 `qwen3_vl_moe/`，包含以下文件：
 
-- `model_adapter.py`：模型适配器主文件
-- `__init__.py`：导出适配器类
-- `moe_utils.py`（可选）：MoE融合权重等特殊结构的辅助转换工具
+- [`model_adapter.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)：模型适配器主文件
+- [`__init__.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/__init__.py)：导出适配器类
+- [`moe_utils.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/moe_utils.py)（可选）：MoE融合权重等特殊结构的辅助转换工具
 
-### 2. 定义适配器类并继承必要接口
+### 定义适配器类并继承必要接口
 
 ```python
 from msmodelslim.model.vlm_base import VlmBaseModelAdapter
@@ -88,15 +88,15 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,  # 提供多模态通用能力
     pass
 ```
 
-### 3. 实现接口方法
+### 实现接口方法
 
-#### 3.1 `handle_dataset`：处理多模态校准数据
+#### `handle_dataset`：处理多模态校准数据
 
 将校准数据（`VlmCalibSample`）转换为多模态理解模型支持的输入，`VlmCalibSample`的定义可参考[`vlm_dataset_loader.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)：
 
 **关键点**：
 
-- 使用 `VlmCalibSample` 结构体统一数据格式，校准数据支持的格式参考：[校准数据准备](#5-校准数据准备)
+- 使用 `VlmCalibSample` 结构体统一数据格式，校准数据支持的格式参考：[校准数据准备](#校准数据准备)
 - **加载processor或tokenizer**：主流多模态理解模型（如Qwen3-VL）一般使用processor对数据做预处理，但以InternVL2-8B为例的模型则使用tokenizer对数据做预处理，需要根据模型官方给出的推理示例进行设置
 - **构建messages**：使用processor对数据做预处理的多模态理解模型，一般有自己特定的messages形式，需要参考模型官方给出的推理示例实现定义
 - 使用 `_collect_inputs_to_device` 批量移动tensor到目标设备
@@ -167,7 +167,7 @@ def handle_dataset(self, dataset: Any, device: DeviceType = DeviceType.NPU) -> L
     return model_inputs
 ```
 
-#### 3.2 `init_model`：初始化模型（视觉部分完整加载+语言部分首层加载）
+#### `init_model`：初始化模型（视觉部分完整加载+语言部分首层加载）
 
 多模态理解模型的初始化需要注意：
 
@@ -180,7 +180,7 @@ def handle_dataset(self, dataset: Any, device: DeviceType = DeviceType.NPU) -> L
 - 通过临时设置 `num_hidden_layers=1` 来控制仅加载一个语言部分解码层
 - 视觉部分会被完整加载（所有blocks、patch_embed、merger、deepstack_merger_list等）
 - 使用 `from_pretrained` 而非手动加载权重，更简洁可靠
-- 如果首层是MoE层，需要进行3D权重转换（参考 `moe_utils.py`）
+- 如果首层是MoE层，需要进行3D权重转换（参考 [`moe_utils.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/moe_utils.py)）
 
 ```python
 def init_model(self, device: DeviceType = DeviceType.NPU) -> nn.Module:
@@ -229,7 +229,7 @@ def init_model(self, device: DeviceType = DeviceType.NPU) -> nn.Module:
     return model
 ```
 
-#### 3.3 `generate_model_visit`：生成模型访问序列
+#### `generate_model_visit`：生成模型访问序列
 
 按照模型结构的拓扑顺序，依次yield各个需要量化的模块。**顺序非常重要**，必须与前向传播顺序一致。
 
@@ -281,7 +281,7 @@ def generate_decoder_layer(self, model: nn.Module) -> Generator[Tuple[str, nn.Mo
         yield name, layer
 ```
 
-#### 3.4 辅助方法：动态加载语言部分的权重
+#### 辅助方法：动态加载语言部分的权重
 
 由于视觉部分已在 `init_model` 中完整加载，只需实现语言部分文本解码器的动态加载逻辑。
 
@@ -359,7 +359,7 @@ def _convert_single_moe_layer(self, layer: nn.Module, layer_idx: int):
     pass
 ```
 
-#### 3.5 `generate_model_forward`：生成模型前向传播序列
+#### `generate_model_forward`：生成模型前向传播序列
 
 实现模型的完整前向传播，同时yield每一层的处理请求。视觉部分一次性运行，语言部分逐层运行。
 
@@ -454,7 +454,7 @@ def generate_model_forward(self, model: nn.Module, inputs: Any) -> Generator[Pro
 
 ```
 
-### 4. 注册模型名
+### 注册模型名
 
 在 [`config/config.ini`](https://gitcode.com/Ascend/msmodelslim/blob/master/config/config.ini) 中注册模型：
 
@@ -468,91 +468,13 @@ qwen3_vl_moe = Qwen3-VL-30B-A3B, Qwen3-VL-235B-A22B
 qwen3_vl_moe = msmodelslim.model.qwen3_vl_moe.model_adapter:Qwen3VLMoeModelAdapter
 ```
 
-### 5. 校准数据准备
+### 校准数据准备
 
-校准数据由 YAML 的 `dataset` 字段指定。`dataset` 可配置为短名称（在 dataset_dir 下查找）、绝对路径或相对路径。支持以下三种使用方式。
+校准数据由 YAML 的 `dataset` 字段指定。`dataset` 可配置为短名称（在 [`lab_calib`](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_calib/__init__.py) 下查找）、绝对路径或相对路径。支持三种使用方式（index.json/index.jsonl、纯图像目录、图像目录+单个 json/jsonl），详见[一键量化使用说明 — dataset 校准数据路径配置](../feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置)。
 
-#### 方式一：index.json / index.jsonl（推荐）
+### 准备量化配置
 
-指向 **index.json** 或 **index.jsonl** 文件，或指向**仅包含一个 index.json 或 index.jsonl** 的目录。支持多模态（图像、音频、视频），格式规范，后续功能会在此方式上演进。
-
-目录示例：
-
-```text
-calib_dir/
-├── index.jsonl
-├── img1.jpg
-├── img2.png
-└── a.wav
-```
-
-**index.jsonl 内容**（每行一个 JSON 对象，至少含 `text`，可选 image/audio/video）：
-
-```json
-{"image": "img1.jpg", "text": "Describe this image."}
-{"image": "img2.png", "audio": "a.wav", "text": "What do you see and hear?"}
-```
-
-字段说明：`text` 必填（或依赖 default_text）；可选 `image`（.jpg/.jpeg/.png）、`audio`（.wav/.mp3）、`video`（.mp4），路径相对 index 文件所在目录。
-
-**配置**：
-
-```yaml
-dataset: calib_dir    # 或 index 文件路径、绝对路径
-default_text: "Describe this image in detail."
-```
-
-#### 方式二：纯图像目录
-
-目录内仅包含图像文件，无 .json/.jsonl。所有图像使用 `default_text` 作为统一文本 prompt。
-
-**说明**：此方式后续不再演进，新场景请使用方式一。
-
-```text
-calibImages/
-├── img1.jpg
-├── img2.png
-└── img3.jpeg
-```
-
-**配置**：
-
-```yaml
-dataset: calibImages
-default_text: "Describe this image in detail."
-```
-
-#### 方式三：图像目录 + 单个 .json/.jsonl（任意文件名）
-
-目录内包含图像及**一个**任意文件名的 .json 或 .jsonl 文件（文件名不为 index.json/index.jsonl），用于为每张图指定自定义文本。仅支持图像，不支持 audio/video。
-
-**说明**：此方式后续不再演进，新场景请使用方式一。
-
-```text
-calibImages/
-├── img1.jpg
-├── img2.png
-├── img3.jpeg
-└── calib_data.jsonl
-```
-
-**calib_data.jsonl**：
-
-```json
-{"image": "img1.jpg", "text": "What objects are in this image?"}
-{"image": "img2.png", "text": "Describe the scene."}
-{"image": "img3.jpeg", "text": "What is the main subject?"}
-```
-
-**配置**：
-
-```yaml
-dataset: calibImages
-```
-
-### 6. 准备量化配置
-
-创建量化配置文件（YAML），例如 `qwen3_vl_moe_w8a8.yaml`：
+创建量化配置文件（YAML），例如 [`qwen3_vl_moe_w8a8.yaml`](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_practice/qwen3_vl_moe/qwen3_vl_moe_w8a8.yaml)：
 
 ```yaml
 apiversion: multimodal_vlm_modelslim_v1
@@ -613,6 +535,16 @@ spec:
   default_text: "Describe this image in detail."  # 图片默认的文本prompt
 ```
 
+配置中各字段说明：
+
+| 配置块 | 说明 | 详细参数参考 |
+| ------ | ---- | ----------- |
+| `process` → `linear_quant`（非专家层） | 对非 MoE 专家层做 per-tensor 静态 W8A8 量化；`exclude` 中跳过 `*experts*`、`*merger*`、`*deepstack_merger_list*`、`*mlp.gate` 等不适合量化的层 | [linear_quant 配置示例](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置示例) · [配置字段详解](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置字段详解) |
+| `process` → `linear_quant`（MoE专家层） | 对 `*experts*` 层做 per-token 动态 W8A8 量化，避免因激活稀疏导致精度损失 | [linear_quant 配置示例](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置示例) · [配置字段详解](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置字段详解) |
+| `save` → `ascendv1_saver` | 保存为 Ascend 格式 safetensors 文件；`part_file_size` 控制每个分片最大大小（单位 GB） | [save 保存器配置](../feature_guide/quick_quantization_v1/usage.md#save---保存器配置字段-vlm) |
+| `dataset` | 校准数据集路径，可配置为短名称（在 `lab_calib/` 下查找）、绝对路径或 index.jsonl 文件路径 | [dataset 校准数据路径配置](../feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置) |
+| `default_text` | 图片默认文本 prompt，在校准数据条目缺少 `text` 字段时使用 | [default_text 配置](../feature_guide/quick_quantization_v1/usage.md#default_text---默认文本prompt配置) |
+
 ## 量化自有模型
 
 完成模型适配器编写、注册、配置文件和校准数据准备后，即可执行量化：
@@ -627,11 +559,11 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 ```
 
 **参数说明**：
-请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。其中\${MODEL_PATH}为原始浮点权重路径，\${SAVE_PATH}为用户自定义的量化权重保存路径，\${MODEL_TYPE}为注册的模型名称，\${CONFIG_PATH}为YAML配置文件路径。
+请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。其中 `${MODEL_PATH}` 为原始浮点权重路径，`${SAVE_PATH}` 为用户自定义的量化权重保存路径，`${MODEL_TYPE}` 为注册的模型名称，`${CONFIG_PATH}` 为YAML配置文件路径。
 
 ## FAQ
 
-### 1. 量化过程报错 Out Of Memory (OOM) 问题
+### 量化过程报错 Out Of Memory (OOM) 问题
 
 **症状**：量化时显存溢出
 
@@ -646,7 +578,7 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 - 确保 `init_model` 中 `num_hidden_layers` 临时设为1，只加载首个文本解码器层
 - 在 `generate_decoder_layer` 中使用 `_load_decoder_if_not_exist` 按需加载文本解码器层
 
-### 2. MoE权重转换问题
+### MoE权重转换问题
 
 **症状**：MoE层3D权重无法直接加载为标准Linear层
 
@@ -654,10 +586,10 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 
 **解决**：
 
-- 参考[辅助方法动态加载语言部分的权重](#34-辅助方法动态加载语言部分的权重)中 `_convert_single_moe_layer` 方法，实现3D权重切分为多个Linear层
+- 参考[辅助方法动态加载语言部分的权重](#辅助方法动态加载语言部分的权重)中 `_convert_single_moe_layer` 方法，实现3D权重切分为多个Linear层
 - 参考 [`moe_utils.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/moe_utils.py) 的等价替换底层逻辑实现
 
-### 3. 校准数据格式错误
+### 校准数据格式错误
 
 **症状**：运行中报错`InvalidDatasetError`
 
@@ -665,7 +597,7 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 
 **解决**：
 
-- 检查数据格式是否符合: [校准数据准备](#5-校准数据准备)
+- 检查数据格式是否符合: [校准数据准备](#校准数据准备)
 - 确保图片路径可访问、格式正确（.jpg/.png/.jpeg）
 
 ## 附录
@@ -674,7 +606,7 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 
 #### 支持IterSmooth离群值抑制算法
 
-如果需要支持IterSmooth算法（用于抑制激活值离群值），需要实现 `IterSmoothInterface`：
+如果需要支持IterSmooth算法（Iterative Smooth，迭代平滑算法，通过对激活值的离群值进行迭代平滑抑制来提升量化精度），需要实现 `IterSmoothInterface`：
 
 ```python
 from msmodelslim.model.interface_hub import IterSmoothInterface
@@ -726,7 +658,7 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,
 
 #### 支持QuaRot旋转离群值抑制算法
 
-如果需要支持QuaRot算法（基于旋转变换显著平滑数据的分布），需要实现旋转矩阵的初始化和应用：
+如果需要支持QuaRot算法（Quantization with Rotation，基于正交旋转变换将激活值离群值均匀分散到各个维度，从而显著平滑数据分布、提升量化精度），需要实现旋转矩阵的初始化和应用：
 
 ```python
 from msmodelslim.model.interface_hub import QuaRotInterface

@@ -102,18 +102,9 @@ class FloatSparseProcessor(AutoSessionProcessor):
 
 ## 功能介绍
 
-### 使用说明
-
-作为 Processor 使用
-
-```yaml
-- type: "float_sparse"
-      sparse_ratio: 0.3          # 稀疏比例，取值范围为 0.0~1.0，默认0.3。
-      include: [ "*" ]           # 包含的层，支持通配符。
-      exclude: ["*self_attn*"]   # 排除的层，支持通配符。
-```
-
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
@@ -132,10 +123,6 @@ spec:
 | sparse_ratio | 稀疏比例 | float | 0.3 | 稀疏比例，取值范围为 0.0~1.0，默认0.3。 |
 | include | 包含的层 | array[string] | ["*"] | 支持通配符匹配，指定要执行浮点稀疏量化的层。 |
 | exclude | 排除的层 | array[string] | [] | 支持通配符匹配，优先级高于include。 |
-
-## 模型适配
-
-请参考[开发者指南/模型接入](../../developer_guide/integrating_models.md)完成模型接入，在 YAML 文件中完成对应配置即可实现浮点稀疏的适配。
 
 ## 算法参数
 

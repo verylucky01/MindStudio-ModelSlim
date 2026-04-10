@@ -86,19 +86,9 @@
 - DeepSeek-R1-0528
 - DeepSeek-V3.1
 
-### 使用说明
-
-作为 Processor 使用
-
-```yaml
-- type: "fa3_quant" # 固定为 `fa3_quant`，用于指定 Processor。
-  include: # 字符串列表，参与量化的注意力层匹配模式（完整路径，支持 `*` 通配），默认全量。
-    - "*"
-  exclude: # 字符串列表，禁止量化的注意力层匹配模式（完整路径，支持 `*` 通配），默认为空。
-    - "model.layers.0.self_attn"
-```
-
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:

@@ -71,7 +71,7 @@ def quant(model):
         w_bit=8,  
         a_bit=8,         
         disable_names=disable_names, 
-        dev_type='npu',   # 在cpu进行量化时，需配置参数dev_type='cpu'，并取消参数dev_id=model.device.index的配置
+        dev_type='npu',
         mm_tensor=False
     )  
     #使用CalibratorAdapter接口，输入加载的原模型、量化配置和校准数据，定义校准

@@ -18,7 +18,7 @@
 
 ### 实现
 
-- 算法在 `msmodelslim/core/quantizer/impl/histogram.py` 和 `msmodelslim/core/observer/histogram.py` 中实现，处理流程分4步。
+- 算法在 [`msmodelslim/core/quantizer/impl/histogram.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quantizer/impl/histogram.py) 和 [`msmodelslim/core/observer/histogram.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/observer/histogram.py) 中实现，处理流程分4步。
 
 1. **直方图统计**：
    - 将输入张量的值域划分为固定数量的bins（默认2048）。
@@ -39,26 +39,9 @@
 
 ## 功能介绍
 
-### 使用说明
-
-作为量化器使用，支持per_tensor量化粒度的int8对称和非对称量化，通过配置一键量化yaml中的qconfig.act.method部分启用。下面以W8A8的linear为例，也可适配其他存在激活值量化的场景，具体请查看对应的quantizer配置中是否使用了AutoActQuantizer。
-
-```yaml
-- type: "linear_quant" 
-  qconfig:
-   act:
-     scope: "per_tensor" # 目前只支持per_tensor
-     dtype: "int8" # 目前只支持int8
-     symmetric: false # 支持对称/非对称量化，取值分别为True/False
-     method: "histogram" # 配置为"histogram", 即启用直方图激活值量化
-   weight:
-     scope: "per_channel"
-     dtype: "int8" 
-     symmetric: true
-     method: "minmax" # 不支持直方图权重量化，此处不应配置为"histogram"
-```
-
 ### YAML配置示例
+
+Histogram 作为 [`linear_quant`](linear_quant.md) 处理器中激活值量化方法（`method: "histogram"`）使用，YAML配置示例如下：
 
 ```yaml
 spec:
@@ -79,12 +62,16 @@ spec:
 
 ### YAML配置字段详解
 
-| 参数名 | 作用 | 可选值 | 说明 | 默认值 |
-|--------|------|--------|------|--------|
-| scope | 量化范围 | `"per_tensor"` | per_tensor: 整个张量使用相同参数 | `"per_tensor"` |
-| dtype | 量化数据类型 | `"int8"` | 8位整数量化 | `"int8"` |
-| symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `false` |
-| method | 量化方法 | `"histogram"` | histogram: 直方图量化 | `"histogram"` |
+以下字段均属于 `linear_quant` 处理器配置，完整的 `linear_quant` 字段说明请参考[线性量化配置字段详解](linear_quant.md#yaml配置字段详解)。
+
+**qconfig.act（Histogram 相关约束）**
+
+| 参数名 | 作用 | 可选值 | 说明 |
+|--------|-------|--------|------|
+| scope | 量化范围 | `"per_tensor"` | 直方图量化目前仅支持 per_tensor |
+| dtype | 量化数据类型 | `"int8"` | 直方图量化目前仅支持 int8 |
+| symmetric | 是否对称量化 | `true`, `false` | true: 对称量化；false: 非对称量化 |
+| method | 量化方法 | `"histogram"` | 固定值，启用直方图激活值量化 |
 
 ## 核心组件
 
@@ -256,7 +243,7 @@ class SearchMethod(str, Enum):
 
 ## FAQ
 
-### 1. 配置错误
+### 配置错误
 
 **问题描述**：日志提示中，出现ValidationError。
 
@@ -284,9 +271,7 @@ class SearchMethod(str, Enum):
      symmetric: True
      method: "minmax" # 不支持直方图权重量化，此处不应配置为"histogram"
 ```
-
-- 排查对应的quantizer在初始化时是否存在AutoActQuantizer。可以根据配置yaml中qconfig对应的-type查看名字，在`msmodelslim\core\quantizer`查看对应的代码。
-
+- 排查对应的quantizer在初始化时是否存在AutoActQuantizer。可以根据 YAML 中 `process` 列表项的 `type` 字段查找对应的量化器名称，在 [`msmodelslim/core/quantizer`](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/core/quantizer) 中查看对应的代码。
 ```python
 class LinearQuantizer(nn.Module):
 

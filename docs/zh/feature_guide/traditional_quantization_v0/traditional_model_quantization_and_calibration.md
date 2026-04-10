@@ -29,8 +29,6 @@ import torchvision
 
 from msmodelslim.pytorch.quant.ptq_tools import QuantConfig, Calibrator
 
-from ascend_utils.common.security import SafeWriteUmask
-
 if __name__ == '__main__':
     MODEL_ARCH = "resnet50"
     SAVE_PATH = "./output"
@@ -113,6 +111,7 @@ calibrator.export_quant_safetensor("/output_path/")
 ```python
 import torch
 from diffusers import StableDiffusion3Pipeline
+from ascend_utils.common.security import SafeWriteUmask
 
 calib_data = []
 

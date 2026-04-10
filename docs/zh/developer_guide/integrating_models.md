@@ -25,21 +25,17 @@ msModelSlim认识到量化机制和算法都有适用范围和局限性，而新
 
 以下内容将以 [`Qwen3-32B`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3/model_adapter.py) W8A8动态量化场景（简称“场景示例”）的模型接入为例：
 
-### 1. 新建模型适配器`py`文件
+### 新建模型适配器`py`文件
 
 建议放在[`msmodelslim/model/`](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/model) 下，命名如 `qwen3.py`。
 
-### 2. 理清量化过程涉及的组件，以组件接口组合定义适配器类
+### 理清量化过程涉及的组件，以组件接口组合定义适配器类
 
 模型适配器类必须继承自[`BaseModelAdapter`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/base.py)。
    
 根据经验，W8A8动态量化的精度损失很小，无需搭配离群值抑制算法，也很少需要回退；因此，在场景示例中，我们仅需支持量化调度，无需支持离群值量化、敏感层分析等额外功能。需要接入其他算法可以参考[`算法总览`](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/quantization_algorithms/)
 
 ```python
-from typing import List, Any, Generator
-from torch import nn
-from msmodelslim.core.const import DeviceType
-from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.model.interface_hub import ModelSlimPipelineInterfaceV1
 from msmodelslim.model.common.transformers import TransformersModel
 from msmodelslim.utils.logging import logger_setter
@@ -52,11 +48,15 @@ class Qwen3ModelAdapter(TransformersModel,  # 继承自BaseModelAdapter，基于
     pass
 ```
 
-### 3. 实现组件接口方法
+### 实现组件接口方法
 
 实现接口所需的方法，方法描述模型特性和行为，若使用IDE，可通过IDE功能快速创建接口方法，再填入功能代码。
 
 ```python
+from typing import List, Any, Generator
+from torch import nn
+from msmodelslim.core.const import DeviceType
+from msmodelslim.core.base.protocol import ProcessRequest
 from msmodelslim.model.interface_hub import ModelSlimPipelineInterfaceV1
 from msmodelslim.model.common.transformers import TransformersModel
 from msmodelslim.model.common.layer_wise_forward import generated_decoder_layer_visit_func, \
@@ -88,9 +88,9 @@ class Qwen3ModelAdapter(TransformersModel,
         return self._enable_kv_cache(model, need_kv_cache)  # TransformersModel已基于Transformers模型特点给出默认实现
 ```
 
-### 4. 注册模型
+### 注册模型
 
-名在配置文件[`config.ini`](https://gitcode.com/Ascend/msmodelslim/blob/master/config/config.ini)中注册模型名称，便于同一系列的模型复用一个模型适配器。
+在配置文件 [`config.ini`](https://gitcode.com/Ascend/msmodelslim/blob/master/config/config.ini) 中注册模型名称，便于同一系列的模型复用一个模型适配器。
 
 ```ini
 # 在ModelAdapter中的qwen3系列注册Qwen3-32B模型，qwen3对应下面的Qwen3ModelAdapter模型适配器
@@ -124,7 +124,7 @@ wan2_2 = msmodelslim.model.wan2_2.model_adapter:Wan2Point2Adapter
 
 当完成模型适配器的编写与注册后，即可使用一键量化能力对自有模型进行量化。
 
-### 1. 创建W8A8动态量化Yaml配置文件
+### 创建W8A8动态量化Yaml配置文件
 
 ```yaml
 apiversion: modelslim_v1
@@ -150,9 +150,9 @@ spec:
       part_file_size: 4 # 每个safetensors权重文件最大4G
 ```
 
-### 2. 量化自有模型
+### 量化自有模型
 
-可通过如下命令完成自有模型量化，请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。其中\${MODEL_PATH}为原始浮点权重路径，\${SAVE_PATH}为用户自定义的量化权重保存路径，\${MODEL_TYPE}为注册的模型名称，\${CONFIG_PATH}为YAML配置文件路径。
+可通过如下命令完成自有模型量化，请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。其中 `${MODEL_PATH}` 为原始浮点权重路径，`${SAVE_PATH}` 为用户自定义的量化权重保存路径，`${MODEL_TYPE}` 为注册的模型名称，`${CONFIG_PATH}` 为YAML配置文件路径。
 
 ```bash
 msmodelslim quant --model_path ${MODEL_PATH} \
