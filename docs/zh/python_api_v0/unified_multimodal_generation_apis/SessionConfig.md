@@ -40,7 +40,7 @@ session_config = SessionConfig(
             disable_names=[]
         ),
         "save": SaveProcessorConfig(
-            output_path="./"
+            output_path="./",
             safetensors_name=None,
             json_name=None,
             save_type=['safe_tensor'],
@@ -103,7 +103,7 @@ class W8A8QuantConfig(BaseModel):
 
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
-| act_method | 输入 | 激活值量化方法 | 可选。<br>数据类型：字符串。可选值: ['minmax', 'histogram', 'mixed']，分别对应MinMax激活量化、Histogram直方图激活量化、MinMax与Histogram混合的激活量化。|
+| act_method | 输入 | 激活值量化方法 | 可选。<br>数据类型：字符串。可选值: ['minmax', 'histogram', 'mix']，分别对应MinMax激活量化、Histogram直方图激活量化、MinMax与Histogram混合的激活量化。|
 
 ### 调用示例
 

@@ -6,7 +6,7 @@
 
 ## 前期准备
 
-代码示例中额外使用了`precision_tool`工具，可以参考该文档进行配置 ：[精度测试工具](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#精度定位方法)。
+代码示例中额外使用了`precision_tool`工具，可以参考该文档进行配置 ：[精度测试工具](../feature_guide/traditional_quantization_v0/fake_quantization_accuracy_testing_tool.md)。
 
 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)。
 

@@ -780,7 +780,7 @@ msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device n
 - <sup>1</sup> 仅MindIE支持w8a16量化模式。
 - <sup>2</sup> kvcache量化和fa3量化都纳入c8，两者均量化LLM中的k和v缓存；仅MindIE支持c8量化模式，包括w8a8c8和w4a8c8。
 - <sup>3</sup> 压缩后配合Atlas 300I Duo系列产品解压缩特性更佳；仅MindIE支持稀疏量化模式，包括w8a8s和w16a16s。
-- <sup>4</sup> 仅MindIE支持采用了PDMIX量化方案的最佳实践，如需使用vllm-ascend部署量化模型，请参考[Qwen量化案例](https://gitcode.com/Ascend/msmodelslim/blob/master/example/Qwen/README.md)，通过config_path指定非PDMIX量化方案。
+- <sup>4</sup> 仅MindIE支持采用了PDMIX量化方案的最佳实践。
 
 ## 多模态模型支持列表
 

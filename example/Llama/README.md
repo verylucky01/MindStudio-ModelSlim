@@ -70,7 +70,7 @@
 | tokenizer_args | 加载自定义tokenizer时传入的自定义参数 | 无 | 以字典方式传入。 |
 | disable_last_linear | 是否回退最后linear层 | True | True：回退最后linear层。<br>False：不回退最后linear层。 |
 | model_name | 模型名称，可选参数 | None | 用于控制异常值抑制参数。 |
-| model_type | llama模型类型 | llama2|  若使用llama3模型，请输入该参数为llama3。 |
+| model_type | llama模型类型 | llama2 | 若使用 LLaMA3 模型，请配置为 `llama3`；若使用 LLaMA3.1 基础模型（8B/70B），请配置为 `llama3.1_fp`；若使用 LLaMA3.1 Instruct 模型，请配置为 `llama3.1_instruct`。 |
 | anti_calib_file | 离群值抑制校准数据文件 | None | 用于离群值抑制的校准数据文件路径(.json或.jsonl格式)。|
 | disable_threshold | 自动选择回退层的阈值 | 0 | 当值大于0时，会根据该阈值自动选择需要回退的层。值越大，回退的层越多。|
 | pdmix | 是否使用PDMix量化类型 | False | True: 使用PDMix量化类型；<br>False: 不使用PDMix量化类型。|
@@ -153,19 +153,19 @@
 #### <span id="llama31-8b-w8a8量化">LLaMA3.1-8B W8A8量化：</span>
 
   ```shell
-  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L0 --anti_method m1 --act_method 1 --trust_remote_code True
+  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L0 --anti_method m1 --act_method 1 --model_type llama3.1_fp --trust_remote_code True
   ```
 
 #### <span id="llama31-70b-w8a8量化">LLaMA3.1-70B W8A8量化：</span>
 
   ```shell
-  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L5 --anti_method m3 --act_method 3 --trust_remote_code True
+  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L5 --anti_method m3 --act_method 3 --model_type llama3.1_fp --trust_remote_code True
   ```
 
 #### <span id="llama31-70b-w8a8量化搭配-kv-cache-int8量化">LLaMA3.1-70B W8A8量化搭配 KV cache int8量化</span>
 
   ```shell
-  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L5 --anti_method m3 --act_method 3 --use_kvcache_quant True --trust_remote_code True
+  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl  --device_type npu --disable_level L5 --anti_method m3 --act_method 3 --model_type llama3.1_fp --use_kvcache_quant True --trust_remote_code True
   ```
 
 #### <span id="llama31-70b-w8a8量化搭配attention量化">LLaMA3.1-70B W8A8量化搭配Attention量化</span>
@@ -175,7 +175,7 @@
 - 相比于W8A8量化，需额外设置`use_fa_quant`参数为True
 
   ```shell
-  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl --w_bit 8 --a_bit 8 --device_type npu --disable_level L5 --anti_method m4 --act_method 3 --use_fa_quant True --trust_remote_code True
+  python3 quant_llama.py --model_path {浮点权重路径} --save_directory {W8A8量化权重路径} --calib_file ../common/boolq.jsonl --w_bit 8 --a_bit 8 --device_type npu --disable_level L5 --anti_method m4 --act_method 3 --model_type llama3.1_fp --use_fa_quant True --trust_remote_code True
   ```
 
 #### <span id="llama31-70b-w8a8-pdmix量化prefill阶段-w8a8动态量化-decode阶段-w8a8量化-搭配-kv-cache-int8量化">LLaMA3.1-70B W8A8-pdmix量化(prefill阶段 W8A8动态量化, decode阶段 W8A8量化) 搭配 KV cache int8量化</span>
@@ -188,6 +188,7 @@
   --device_type npu \
   --anti_method m6 \
   --act_method 3 \
+  --model_type llama3.1_fp \
   --use_kvcache_quant True \
   --disable_threshold 1 \
   --pdmix True \

@@ -11,6 +11,7 @@ from msmodelslim.onnx.squant_ptq import OnnxCalibrator, QuantConfig
 quant_config = QuantConfig(disable_names=[],
                      quant_mode=0,
                      amp_num=0)
+input_model_path="/home/xxx/Resnet50/resnet50_pytorch.onnx"   #根据实际路径配置
 output_model_path="/home/xxx/Resnet50/resnet50_quant.onnx"    #根据实际情况配置 
 calibrator = OnnxCalibrator(input_model_path, quant_config)
 calibrator.run() 

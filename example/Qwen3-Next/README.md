@@ -7,7 +7,7 @@
 ## 使用前准备
 
 - 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../docs/zh/getting_started/install_guide.md)。
-- transformers版本需要配置安装4.57.0及其之后的版本
+- 需要安装 transformers 4.57.0 或更高版本：
     - pip install transformers==4.57.1
 
 ## 昇腾AI处理器支持情况
@@ -30,10 +30,9 @@
 
 ### 使用示例
 
-- 请将{MODEL_PATH}替换为用户实际浮点权重路径，{SAVE_PATH}替换为量化权重保存路径。
+- 请将`${MODEL_PATH}`替换为用户实际浮点权重路径,`${SAVE_PATH}`替换为量化权重保存路径。
 
-#### 1. Qwen3-Next-80B-A3B-Instruct
-
+#### Qwen3-Next-80B-A3B-Instruct
 ##### <span id="qwen3-next-80b-a3b-instruct-w8a8量化">Qwen3-Next-80B-A3B-Instruct W8A8量化</span>
 
 该模型的量化已经集成至[一键量化](../../docs/zh/feature_guide/quick_quantization_v1/usage.md)。

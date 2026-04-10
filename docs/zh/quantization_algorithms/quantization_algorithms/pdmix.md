@@ -4,8 +4,8 @@
 
 - 问题：传统 W8A8 静态量化采用静态的激活量化参数，在长上下文或分布漂移场景中易产生较大量化误差，需要回退大量层才能控制精度损失，却因此损失性能收益。
 - 目标：阶段间混合 W8A8 动态与 W8A8 静态两种策略，回退少量层即可控制精度损失，输出时获取与W8A8静态量化相近的性能收益。
-    - prefilling 阶段：W8A8 动态量化（per-token），减少输入上下文的量化信息损失，控制量化精度损失；
-    - decoding 阶段：W8A8 静态量化（per-tensor），获取输出时的量化性能收益，提高推理性能。
+    - prefilling 阶段：W8A8 动态量化（`per_token`），减少输入上下文的量化信息损失，控制量化精度损失；
+    - decoding 阶段：W8A8 静态量化（`per_tensor`），获取输出时的量化性能收益，提高推理性能。
 
 > 说明：阶段间权重量化方式必须保持一致，否则需要存储两份量化权重，因此 PDMIX 量化算法可视为一种`激活值量化`算法，与 W8 per-channel 权重量化结合。
 
@@ -24,8 +24,8 @@
 ### 原理
 
 - 保持权重量化不变，激活值量化采用“阶段自适应”的混合量化。
-    - prefilling：per-token 动态量化，token 级颗粒度在线计算量化参数，减小量化误差；
-    - decoding：per-tensor 静态量化，离线计算激活量化参数，减少量化参数计算操作，降低推理时延，提高吞吐量。
+    - prefilling：`per_token` 动态量化，token 级颗粒度在线计算量化参数，减小量化误差；
+    - decoding：`per_tensor` 静态量化，离线计算激活量化参数，减少量化参数计算操作，降低推理时延，提高吞吐量。
 
 ### 实现
 
@@ -56,7 +56,7 @@ spec:
           symmetric: false     # PDMIX 量化总体为非对称
           method: "minmax"     # 暂时仅支持 MinMax 算法
         weight: # 权重量化配置   
-          scope: "per_channel" # 暂时仅支持搭配权重 per-channel 量化
+          scope: "per_channel" # 暂时仅支持搭配权重 per_channel 量化
           dtype: "int8"        # 暂时仅支持搭配权重 INT8 量化
           symmetric: true      # 仅支持搭配权重对称量化
           method: "minmax"     # 权重量化算法

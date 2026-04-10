@@ -2,7 +2,7 @@
 
 ## 模型介绍
 
-- [GLM-4.1V-9B-Thinking](https://github.com/zai-org/GLM-V) 是由智谱 AI 联合清华大学团队推出的多模态大模型，该模型引入思考范式，并通过课程采样强化学习 RLCS（Reinforcement Learning with Curriculum Sampling）全面提升模型能力。
+- [GLM-4.1V-9B-Thinking](https://github.com/zai-org/GLM-V) 是由智谱 AI 联合清华大学团队推出的多模态大模型，该模型引入思考范式，并通过基于课程采样的强化学习（Reinforcement Learning with Curriculum Sampling，RLCS）全面提升模型能力。
 
 ## 使用前准备
 

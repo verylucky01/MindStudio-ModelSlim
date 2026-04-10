@@ -44,6 +44,8 @@
 
 ### YAML配置示例
 
+作为Processor使用，YAML配置示例如下：
+
 per_channel量化示例
 
 ```yaml

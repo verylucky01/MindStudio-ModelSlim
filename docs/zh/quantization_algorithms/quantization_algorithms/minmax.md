@@ -31,11 +31,15 @@ MinMax 算法基于以下公式计算量化参数：
 
 ### 实现
 
-算法在 `msmodelslim/core/quantizer/impl/minmax.py` 中实现。
+算法在 [`msmodelslim/core/quantizer/impl/minmax.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quantizer/impl/minmax.py) 中实现。
 
 ## 功能介绍
 
-在 `linear_quant` 处理器中使用 MinMax 算法：
+### 使用说明
+
+MinMax 作为 [`linear_quant`](linear_quant.md) 处理器中激活值或权重的量化方法，通过 `qconfig.act.method` 或 `qconfig.weight.method` 字段指定。
+
+### YAML配置示例
 
 ```yaml
 spec:
@@ -43,19 +47,29 @@ spec:
     - type: "linear_quant"
       qconfig:
         act:
-          method: "minmax"    # 激活值使用 minmax
+          scope: "per_tensor"   # 激活值量化范围
+          dtype: "int8"         # 激活值量化数据类型
+          symmetric: false      # 激活值非对称量化
+          method: "minmax"      # 激活值使用 minmax
         weight:
-          method: "minmax"    # 权重使用 minmax
+          scope: "per_channel"  # 权重量化范围
+          dtype: "int8"         # 权重量化数据类型
+          symmetric: true       # 权重对称量化
+          method: "minmax"      # 权重使用 minmax
+      include: ["*"]            # 包含的层
+      exclude: []               # 排除的层
 ```
 
-### 参数说明
+### YAML配置字段详解
 
-| 参数名 | 作用 | 可选值 | 说明 |
-|--------|------|--------|------|
-| method | 量化方法 | `"minmax"` | 指定使用 MinMax 算法 |
+以下字段均属于 `linear_quant` 处理器配置，完整的 `linear_quant` 字段说明请参考[线性量化配置字段详解](linear_quant.md#yaml配置字段详解)。
+
+| 参数名 | 所属配置 | 可选值 | 说明 |
+|--------|----------|--------|------|
+| `qconfig.act.method` | 激活值量化 | `"minmax"` | 指定激活值使用 MinMax 算法 |
+| `qconfig.weight.method` | 权重量化 | `"minmax"` | 指定权重使用 MinMax 算法 |
 
 ## FAQ
 
-### 1. 为什么 MinMax 在低比特（如 INT8、INT4）下精度下降明显？
-
+### 为什么 MinMax 在低比特（如 INT8、INT4）下精度下降明显？
 MinMax 算法对离群值（Outliers）非常敏感。如果张量中存在极少数数值巨大的点，MinMax 会为了覆盖这些点而拉大整体量化范围，导致大部分正常数值的量化精度丢失。在低比特或有限位宽的浮点量化场景下，建议配合离群值抑制算法（如 SmoothQuant）或使用更高级的量化算法（如 SSZ）。
