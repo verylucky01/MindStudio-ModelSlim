@@ -32,7 +32,7 @@
 
 ### 实现
 
-- 算法在 `msmodelslim/processor/sparse/float_sparse.py` 和 `admm.py` 中实现：
+- 算法在 [msmodelslim/processor/sparse/float_sparse.py](../../../../msmodelslim/processor/sparse/float_sparse.py) 和 [admm.py](../../../../msmodelslim/processor/sparse/admm.py) 中实现：
 
 #### ADMM稀疏器核心类
 
@@ -126,7 +126,7 @@ spec:
 
 ## 算法参数
 
-浮点稀疏算法内部使用以下参数（可通过修改源码调整，`msmodelslim/processor/sparse/float_sparse.py`）：
+浮点稀疏算法内部使用以下参数（可通过修改源码调整，[admm.py](../../../../msmodelslim/processor/sparse/admm.py)）：
 
 ```python
 # ADMM参数
@@ -164,25 +164,25 @@ FloatSparseProcessorConfig(
 
 ## FAQ
 
-### 1. 浮点稀疏不支持叠加 w8a8 稀疏量化
+### 浮点稀疏不支持叠加 w8a8 稀疏量化
 
 **现象**：用户尝试对已经进行W8A8S（权重INT8稀疏量化）处理的模型，再应用浮点稀疏算法进行进一步稀疏化。
 
 **解决方案**：浮点稀疏算法（W16A16S）和W8A8S稀疏量化是两种不同的技术路径，不支持叠加使用。多次稀疏化处理会累积精度损失，可能严重影响模型性能。
 
-### 2. 稀疏比例设置过高
+### 稀疏比例设置过高
 
 **现象**：稀疏比例过高导致模型精度严重下降。
 
 **解决方案**：降低 sparse_ratio 配置参数，建议在 0.3 附近逐步调整。
 
-### 3. 校准数据长度不够，导致求矩阵逆失败
+### 校准数据长度不够，导致求矩阵逆失败
 
 **现象**：处理大模型时出现求矩阵逆失败错误。
 
 **解决方案**：增加校准集中每条数据长度，保证经过 tokenizer 编码后的 token id 数量 >= 2048。
 
-### 4. 校准集数量过多导致显存溢出
+### 校准集数量过多导致显存溢出
 
 **现象**：处理大模型时出现显存溢出错误。
 

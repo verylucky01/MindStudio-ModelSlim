@@ -24,5 +24,5 @@ config = RACompressConfig(theta=0.00001, alpha=100)
 model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path="baichuan2-13b/float_path/", 
                                              local_files_only=True).float().cpu()    # 需根据模型的实际路径配置
 ra = RACompressor(model, config) 
-ra.get_alibi_windows(save_path)
+ra.get_alibi_windows('./alibi_windows.pt')
 ```
