@@ -145,13 +145,13 @@ class FakeQuantDynamicCache(AutoFakeQuantDynamicCache):
 
 ## FAQ
 
-1. 缓存未被量化
+### 缓存未被量化
 
     问题现象：缓存未被量化。
 
     解决方案：确认注意力前向接受了一个 `cache` 参数并正确调用 `cache.update()`。
 
-2. 新缓存类型不支持
+### 新缓存类型不支持
 
     问题现象：新缓存类型不支持。
 

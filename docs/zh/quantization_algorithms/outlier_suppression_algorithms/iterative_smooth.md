@@ -28,7 +28,7 @@ scales = (A_scale**α / W_scale**(1-α)).clamp(min=scale_min)
 
 ### 支持的子图类型
 
-#### 1. NormLinearSubgraph（归一化-线性子图）
+#### NormLinearSubgraph（归一化-线性子图）
 
 适用于包含归一化层和多个线性层的结构，如：
 
@@ -43,7 +43,7 @@ y = torch.cat([linear(x) for linear in linears], dim=-1)
 - 对每个线性层应用正向缩放
 - 对归一化层应用反向缩放（1/scales）
 
-#### 2. LinearLinearSubgraph（线性-线性子图）
+#### LinearLinearSubgraph（线性-线性子图）
 
 适用于两个连续线性层的结构：
 
@@ -57,7 +57,7 @@ y = linear2(linear1(x))
 - 对linear2应用正向缩放
 - 对linear1应用反向缩放（1/scales）
 
-#### 3. OVSubgraph（注意力输出-值子图）
+#### OVSubgraph（注意力输出-值子图）
 
 适用于注意力机制中的输出投影和值投影：
 
@@ -71,7 +71,7 @@ y = linear2(linear1(x))
 - 对o_proj应用正向缩放
 - 对v_proj应用反向缩放（1/scales）
 
-#### 4. UpDownSubgraph（上投影-下投影子图）
+#### UpDownSubgraph（上投影-下投影子图）
 
 适用于MLP门控机制：
 
@@ -85,7 +85,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - 对down_proj应用正向缩放
 - 对up_proj应用反向缩放（1/scales）
 
-#### 5. NonFusionSubgraph（非融合子图）
+#### NonFusionSubgraph（非融合子图）
 
 适用于**仅对若干线性层做平滑、且不融合到前置层**的场景。当映射中 `source` 为 `None`、仅提供 `targets` 时，处理器会走非融合分支，将 `targets` 中的线性层组成非融合子图进行平滑。
 
@@ -105,7 +105,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 ### 实现
 
-算法在 `msmodelslim/processor/anti_outlier/iter_smooth/processor.py` 中实现，处理流程分两阶段：
+算法在 [msmodelslim/processor/anti_outlier/iter_smooth/processor.py](../../../../msmodelslim/processor/anti_outlier/iter_smooth/processor.py) 中实现，处理流程分两阶段：
 
 #### 1) 预处理阶段（preprocess）
 
@@ -137,12 +137,6 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - **OV子图**：处理注意力机制中的输出投影（Output projection）和值投影（Value projection）之间的连接关系，支持QKV融合模式。
 - **Up-Down子图**：处理MLP门控机制，对上下投影层应用平滑。
 - **非融合子图**：当 `mapping.source` 为 `None` 且 `mapping.targets` 非空时，将目标线性层组成 NonFusionSubgraph，仅对权重做缩放并在每层注册输入侧 scale 的 pre-hook，不融合到前置层；不支持 shift。
-
-**平滑算法核心：**
-
-- 基于收集的激活统计信息计算每通道的缩放因子。
-- 使用 `iter_smooth` 算法对子图进行迭代平滑优化。
-- 支持可配置的平滑参数：`alpha`（平滑强度）、`scale_min`（最小缩放）、`symmetric`（对称量化）。
 
 **资源清理：**
 
@@ -277,7 +271,7 @@ class IterSmoothInterface(ABC):
    - **非融合子图**：`source=None`，`targets` 为需要平滑的线性层路径列表（可不融合到前置层）
 3. **指定模块路径**：使用完整的模块路径，如 `model.layers.{i}.self_attn.q_proj`。
 
-**参考实现：** 可参考 `msmodelslim/model/qwen3/model_adapter.py` 中的 `Qwen3ModelAdapter` 实现。
+**参考实现：** 可参考 [msmodelslim/model/qwen3/model_adapter.py](../../../../msmodelslim/model/qwen3/model_adapter.py) 中的 `Qwen3ModelAdapter` 实现。
 
 ### 配置示例
 

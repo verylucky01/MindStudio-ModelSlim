@@ -17,16 +17,7 @@ vllm-ascend提供用于部署的Docker镜像，可以从镜像仓库[ascend/vllm
 
 ### 2. 镜像内安装 msModelSlim
 
-```shell
-# 1. git clone msmodelslim 代码
-git clone https://gitcode.com/Ascend/msmodelslim.git
-
-# 2. 进入到 msmodelslim 的目录并运行安装脚本
-cd msmodelslim
-bash install.sh
-```
-
-**注意：** 使用 msmodelslim 命令行工具时，请不要在 msmodelslim 源码目录下执行 msmodelslim 命令，这样做可能会因为 Python 导入模块时源码路径和安装路径冲突，导致命令执行报错。
+安装命令具体参考[msModelSlim安装指导](./install_guide.md)
 
 ### 3. 下载大模型原始浮点权重
 

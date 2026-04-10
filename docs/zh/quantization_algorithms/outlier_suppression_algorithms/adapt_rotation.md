@@ -4,8 +4,63 @@
 
 - **概述**：Adapt Rotation（自适应旋转优化）是一种用于大语言模型量化的离群值抑制算法，在 QuaRot 的基础上进一步优化旋转矩阵。该算法通过校准数据驱动的方式，迭代优化 Hadamard 旋转矩阵，使变换后的激活值在量化时具有更小的重构误差，从而有效抑制激活离群值，提升低比特量化精度。
 - **核心思想**：在固定 Hadamard 矩阵的基础上，通过 Newton-Schulz 迭代求解正交极因子，学习了一个可优化的正交矩阵，使得在给定激活数据上，经过量化-反量化后的重构误差最小。
-- **与 QuaRot 的关系**：使用 Adapt Rotation 的前提是模型适配 `AdaptRotationInterface`（它继承 `QuaRotInterface`，并额外提供 `get_hidden_dim()`）。Stage1 负责基于校准数据优化旋转矩阵；Stage2 将优化后的矩阵应用到 QuaRot 中，替代默认的 Hadamard 矩
-阵。
+- **与 QuaRot 的关系**：使用 Adapt Rotation 的前提是模型适配 `AdaptRotationInterface`（它继承 `QuaRotInterface`，并额外提供 `get_hidden_dim()`）。Stage1 负责基于校准数据优化旋转矩阵；Stage2 将优化后的矩阵应用到 QuaRot 中，替代默认的 Hadamard 矩阵。
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant MultiStageQuantServer
+    participant AdaptRotationStage1
+    participant AdaptRotationStage2
+    participant QuaRotInterface
+    participant HadamardOptimizer
+    participant Context
+
+    User->>MultiStageQuantServer: 启动多阶段量化服务<br>apiversion: modelslim_v1_multi_stage
+
+    Note over MultiStageQuantServer,QuantProcessor: =========== Stage1：旋转矩阵优化 ===========
+    MultiStageQuantServer->>AdaptRotationStage1: 执行 Stage1
+
+    Note over AdaptRotationStage1: pre_run
+    AdaptRotationStage1->>QuaRotInterface: 获取融合与维度信息
+    QuaRotInterface-->>AdaptRotationStage1: 融合映射、隐藏层维度
+    AdaptRotationStage1->>AdaptRotationStage1: 初始化初始旋转并融合归一化
+
+    Note over AdaptRotationStage1: process
+    loop 逐层调度
+        AdaptRotationStage1->>AdaptRotationStage1: 注册前向钩子并收集激活
+    end
+
+    Note over AdaptRotationStage1: post_run
+    AdaptRotationStage1->>AdaptRotationStage1: 汇总激活并按采样数得到激活矩阵
+    AdaptRotationStage1->>HadamardOptimizer: 基于激活矩阵与初始旋转求解最优正交矩阵
+    HadamardOptimizer->>HadamardOptimizer: 基于 SVD/正交普鲁克迭代求解
+    HadamardOptimizer-->>AdaptRotationStage1: 优化后的旋转矩阵
+    AdaptRotationStage1->>Context: 写入优化后的旋转矩阵
+    AdaptRotationStage1-->>MultiStageQuantServer: Stage1 完成
+
+    Note over MultiStageQuantServer,QuantProcessor: =========== Stage2：应用优化旋转 ===========
+    MultiStageQuantServer->>AdaptRotationStage2: 执行 Stage2
+
+    Note over AdaptRotationStage2: pre_run
+    AdaptRotationStage2->>Context: 读取优化后的旋转矩阵
+    Context-->>AdaptRotationStage2: 
+    AdaptRotationStage2->>QuaRotInterface: 获取旋转相关信息
+    QuaRotInterface-->>AdaptRotationStage2: 
+    AdaptRotationStage2->>AdaptRotationStage2: 用优化后旋转矩阵覆盖原始旋转并执行层融合与旋转操作
+
+    Note over AdaptRotationStage2: process
+    loop 逐层
+        AdaptRotationStage2->>AdaptRotationStage2: 执行 QuaRotProcessor 逻辑
+    end
+    Note over AdaptRotationStage2: post_run
+    AdaptRotationStage2->>AdaptRotationStage2: 执行 QuaRotProcessor 逻辑
+
+
+    AdaptRotationStage2-->>MultiStageQuantServer: Stage2 完成
+
+    MultiStageQuantServer-->>User: 多阶段量化服务完成
+```
 
 ## 使用前准备
 
