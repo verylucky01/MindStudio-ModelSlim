@@ -64,7 +64,7 @@ sequenceDiagram
 
 ## 使用前准备
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见 [msModelSlim 工具安装指南](../../getting_started/install_guide.md)。
 
 ## 原理和实现
 
@@ -211,7 +211,7 @@ spec:
 | steps | 迭代优化步数 | `int` | Hadamard 优化最大迭代次数 | `20` |
 | quant_dtype | 量化激活类型 | `string` | `"int4"` 或 `"int8"`，应与下游量化中的 act.dtype 一致 | `"int4"` |
 | layer_type | 收集激活的层名子串 | `array[string]` | 用于匹配 Linear 层名称，如 `["up_proj"]` | `["up_proj"]` |
-| block_size | 块大小 | `int` | 旋转矩阵块大小，取值为大于 0 的 2 的幂，当设置为-1时表示 hidden_dim（不分块） | `-1` |
+| block_size | 块大小 | `int` | 旋转矩阵块大小，取值为大于 0 的 2 的幂或 -1；当设置为 -1 时表示 hidden_dim（不分块） | `-1` |
 | max_samples | 每层最大采样数 | `int` | 控制激活采样数量 | `2048` |
 
 #### Stage2 字段
@@ -221,8 +221,8 @@ spec:
 | type | 处理器类型标识 | `string` | 固定为 `"adapt_rotation"` | - |
 | stage | 阶段标识 | `int` | 固定为 `2` | - |
 | online | 是否启用“在线旋转” | `bool` | 当为 `True` 时，在量化过程动态注入旋转计算 | `False` |
-| block_size | 块大小 | `int` | 旋转矩阵块大小，取值为大于 0 的 2 的幂，当设置为-1时表示 hidden_dim（不分块） | `-1` |
-| down_proj_online_layers | 应用在线旋转的 down 层索引 | `array[int]` | 仅当 `online=True` 时生效 | `[]` |
+| block_size | 块大小 | `int` | 旋转矩阵块大小，取值为大于 0 的 2 的幂或 -1；当设置为 -1 时表示 hidden_dim（不分块） | `-1` |
+| down_proj_online_layers | 应用在线旋转的 down 层索引 | `array[int]` | 应用在线旋转的 down 层索引，仅当 `online=True` 时生效 | `[]` |
 | max_tp_size | 最大张量并行度（在线旋转分块规模） | `int` | 仅当 `online=True` 时生效，用于在线旋转矩阵构造与并行相关的分块参数，需为 `1` 或正的 2 的幂 | `4` |
 
 ## 模型适配
@@ -254,7 +254,7 @@ Adapt Rotation 的模型适配要求：
 
 **解决方案**：将 Stage1 的 `quant_dtype` 设置为与下游 `qconfig.act.dtype` 一致，如 w4a4 用 `int4`，w8a8 用 `int8`。
 
-### MoE模型执行该算法速度很慢
+### MoE 模型执行该算法速度很慢
 
 **现象**：当模型为 MoE 结构时，运行该处理器后速度明显变慢，Stage1 的激活收集与 Hadamard 优化耗时显著增加。
 
