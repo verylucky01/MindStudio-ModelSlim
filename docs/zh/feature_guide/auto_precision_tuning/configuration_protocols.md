@@ -13,8 +13,6 @@
 
 用户需要自定义调优配置文件，可以参考 [example](./example/) 目录下的配置文件格式进行自定义。
 
-## 自动调优基础配置协议
-
 ### 基础配置结构
 
 ```yaml
@@ -46,11 +44,11 @@ evaluation:
 
 **类型**: `string`
 
-**可选值**: 根据已实现的调优策略而定，例如 `standing_high`。
+**可选值**: 根据已实现的调优策略而定，例如 `standing_high`、`standing_high_with_experience`。
 
 **策略特有配置字段**
 
-不同调优策略的配置字段差异较大，本协议文档不展开具体策略参数。请在选择策略后，直接参考对应策略文档中的“关键参数/配置示例”：
+不同调优策略的配置字段差异较大，详细的配置项请参考相应算法文档的「YAML 配置字段详解」章节。目前已支持的算法如下：
 
 - [Standing High 调优算法](../../quantization_algorithms/auto_tuning_strategies/standing_high.md)
 - [Standing High With Experience 调优算法](../../quantization_algorithms/auto_tuning_strategies/standing_high_with_experience.md)
@@ -91,8 +89,8 @@ evaluation:
 | 字段名 | 作用 | 类型 | 必选/可选 | 说明 |
 |--------|------|------|----------|------|
 | dataset | 指定要评估的数据集 | string | 必选 | 数据集名称，必须是在 evaluation.evaluation.datasets 中配置的数据集名称 |
-| target | 设置精度目标值 | number | 必选 | 期望达到的精度目标值，必须大于 0；内部按 Decimal 处理 |
-| tolerance | 设置精度容差 | number | 必选 | 精度允许的误差范围，必须大于等于 0；内部按 Decimal 处理 |
+| target | 设置精度目标值 | number | 必选 | 期望达到的精度目标值，必须大于 0；可写数字（如 `0.95`）或字符串（如 `"0.95"`） |
+| tolerance | 设置精度容差 | number | 必选 | 精度允许的误差范围，必须大于等于 0；可写数字（如 `0.95`）或字符串（如 `"0.95"`） |
 
 **配置示例**:
 
@@ -118,10 +116,10 @@ demand:
       tolerance: 2  # 容差 ±2%
 ```
 
-**注意**: 
+**注意**:
 
 - **精度单位说明**：不同数据集返回的精度格式可能不同，有些数据集返回小数形式（0.0-1.0，如 0.83 表示 83%），有些数据集返回百分制（0-100，如 83 表示 83%）。`target` 和 `tolerance` 的单位必须与对应数据集返回的精度格式保持一致。请根据测评工具实际数据集返回的精度格式来配置 `target` 和 `tolerance`。
-- **精度数值精度说明**：`target` 和 `tolerance` 在系统内部按 Decimal 进行计算。YAML 中可直接写数字（如 `0.95`），也可写字符串（如 `"0.95"`）；在需要严格控制小数精度的场景，建议使用字符串写法。
+- **精度数值设置说明**：`target` 和 `tolerance` 在系统内部按 Decimal 进行计算。YAML 中可直接写数字（如 `0.95`），也可写字符串（如 `"0.95"`）；在需要严格控制小数精度的场景，建议使用字符串写法。
 - **精度目标设置说明**：文档中给出的精度数据仅供参考，请根据实际浮点模型的精度进行配置。理论上量化后模型不会超过原始浮点模型的精度，因此建议将精度目标设置为略低于或等于浮点模型的精度。
 - 支持配置多个数据集的精度需求，每个数据集可以设置不同的目标精度和容差。
 
@@ -135,7 +133,7 @@ demand:
 |--------|------|------|----------|------|
 | type | 测评工具类型 | string | 必选 | 当前支持 `aisbench`。 |
 | precheck | 预检查配置 | list | 可选 | 定义正式评估前的预检查配置，空列表表示跳过预检查。默认值：`[]` |
-| aisbench | AISbench 测评工具配置 | object | 必选 | AISbench 测评工具的详细配置参数（如 `timeout`、`batch_size`、`generation_kwargs` 等）。 |
+| aisbench | AISBench 测评工具配置 | object | 必选 | AISBench 测评工具的详细配置参数（如 `timeout`、`batch_size`、`generation_kwargs` 等）。 |
 | datasets | 数据集配置 | dict | 必选 | 定义需要评估的数据集及其配置，必须至少包含 `demand.expectations` 中指定的所有数据集。 |
 | host | 服务主机地址 | string | 可选 | 测评端连接推理服务的地址。**需与推理引擎侧保持一致**。默认值：`"localhost"` |
 | port | 服务端口 | int | 可选 | 测评端连接推理服务的端口。**需与推理引擎侧保持一致**。默认值：`1234` |
@@ -192,7 +190,7 @@ evaluation:
 
 **aisbench 字段说明**:
 
-AISbench 测评工具的详细配置参数：
+AISBench 测评工具的详细配置参数：
 
 | 字段名 | 作用 | 类型 | 必选/可选 | 说明 |
 |--------|------|------|----------|------|
@@ -220,7 +218,7 @@ AISbench 测评工具的详细配置参数：
 | directory | 指定模型配置目录路径 | string | 可选 | 模型配置目录的显式路径，空字符串表示使用默认路径。默认值：`""` |
 | subdir | 指定模型服务化后端配置子目录 | string | 可选 | 模型服务化后端配置子目录。默认值：`"vllm_api"` |
 | base_name | 指定模型服务化后端配置基础名称 | string | 可选 | 模型服务化后端配置基础名称。默认值：`"vllm_api_general_chat"` |
-| name_suffix | 指定模型服务化后端配置名称后缀 | string | 可选 | 模型服务化后端配置名称后缀，'auto'表示自动生成。默认值：`"auto"` |
+| name_suffix | 指定模型服务化后端配置名称后缀 | string | 可选 | 模型服务化后端配置名称后缀，`auto` 表示自动生成。默认值：`"auto"` |
 | abbr | 指定模型配置缩写 | string | 可选 | 模型配置缩写。默认值：`"vllm-api-general-chat"` |
 | attr | 指定模型配置属性 | string | 可选 | 模型配置属性。默认值：`"service"` |
 
@@ -232,13 +230,13 @@ AISbench 测评工具的详细配置参数：
 
 **datasets 字段说明**:
 
-该字段指定了不同的数据集字段对应的 AISbench 拉起测评服务的字段。当前示例中仅支持三个数据集（gsm8k、aime25、bfcl-simple），用户可以参考 [AISbench 文档数据集支持列表](https://ais-bench-benchmark.readthedocs.io/zh-cn/latest/get_started/datasets.html)添加更多支持的数据集。
+该字段指定了不同的数据集键与 AISBench 侧数据集配置的对应关系。下文示例中仅列出三个数据集（gsm8k、aime25、bfcl-simple）；更多数据集可参考 [AISBench 文档数据集支持列表](https://ais-bench-benchmark.readthedocs.io/zh-cn/latest/get_started/datasets.html) 自行扩展。
 
 每个数据集的配置字段说明：
 
 | 字段名 | 作用 | 类型 | 必选/可选 | 说明 |
 |--------|------|------|----------|------|
-| config_name | 指定 AISbench 中的配置名称 | string | 必选 | 数据集在 AISbench 中的配置名称，非空字符串 |
+| config_name | 指定 AISBench 中的配置名称 | string | 必选 | 数据集在 AISBench 中的配置名称，非空字符串 |
 | mode | 设置该数据集的评测模式 | string | 可选 | 评测模式，空字符串表示使用全局模式。默认值：`""` |
 | request_rate | 设置该数据集的请求速率 | float | 可选 | 请求速率，0.0 表示使用全局默认值。必须大于等于 0。默认值：`0.0` |
 | max_out_len | 设置该数据集的最大输出长度 | int | 可选 | 最大输出长度，None 表示使用全局默认值。如果指定则必须大于 0。默认值：`None` |
@@ -266,7 +264,7 @@ AISbench 测评工具的详细配置参数：
 |--------|------|------|----------|------|
 | type | 指定预检查类型 | string | 必选 | 固定值：`expected_answer`。 |
 | test_cases | 配置测试用例列表 | list | 可选 | 测试用例列表，使用键值对格式（问题: 答案）。如果不配置，默认使用一个测试用例（"What is 2+2?": "4"）。默认值：`[{"What is 2+2?": "4"}]` |
-| max_tokens | 设置最大token数 | int | 可选 | 必须大于零。默认值：`512` |
+| max_tokens | 设置最大 token 数 | int | 可选 | 必须大于零。默认值：`512` |
 | timeout | 设置超时时间 | float | 可选 | 超时时间（秒），必须大于零。默认值：`60.0` |
 
 **test_cases 字段说明**:
@@ -290,12 +288,12 @@ test_cases:
 
 ```yaml
 precheck:
-- type: expected_answer
-  test_cases:
-    - "What is 2+2?": ["4", "four"]
-    - "What is the capital of China?": "Beijing"
-  max_tokens: 1024
-  timeout: 60.0
+  - type: expected_answer
+    test_cases:
+      - "What is 2+2?": ["4", "four"]
+      - "What is the capital of China?": "Beijing"
+    max_tokens: 1024
+    timeout: 60.0
 ```
 
 **注意**:
@@ -321,9 +319,9 @@ precheck:
 | port | 指定服务端口 | int | 可选 | 推理服务监听端口，范围：1-65535。**需与测评端保持一致**。默认值：`1234` |
 | health_check_endpoint | 指定健康检查端点 | string | 可选 | 就绪探测时请求的 **HTTP 路径**，须与推理进程实际提供的、可返回成功响应的 URL 一致。默认 `"/v1/models"` 对应常见 OpenAI 兼容服务的模型列表接口。必须以 `/` 开头，其它取值无统一列表，可按部署的 vLLM-Ascend 真实路由自定义。 |
 | startup_timeout | 设置启动超时时间 | int | 可选 | 启动超时时间（秒），必须大于 0。默认值：`600` |
-| args | 配置推理引擎启动参数 | dict | 可选 | 推理引擎启动参数，用于添加其他vllm-ascend参数配置。默认值：`{}` |
+| args | 配置推理引擎启动参数 | dict | 可选 | 推理引擎启动参数，用于添加其他 vLLM-Ascend 参数配置。默认值：`{}` |
 
-**注意**: 不同模型拉起服务化时需要的参数可能不同，用户需要根据实际模型调整服务化参数。可以参考 [vLLM-Ascend 教程](https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/latest/user_guide/configuration/index.html) 适应不同模型的参数配置，启动参数可以在 `args` 中进行添加，环境变量可以在 `env_vars` 中添加。
+**注意**: 不同模型拉起服务化时需要的参数可能不同，用户需要根据实际模型调整服务化参数。可以参考 [vLLM-Ascend 教程](https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/latest/user_guide/configuration/index.html) 按模型需求配置参数，启动参数可以在 `args` 中进行添加，环境变量可以在 `env_vars` 中添加。
 
 **配置示例**:
 
@@ -357,7 +355,7 @@ inference_engine:
       enable_weight_nz_layout: true
 ```
 
-## 配置示例
+### 使用示例
 
 完整的自动调优配置示例请参考：
 
