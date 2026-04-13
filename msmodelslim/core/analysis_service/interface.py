@@ -30,7 +30,10 @@ from msmodelslim.core.runner.pipeline_interface import PipelineInterface
 class AnalysisConfig(BaseModel):
     """分析服务入参：指标类型、校准数据集、层匹配模式及方法参数等。"""
 
-    metrics: str = Field(..., description="分析指标名，如 std / quantile / kurtosis / attention_mse")
+    metrics: str = Field(
+        ...,
+        description="分析指标名，如 std / quantile / kurtosis / attention_mse / mse_model_wise",
+    )
     calib_dataset: str = Field(..., description="校准数据集名称，用于前向收集激活")
     patterns: List[str] = Field(default_factory=lambda: ["*"], description="层名匹配模式，支持 fnmatch")
 

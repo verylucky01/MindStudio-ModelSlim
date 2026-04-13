@@ -25,6 +25,8 @@ __all__ = [
     "BinaryAnalysisProcessorConfig",
     "BinaryAnalysisProcessor",
     "AttentionMSEAnalysisInterface",
+    "BinaryOperatorModelWiseProcessorConfig",
+    "BinaryOperatorModelWiseProcessor",
 ]
 
 from .binary_operator.metrics.attention_mse.interface import AttentionMSEAnalysisInterface
@@ -35,4 +37,8 @@ from .unary_operator.processor import (
 from .binary_operator.processor import (
     BinaryAnalysisProcessorConfig,
     BinaryAnalysisProcessor,
+)
+from .binary_operator_model_wise.processor import (
+    BinaryOperatorModelWiseProcessorConfig,
+    BinaryOperatorModelWiseProcessor,
 )

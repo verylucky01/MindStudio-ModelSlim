@@ -19,7 +19,7 @@ toc_depth: 3
 
 ### 功能说明
 
-- **多维度分析**: 支持 `std`、`quantile`、`kurtosis` 三种**线性层**衡量算法，以及 `attention_mse` 一种**attention结构**衡量算法，能够从数据分布、稳健性、峰态特征和量化前后注意力输出的差异等多个维度，精准评估层敏感度。
+- **多维度分析**: 支持 `std`、`quantile`、`kurtosis` 三种**线性层**衡量算法，`attention_mse` 一种**attention结构**衡量算法，以及 `mse_model_wise` 一种**模型级输出**衡量算法（对比量化前后最终输出差异），能够从数据分布、稳健性、峰态特征、注意力输出差异和模型输出差异等多个维度，精准评估层敏感度。
 - **灵活配置**: 支持自定义校准数据集（JSON/JSONL格式）、层名匹配以及丰富的参数选项，满足不同场景的量化需求。
 - **智能输出**: 支持打印Top K敏感层列表，实际打印数量可能会大于或等于目标数量，如QKV一起打印。
 
@@ -52,7 +52,7 @@ msmodelslim analyze [参数选项]
 |------|------|--------|------|--------|
 | `--device` | `str` | `npu` | 指定运行分析的目标设备，可选值：`npu`, `cpu`。 | `npu` |
 | `--pattern` | `List[str]` | `["*"]` | 待分析的层名称列表，支持通配符匹配。支持设置多个pattern，使用空格分隔。不传值会使用默认值。 | `"*linear*"` `"*attention.*"` `"*mlp.*"` |
-| `--metrics` | `str` | `"kurtosis"` | 分析使用的度量算法，可选值：`"std"`, `"quantile"`, `"kurtosis"`, `"attention_mse"` | `"kurtosis"` |
+| `--metrics` | `str` | `"kurtosis"` | 分析使用的度量算法，可选值：`"std"`, `"quantile"`, `"kurtosis"`, `"attention_mse"`, `"mse_model_wise"` | `"kurtosis"` |
 | `--calib_dataset` | `str` | `"boolq.jsonl"` | 校准数据集文件路径，支持JSON/JSONL格式，以.json或.jsonl结尾。支持绝对路径和相对路径。 |`/path/data.jsonl`|
 | `--topk` | `int` | `15` | 输出Top K敏感的层数量，为大于0的整数。推荐范围为10~20。 |  `15` |
 | `--trust_remote_code` | `bool` | `False` | 是否信任远程代码，需要用户自行保障安全性。可选值：`True`, `False`。模型加载时如需依赖 transformers 库外的文件，则需指定 `--trust_remote_code` 为 `True`，如 DeepSeek-V3 系列模型。 | `False` |
@@ -95,6 +95,7 @@ msmodelslim analyze [参数选项]
 - **quantile**: 分位数算法，对异常值不敏感，适合精度要求较高的场景。
 - **kurtosis**: 峰度算法，能识别分布形态特征，适合需要精细控制的场景。
 - **attention_mse**: 注意力 MSE 算法，基于量化前后两次前向的注意力输出差异，适合需要评估注意力模块需要量化的场景。
+- **mse_model_wise**: 模型级输出 MSE 算法，基于量化前后前向**最后一层Decoder输出**差异，用于从模型整体输出角度衡量量化敏感度。
 
 ### 分析算法说明
 
@@ -189,6 +190,20 @@ class AttentionMSEAnalysisInterface(ABC):
 ##### 特点
 
 - 数值越大表示该注意力层在量化后输出偏差越大、越敏感。
+
+#### mse_model_wise (Model-wise MSE) - 模型级 MSE 算法
+
+##### 算法原理
+
+- 对同一批校准样本分别执行**量化前（浮点）**与**量化后**两次前向，采集模型最终输出（最后一个Decoder层的输出）。
+- 以模型最终输出的差异计算 MSE，分数越大表示该层量化后对最终输出影响越大、越敏感。
+
+##### 适用场景
+
+- **推荐用于**: 希望从模型最终输出角度评估各层量化影响的场景，无需模型适配；结果按 **Decoder 层（block）** 排序，适合做**整层回退**或按结构做**整块回退**（例如整个 attention / 整个 mlp）。
+- **使用注意**:
+  - `pattern` 参数会直接影响在对比单个 Decoder 层量化前/量化后误差时，哪些结构会被量化；patterns 选择不同，对比出来的排序结果也会不同。
+  - 不同模型的前向传播过程不同，只有当前 Decoder 层的输出可以直接作为下一层输入时能够使用；若层间输入输出无法对齐，会报错显示不支持。
 
 ### 使用示例
 

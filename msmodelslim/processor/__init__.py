@@ -29,6 +29,8 @@ __all__ = [
     "UnaryAnalysisProcessor",
     "BinaryAnalysisProcessorConfig",
     "BinaryAnalysisProcessor",
+    "BinaryOperatorModelWiseProcessorConfig",
+    "BinaryOperatorModelWiseProcessor",
     "LinearProcessorConfig",
     "LinearQuantProcessor",
     "SmoothQuantProcessorConfig",
@@ -63,6 +65,8 @@ from .analysis import (
     UnaryAnalysisProcessor,
     BinaryAnalysisProcessorConfig,
     BinaryAnalysisProcessor,
+    BinaryOperatorModelWiseProcessorConfig,
+    BinaryOperatorModelWiseProcessor,
 )
 from .anti_outlier import (
     SmoothQuantProcessorConfig,

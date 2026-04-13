@@ -39,6 +39,7 @@ METRIC_TO_YAML: Dict[str, str] = {
     "std": "std.yaml",
     "kurtosis": "kurtosis.yaml",
     "attention_mse": "attention_mse.yaml",
+    "mse_model_wise": "mse_model_wise.yaml",
 }
 
 def _get_analysis_pipeline_dir() -> Path:

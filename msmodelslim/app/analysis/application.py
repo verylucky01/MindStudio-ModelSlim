@@ -42,6 +42,7 @@ class AnalysisMetrics(str, Enum):
     QUANTILE = 'quantile'
     KURTOSIS = 'kurtosis'
     ATTENTION_MSE = 'attention_mse'
+    MSE_MODEL_WISE = 'mse_model_wise'
 
 
 @logger_setter('msmodelslim.app.analysis.application')
