@@ -31,7 +31,7 @@ pip3 install tqdm==4.66.1
 
 ## 量化步骤（以llama2-7b legacy为例）
 
-1.获取开源权重，转化为MindSpeed-LLM支持的模型，可以使用MindSpeed-LLM的权重[转化脚本](https://gitcode.com/Ascend/MindSpeed-LLM/blob/master/convert_ckpt.py)，[此处有转化脚本使用教程](https://gitcode.com/Ascend/MindSpeed-LLM/blob/master/docs/zh/pytorch/tools/checkpoint_convert_hf_mcore_large_params.md)
+1.获取开源权重，转化为MindSpeed-LLM支持的模型，可以使用MindSpeed-LLM的权重[转化脚本](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.0.0/convert_ckpt.py)，[此处有转化脚本使用教程](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.0.0/docs/zh/pytorch/tools/checkpoint_convert_hf_mcore_large_params.md)
 
 ```bash
 python convert_ckpt.py \
@@ -81,7 +81,7 @@ def quant(model):
     print('Save quant weight success!')
 ```
 
-3.将上述量化函数插入推理脚本，以mindspeed-llm的自带推理精度测试脚本[evaluation.py](https://gitcode.com/Ascend/MindSpeed-LLM/blob/master/evaluation.py)为例，将quant函数插入main函数。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。
+3.将上述量化函数插入推理脚本，以mindspeed-llm的自带推理精度测试脚本[evaluation.py](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.0.0/evaluation.py)为例，将quant函数插入main函数。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。
 
 ```python
  ...
