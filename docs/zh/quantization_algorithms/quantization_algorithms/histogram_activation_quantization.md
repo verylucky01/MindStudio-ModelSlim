@@ -271,7 +271,9 @@ class SearchMethod(str, Enum):
      symmetric: True
      method: "minmax" # 不支持直方图权重量化，此处不应配置为"histogram"
 ```
+
 - 排查对应的quantizer在初始化时是否存在AutoActQuantizer。可以根据 YAML 中 `process` 列表项的 `type` 字段查找对应的量化器名称，在 [`msmodelslim/core/quantizer`](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/core/quantizer) 中查看对应的代码。
+
 ```python
 class LinearQuantizer(nn.Module):
 

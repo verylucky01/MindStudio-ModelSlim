@@ -35,7 +35,7 @@ class CustomLoss(Cell):
 custom_loss = CustomLoss()
 #定义配置
 distill_config = KnowledgeDistillConfig()
-distill_config.set_hard_label (0.5, 0) \
+distill_config.set_hard_label(0.5, 0) \
   .add_custom_loss_func("custom_loss", custom_loss) \
   .add_output_soft_label({
     't_output_idx': 0,

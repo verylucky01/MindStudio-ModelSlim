@@ -41,7 +41,7 @@ pip install -e .[train]
 
 | 模型名称 | 框架 | 优化特性 | 说明 |
 |---------|------|----------|------|
-| OpenSoraPlanV1.2 | PyTorch | [采样优化](#自适应采样优化), [DiT缓存优化](#dit缓存优化) | • [模型源码链接](https://github.com/PKU-YuanGroup/Open-Sora-Plan/releases/tag/v1.2.0)<br>• 采样优化目前仅支持29\*480p场景,可达到2×加速,vbench精度损失<1% |
+| OpenSoraPlanV1.2 | PyTorch | [采样优化](#自适应采样优化), [DiT缓存优化](#dit缓存优化) | • [模型源码链接](https://github.com/PKU-YuanGroup/Open-Sora-Plan/releases/tag/v1.2.0)<br>• 采样优化目前仅支持29\*480p场景，可达到2×加速，vbench精度损失<1%。 |
 
 ## DiT缓存优化
 

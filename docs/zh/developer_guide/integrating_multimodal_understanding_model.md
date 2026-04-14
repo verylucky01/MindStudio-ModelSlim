@@ -50,7 +50,7 @@ flowchart TD
 
 ## 多模态模型接入
 
-以下内容将以 [Qwen3-VL-MoE](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)（Mixture of Experts，混合专家架构的多模态模型）W8A8混合量化场景（简称"场景示例"）的模型接入为例。
+以下内容将以 [Qwen3-VL-MoE](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)（Mixture of Experts，混合专家架构的多模态模型）W8A8混合量化场景（简称“场景示例”）的模型接入为例。
 
 **Qwen3-VL-MoE的加载策略**：
 
@@ -559,7 +559,7 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 ```
 
 **参数说明**：
-请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。其中 `${MODEL_PATH}` 为原始浮点权重路径，`${SAVE_PATH}` 为用户自定义的量化权重保存路径，`${MODEL_TYPE}` 为注册的模型名称，`${CONFIG_PATH}` 为YAML配置文件路径。
+请注意`trust_remote_code`为`True`时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。其中 `${MODEL_PATH}` 为原始浮点权重路径，`${SAVE_PATH}` 为用户自定义的量化权重保存路径，`${MODEL_TYPE}` 为注册的模型名称，`${CONFIG_PATH}` 为YAML配置文件路径。
 
 ## FAQ
 

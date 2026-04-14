@@ -96,7 +96,7 @@ calib_set = []
 i = 0
 with open(entry, encoding="utf-8") as file:
     for line in file:
-        data =json.loads(line) # 将字符串转换为字典
+        data = json.loads(line) # 将字符串转换为字典
         while i < 50: # 获取50条校准数据
             calib_set.append(data)
             i += 1
@@ -194,7 +194,7 @@ anti_config = AntiOutlierConfig(
 
 m1：SmoothQuant算法  
 m2：SmoothQuant升级版  
-m3：AWQ算法(适用于W8A16/W4A16)  
+m3：AWQ算法（适用于W8A16/W4A16）  
 m4：SmoothQuant优化算法  
 m5：CBQ算法  
 m6：Flex smooth量化算法 
@@ -226,9 +226,9 @@ calibrator = Calibrator(
 ```
 
 可优化参数——disable_names、disable_level、act_method  
-【增加回退层(建议最后进行调整)，可以按照一定经验，通过disable_names手动设置回退层，或使用disable_level自动回退功能按照一定的标准自动回退对精度影响比较大的Linear层】
+【增加回退层（建议最后进行调整），可以按照一定经验，通过disable_names手动设置回退层，或使用disable_level自动回退功能按照一定的标准自动回退对精度影响比较大的Linear层】
 
-disable_names: 手动指定回退层(根据理论经验和日志信息)
+disable_names: 手动指定回退层（根据理论经验和日志信息）
 disable_level='L0': 自动回退
 
 act_method：激活值量化方法  
@@ -246,7 +246,7 @@ act_method：激活值量化方法
 （在选取时需要考虑模型部署时的具体推理场景，例如中文模型需要使用中文输入作为校准集；英文模型使用英文输入；代码生成类模型则使用代码生成类任务；中英文兼顾的模型考虑使用中英文混合的校准集）。  
 3.剔除量化前后模型输出变化较大的数据作为校准集。  
 4.注意校准集格式：  
-在下述示例中，get_calib_dataset的作用是调整校准集格式，以boolq数据集做校准集为例，boolq数据集格式为 dict={"question":str, "title":str, "answer":bool, "passage":str}，而tokenizer中需要传入的数据格式为："str"（单个提示词）、"List[str]"（批量或单个提示词）或 "List[List[str]]"（批量提示词）。
+在下述示例中，get_calib_dataset的作用是调整校准集格式，以boolq数据集作为校准集为例，boolq数据集格式为 dict={"question":str, "title":str, "answer":bool, "passage":str}，而tokenizer中需要传入的数据格式为："str"（单个提示词）、"List[str]"（批量或单个提示词）或 "List[List[str]]"（批量提示词）。
  
 ```python
 def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
@@ -280,7 +280,7 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
 
 此示例中的 range_parm:41.21875 数值就很大（和日志中其他层的range_parm相比），说明该层敏感，需要回退。
 
-量化回退的方法：分为手动回退和自动回退两个方法(可叠加使用)，建议先手动回退，如果不清楚该回退哪些模型层或者手动回退精度不好的话，再自动回退。
+量化回退的方法：分为手动回退和自动回退两个方法（可叠加使用），建议先手动回退，如果不清楚该回退哪些模型层或者手动回退精度不好的话，再自动回退。
 
 注：量化回退会造成一定的性能损失。
 
@@ -289,8 +289,8 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
 disable_names=[]: []手动回退层名称，如果不添加则不回退
 
 按以下顺序进行回退：  
-1、回退down_proj层(精度敏感)：mlp的采样层，(如果没有标识出down_proj就看out_features, 数值小的就是下采样层)。  
-2、回退o_proj层(通常精度敏感)：是self_attention中调的最后一个线性层，(model中打出来的只是初始化时的顺序，要去模型代码里看实际调用顺序) 。  
+1、回退down_proj层（精度敏感）：mlp的采样层，（如果没有标识出down_proj就看out_features, 数值小的就是下采样层)。  
+2、回退o_proj层（通常精度敏感）：是self_attention中调用的最后一个线性层，(model中打出来的只是初始化时的顺序，要去模型代码里看实际调用顺序) 。  
 3、根据理论经验或终端打印日志中的range_parm数值大小找出量化敏感层进行回退。
 
 如下示例为手动回退chatglm2-6b的所有down_proj层：

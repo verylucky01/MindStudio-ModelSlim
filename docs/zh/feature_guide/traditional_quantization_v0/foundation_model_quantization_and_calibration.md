@@ -115,7 +115,7 @@ https://huggingface.co/datasets/ceval/ceval-exam
 
 ### 调用示例
 
-请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。
+请注意`trust_remote_code`为`True`时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。
 
 ```python
 import torch

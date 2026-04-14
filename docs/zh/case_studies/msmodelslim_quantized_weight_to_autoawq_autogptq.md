@@ -2,7 +2,7 @@
 
 ## 概述
 
-msModelSlim权重格式与开源工具AutoAWQ、AutoGPTQ的格式存在差异，因此本文的目的是提供一份指南，用于将msModelSlim量化后的权重转换为与如上的开源工具格式一致的权重，以实现qwen2-7b W4A16转换后的权重能直接以huggingface形式加载权重。
+msModelSlim权重格式与开源工具AutoAWQ、AutoGPTQ的格式存在差异，因此本文的目的是提供一份指南，用于将msModelSlim量化后的权重转换为与如上的开源工具格式一致的权重，以实现qwen2-7b W4A16转换后的权重能直接以huggingface形式加载。
 本指南仅支持如下配置的权重转换：  
 W4A16 + per_group + AWQ  
 W4A16 + per_group + GPTQ  
@@ -75,7 +75,7 @@ calibrator.save(output_path, safetensors_name=None, json_name=None, save_type=No
 
 ```python 
 命令：
-python ms_to_vllm.py --model {weighted_safetensors_path} --json {weighted_json_path} --save_path  {converted_safetensors_path}  --w_bit {weight_bit}   --target_tool  {target_convert_tool}
+python ms_to_vllm.py --model {weighted_safetensors_path} --json {weighted_json_path} --save_path  {converted_safetensors_path} --w_bit {weight_bit} --target_tool  {target_convert_tool}
 
 说明：
     model，必选参数，string类型，用于表示传入量化后的safetensors权重文件，可传入文件的绝对路径和相对路径
@@ -86,7 +86,7 @@ python ms_to_vllm.py --model {weighted_safetensors_path} --json {weighted_json_p
 
 使用示例：
 首先将权重转换脚本拷贝到量化权重目录下，然后在该目录下执行如下命令，最终在该目录下生成转换后的权重脚本文件res.safetensors：
-python ms_to_vllm.py --model ./quant_model_weight_w4a16.safetensors  --json ./quant_model_description_w4a16.json  --save_path res.safetensors --target_tool awq 
+python ms_to_vllm.py --model ./quant_model_weight_w4a16.safetensors --json ./quant_model_description_w4a16.json --save_path res.safetensors --target_tool awq 
 
 ```
 
@@ -99,7 +99,7 @@ python ms_to_vllm.py --model ./quant_model_weight_w4a16.safetensors  --json ./qu
 ### 量化使用说明
 
 AutoAWQ量化, 需要注意的是，Version使用GEMM，如果没有传入数据集可能会报错，需要传入数据集val.jsonl文件, 参考网址：https://github.com/casper-hansen/AutoAWQ/issues/506
-，数据集获取地址：https://huggingface.co/datasets/mit-han-lab/pile-val-backup/blob/main/val.jsonl.zst 。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。     
+，数据集获取地址：https://huggingface.co/datasets/mit-han-lab/pile-val-backup/blob/main/val.jsonl.zst 。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。     
 AutoAWQ量化脚本示例如下：
 
 ```python
@@ -139,7 +139,7 @@ print(f'Model is quantized and saved at "{quant_path}"')
 
 ### 推理使用说明
 
-首先，修改AutoAWQ量化后权重路径的model.safetensors.index.json文件，请将文件中的weight_map中的权重文件名称修改为第1.2节中的转换脚本所生成的权重文件名，然后将权重文件替换为第1.2节中转换脚本所生成的权重文件，最后运行推理脚本。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中代码文件，请确保浮点模型来源安全可靠。
+首先，修改AutoAWQ量化后权重路径的model.safetensors.index.json文件，请将文件中的weight_map中的权重文件名称修改为第1.2节中的转换脚本所生成的权重文件名，然后将权重文件替换为第1.2节中转换脚本所生成的权重文件，最后运行推理脚本。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。
 
 AutoAWQ推理脚本测试对话示例如下：
 
@@ -173,7 +173,7 @@ for idx, item in enumerate(res):
 1.将浮点模型的原始配置文件复制到msModelSlim量化后转换生成的权重文件目录中。  
 2.修改量化后权重路径的 model.safetensors.index.json 文件，请将文件中的 weight_map 中的权重文件名称修改为第1.2节中的转换脚本所生成的权重文件名。  
 3.修改 config.json 文件，添加 quantization_config 参数，bits为量化的权重位数，group_size 和msModelSlim量化的 group_size 对应，保持一致。可参考第2.2节使用autoAWQ量化后生成的 config.json 文件进行配置。    
-该处以Qwen2-7B-Instruct，W4A16+AWQ为例，在 config.json 添加 quantization_config 参数：
+此处以Qwen2-7B-Instruct，W4A16+AWQ为例，在 config.json 添加 quantization_config 参数：
 
 ```json
 {
@@ -232,7 +232,7 @@ print(tokenizer.decode(model.generate(**tokenizer("auto_gptq is", return_tensors
 1.将浮点模型的原始配置文件 config.json，model.safetensors.index.json 复制到msModelSlim量化后转换生成的权重文件目录中。   
 2.修改量化后权重路径的 model.safetensors.index.json 文件，请将文件中的 weight_map 中的权重文件名称修改为第1.2节中的转换脚本所生成的权重文件名。  
 3.在量化后权重路径下新建 quantize_config.json 文件，bits为量化的权重位数，group_size 和msModelSlim量化的 group_size 对应，保持一致。可参考使用autoGPTQ量化后生成的 quantize_config.json 文件进行配置。  
-该处以Qwen2-7B-Instruct，W4A16+GPTQ为例，新建 quantize_config.json 文件：
+此处以Qwen2-7B-Instruct，W4A16+GPTQ为例，新建 quantize_config.json 文件：
 
 ```json
 {

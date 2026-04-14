@@ -69,7 +69,7 @@ from transformers import AutoTokenizer, AutoModel
 tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path='./chatglm2', local_files_only=True)
 model = AutoModel.from_pretrained(
     pretrained_model_name_or_path='./chatglm2', local_files_only=True
-  ).npu()   # 若在NPU上进行多卡量化时，需要先参考前提条件进行配置，并配置device_map='auto'，创建model函数时需去掉.npu()；若在CPU上进行量化时，需要配置torch_dtype=torch.float32，创建model时需去掉.npu()
+  ).npu()   # 若在NPU上进行多卡量化时，需要先参考前提条件进行配置，并配置device_map='auto'，创建model时需去掉.npu()；若在CPU上进行量化时，需要配置torch_dtype=torch.float32，创建model时需去掉.npu()
 # 准备校准数据，请根据实际情况修改
 calib_list = ["中国的首都在哪里？",
               "请作一首诗歌：",
