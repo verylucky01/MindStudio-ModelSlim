@@ -7,7 +7,7 @@
   <p align="center">
     <em>Simple, fast, and lean—msModelSlim is all you need.</em>
   </p>
-  <h4>昇腾模型压缩工具</h4>
+  <strong>昇腾模型压缩工具</strong>
   <!-- 用分隔线替代背景 -->
 
 [![License](https://img.shields.io/badge/license-MulanPSL--2.0-blue)](https://gitcode.com/Ascend/msmodelslim/blob/master/LICENSE)

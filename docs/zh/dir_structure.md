@@ -85,7 +85,7 @@ msmodelslim/
 ├── pytorch/          # PyTorch 框架的适配与功能实现（V0框架和小模型）
 ├── quant/            # 多模态量化（V0框架）
 ├── utils/            # 通用模块，如日志、配置、校验、安全等（V1框架）
-├── Third_Party_Open_Souce_Software_Notice
+├── Third_Party_Open_Source_Software_Notice
 └── __init__.py 
 ```
 
@@ -101,7 +101,7 @@ msmodelslim/
 ├── model/            # 基础设施层，模型适配知识库，如DeepSeek、Qwen等
 ├── processor/        # 领域层，量化算法知识库，描述如何做量化，如GPTQ算法等
 ├── utils/            # 通用模块，如日志、配置、校验、安全等
-├── Third_Party_Open_Souce_Software_Notice
+├── Third_Party_Open_Source_Software_Notice
 └── __init__.py 
 ```
 
