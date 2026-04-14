@@ -14,6 +14,14 @@
 
 ### 原理
 
+**算法核心：**
+
+- 使用 `smooth_quant` 算法对子图进行平滑处理。
+- 支持可配置的平滑参数：`alpha`（平滑强度）、`symmetric`（对称量化）。
+- 缩放因子下界固定为 `1e-5`。
+
+**算法公式：**
+
 SmoothQuant 算法基于以下数学等价变换：
 
 ```text
@@ -43,9 +51,9 @@ scales = (A_scale**α / W_scale**(1-α)).clamp(min=1e-5)
 
 ### 支持的子图类型
 
-SmoothQuant 仅支持 NormLinearSubgraph（归一化-线性子图）类型。
-
 #### NormLinearSubgraph
+
+SmoothQuant 仅支持 NormLinearSubgraph（归一化-线性子图）类型。
 
 适用于包含归一化层和多个线性层的结构，如：
 
@@ -63,9 +71,11 @@ y = torch.cat([linear(x) for linear in linears], dim=-1)
 
 ### 实现
 
-算法在 [msmodelslim/processor/anti_outlier/smooth_quant/](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/processor/anti_outlier/smooth_quant) 中实现，处理流程分两阶段：
+#### 代码实现
 
-#### 预处理阶段（preprocess）
+算法在 [msmodelslim/processor/anti_outlier/smooth_quant/](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/processor/anti_outlier/smooth_quant) 中实现，处理流程分两阶段。
+
+#### 预处理阶段
 
 **子图发现与构建：**
 
@@ -84,7 +94,7 @@ y = torch.cat([linear(x) for linear in linears], dim=-1)
   - 每通道的绝对最大值（用于平滑缩放计算）
   - 通道偏移量（用于非对称量化）
 
-#### 后处理阶段（postprocess）
+#### 后处理阶段
 
 **子图平滑处理：**
 
@@ -108,33 +118,21 @@ y = torch.cat([linear(x) for linear in linears], dim=-1)
 
 ## 功能介绍
 
-### 使用说明
-
-作为 Processor 使用
-
-```yaml
-- type: "smooth_quant"                    # 固定为 `smooth_quant`，用于指定 Processor。
-  alpha: 0.5                              # 浮点数, 0~1, 默认 0.5，平衡参数，控制激活和权重的相对重要性。
-  symmetric: True                         # 布尔型，默认为True，是否启用对称量化，True为对称，False为非对称。
-  include:                                # 字符串列表，参与平滑的层匹配模式（完整路径，支持 `*` 通配），默认全量。
-    - "*"
-  exclude:                                # 字符串列表，禁止平滑的层匹配模式（完整路径，支持 `*` 通配），默认为空。
-    - "*self_attn*"
-```
-
-**注意**：SmoothQuant 仅支持 `norm-linear` 子图类型，不支持其他子图类型（如 `ov`、`up-down`、`linear-linear`），因而不支持指定 `enable_subgraph_type` 字段。
-
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
   process:
-    - type: "smooth_quant"
-      alpha: 0.5                           # 平衡参数，控制激活和权重的相对重要性，默认0.5。
-      symmetric: True                      # 是否启用对称量化，默认True。
-      include: ["*"]                       # 包含的层，支持通配符。
-      exclude: ["*self_attn*"]             # 排除的层，支持通配符。
+    - type: "smooth_quant"                 # 固定为 `smooth_quant`，用于指定 Processor 类型。
+      alpha: 0.5                           # 平衡参数，控制激活和权重的相对重要性，浮点数，0~1，默认0.5。
+      symmetric: True                      # 是否启用对称量化，默认True，True为对称，False为非对称。
+      include: ["*"]                       # 包含的层，支持通配符匹配，默认为["*"]（全量）。
+      exclude: ["*self_attn*"]             # 排除的层，支持通配符匹配，默认为空。
 ```
+
+**注意**：SmoothQuant 仅支持 `norm-linear` 子图类型，不支持其他子图类型（如 `ov`、`up-down`、`linear-linear`），因而不支持指定 `enable_subgraph_type` 字段。
 
 ### YAML配置字段详解
 
@@ -241,20 +239,24 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 
 ### 模块名称不匹配
 
-**现象**: `include/exclude` 未命中时，日志提示未匹配模式。  
+**现象**: `include/exclude` 未命中时，日志提示未匹配模式。
+
 **解决方案**: 核对完整模块名称是否与 `named_modules()` 返回的路径一致。
 
 ### 子图配置错误
 
-**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。  
+**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。
+
 **解决方案**: 检查配置中的 `source` 和 `targets` 字段是否正确。
 
 ### 模块不存在
 
-**现象**: 配置中指定的模块名称在模型中不存在。  
+**现象**: 配置中指定的模块名称在模型中不存在。
+
 **解决方案**: 通过 `model.named_modules()` 验证模块是否确实存在。
 
 ### 映射关系错误
 
-**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。  
+**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。
+
 **解决方案**: 检查 `MappingConfig` 中的 `source` 是否为归一化层，`targets` 是否为其后续的线性层。

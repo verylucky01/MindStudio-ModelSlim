@@ -11,7 +11,9 @@
 
 ## 原理和实现
 
-### 缩放因子计算公式
+### 原理
+
+**算法公式：**
 
 ```python
 scales = act_mean.pow(ratio).clamp(min=1e-4)
@@ -24,14 +26,14 @@ scales = scales / sqrt(scales.max() * scales.min())
 - `ratio`：缩放比例系数，在 `[0, 1)` 范围内以 `1 / n_grid` 为步长进行网格搜索。
 - `n_grid`：网格搜索步数，默认值为 `20`，用于控制搜索精度。
 
-### 关键特性
+**关键特性：**
 
 1. **基于激活均值的重要性评估**：使用激活值绝对值的逐通道均值衡量权重通道的重要性，均值越大的通道在量化时会获得更多保护。
 2. **网格搜索最优缩放**：在 `[0, 1)` 范围内遍历不同的 `ratio` 值，评估各候选缩放因子的量化效果。
 3. **实际量化器评估**：使用真实的权重量化器对缩放后的权重进行量化，并基于量化结果与浮点基准结果的均方误差选择最优参数。
 4. **块级误差评估**：通过自动发现目标模块的最低公共祖先（lowest common ancestor，LCA）并缓存其输入参数，在块级别评估量化误差，而不是只比较单个线性层的权重误差。
 
-### 缩放因子搜索流程
+**缩放因子搜索流程：**
 
 1. **初始化**：收集激活值均值和祖先模块输入参数缓存。
 2. **基准推理**：使用原始浮点权重在祖先模块上执行推理，得到浮点基准输出。
@@ -105,7 +107,9 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - 通过自动发现的最低公共祖先模块进行块级误差评估。
 - 对 `down_proj` 应用正向缩放，对 `up_proj` 应用反向缩放。
 
-### 代码架构
+### 实现
+
+#### 代码实现
 
 AWQ 算法的代码组织在 [msmodelslim/processor/anti_outlier/awq/](../../../../msmodelslim/processor/anti_outlier/awq/__init__.py) 目录下：
 
@@ -118,7 +122,6 @@ AWQ 算法的代码组织在 [msmodelslim/processor/anti_outlier/awq/](../../../
 | [common.py](../../../../msmodelslim/processor/anti_outlier/awq/common.py)                           | `AWQConfig`, `AWQContext`, `offload()`, `onload()` | 算法配置、运行时上下文和张量迁移工具   |
 | [interface.py](../../../../msmodelslim/processor/anti_outlier/awq/interface.py)                     | `AWQInterface`                                     | 模型适配器需要实现的抽象接口           |
 
-### 处理流程
 
 #### 预处理阶段
 
@@ -145,11 +148,9 @@ AWQ 算法的代码组织在 [msmodelslim/processor/anti_outlier/awq/](../../../
 
 ## 功能介绍
 
-### 使用说明
+### YAML 配置示例
 
-AWQ 作为 anti-outlier Processor 使用，配置时需在 YAML 中设置 Processor 参数。
-
-以下示例为常见的 W8A16 YAML 搜索配置：
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 - type: "awq"
@@ -276,34 +277,41 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 ### 模块名不匹配
 
 **现象**: `include/exclude` 未命中时，日志提示未匹配模式。  
+
 **解决方案**: 核对完整模块名是否与 `named_modules()` 返回的路径一致。
 
 ### 子图配置错误
 
 **现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。  
+
 **解决方案**: 检查配置中的 `source` 和 `targets` 字段是否正确。
 
 ### 模块不存在
 
 **现象**: 配置中指定的模块名称在模型中不存在。  
+
 **解决方案**: 通过 `model.named_modules()` 验证模块是否确实存在。
 
 ### 子图类型不支持
 
 **现象**: 配置的子图类型不被支持。  
+
 **解决方案**: 建议按模型实际已适配的子图类型填写，支持的取值为 `norm-linear`、`linear-linear`、`ov`、`up-down`。如无特殊需求，可保持默认配置。
 
 ### 祖先模块未找到
 
 **现象**: 日志提示 "No name found for inspect module of subgraph"，子图被跳过。  
+
 **解决方案**: 检查 `targets` 中的模块名称是否具有合理的共同路径前缀，确保其最低公共祖先模块在模型中存在。
 
 ### 激活统计信息缺失
 
 **现象**: 日志提示 "No activation mean for target module"，子图被跳过。  
+
 **解决方案**: 确保校准数据（calibration data）足够且模型前向推理正常执行，使钩子能够正确收集激活统计信息。
 
 ### 中间参数缓存为空
 
 **现象**: 日志提示 "No kwargs cache for parent module"，子图被跳过。  
+
 **解决方案**: 确保通过 LCA 自动发现的祖先模块在前向推理中被正确触发，检查 `targets` 中的模块路径是否正确。

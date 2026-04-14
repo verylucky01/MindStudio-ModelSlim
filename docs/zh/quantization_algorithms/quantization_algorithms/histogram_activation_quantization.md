@@ -37,45 +37,9 @@
    - 以最优截断区间的上下界为max/min，计算并保存scale和zero_point。
    - 执行伪量化操作，返回量化后的张量。
 
-## 功能介绍
+### 核心组件
 
-### YAML配置示例
-
-Histogram 作为 [`linear_quant`](linear_quant.md) 处理器中激活值量化方法（`method: "histogram"`）使用，YAML配置示例如下：
-
-```yaml
-spec:
-  process:
-  - type: "linear_quant" 
-    qconfig:
-      act:
-        scope: "per_tensor" # 目前只支持per_tensor
-        dtype: "int8" # 目前只支持int8
-        symmetric: false # 支持对称/非对称量化，取值分别为True/False
-        method: "histogram" # 配置为"histogram", 即启用直方图激活值量化
-      weight:
-        scope: "per_channel"
-        dtype: "int8" 
-        symmetric: true
-        method: "minmax" # 不支持直方图权重量化，此处不应配置为"histogram"
-```
-
-### YAML配置字段详解
-
-以下字段均属于 `linear_quant` 处理器配置，完整的 `linear_quant` 字段说明请参考[线性量化配置字段详解](linear_quant.md#yaml配置字段详解)。
-
-**qconfig.act（Histogram 相关约束）**
-
-| 参数名 | 作用 | 可选值 | 说明 |
-|--------|-------|--------|------|
-| scope | 量化范围 | `"per_tensor"` | 直方图量化目前仅支持 per_tensor |
-| dtype | 量化数据类型 | `"int8"` | 直方图量化目前仅支持 int8 |
-| symmetric | 是否对称量化 | `true`, `false` | true: 对称量化；false: 非对称量化 |
-| method | 量化方法 | `"histogram"` | 固定值，启用直方图激活值量化 |
-
-## 核心组件
-
-### 直方图观察器（HistogramObserver）
+#### 直方图观察器（HistogramObserver）
 
 ```python
 class HistogramObserver(TorchHistogramObserver):
@@ -87,7 +51,7 @@ class HistogramObserver(TorchHistogramObserver):
         self.upsample_rate = 16  # 上采样率，减少量化误差
 ```
 
-#### 核心方法实现
+**核心方法实现**
 
 1. **forward方法**：
 
@@ -166,7 +130,7 @@ class HistogramObserver(TorchHistogramObserver):
        """
    ```
 
-### 直方图量化器（ActPerTensorHistogram）
+#### 直方图量化器（ActPerTensorHistogram）
 
 ```python
 class ActPerTensorHistogram(AutoActQuantizer):
@@ -178,7 +142,7 @@ class ActPerTensorHistogram(AutoActQuantizer):
         self.q_param: Optional[QParam] = None
 ```
 
-#### 核心方法
+**核心方法实现**
 
 1. **forward方法**：
 
@@ -219,25 +183,62 @@ class ActPerTensorHistogram(AutoActQuantizer):
        return self.q_param
    ```
 
-## 配置参数
+## 功能介绍
 
-### HistogramObserverConfig
+### YAML配置示例
+
+Histogram 作为 [`linear_quant`](linear_quant.md) 处理器中激活值量化方法（`method: "histogram"`）使用，YAML配置示例如下：
+
+```yaml
+spec:
+  process:
+  - type: "linear_quant" 
+    qconfig:
+      act:
+        scope: "per_tensor"  # 目前只支持per_tensor
+        dtype: "int8"        # 目前只支持int8
+        symmetric: false     # 支持对称/非对称量化，取值分别为True/False
+        method: "histogram"  # 配置为"histogram", 即启用直方图激活值量化
+      weight:
+        scope: "per_channel"
+        dtype: "int8" 
+        symmetric: true
+        method: "minmax"     # 不支持直方图权重量化，此处不应配置为"histogram"
+```
+
+### YAML配置字段详解
+
+#### qconfig.act（激活值量化配置）
+
+以下字段均属于 `linear_quant` 处理器配置，完整的 `linear_quant` 字段说明请参考[线性量化配置字段详解](linear_quant.md#yaml配置字段详解)。
+
+| 参数名 | 作用 | 可选值 | 说明 |
+|--------|-------|--------|------|
+| scope | 量化范围 | `"per_tensor"` | 直方图量化目前仅支持 per_tensor |
+| dtype | 量化数据类型 | `"int8"` | 直方图量化目前仅支持 int8 |
+| symmetric | 是否对称量化 | `true`, `false` | true: 对称量化；false: 非对称量化 |
+| method | 量化方法 | `"histogram"` | 固定值，启用直方图激活值量化 |
+
+
+### 算法参数
+
+**HistogramObserverConfig**
 
 目前由量化器自行配置，用户不需要调整。
 
 ```python
 class HistogramObserverConfig(BaseModel):
-    symmetric: bool = False                    # 是否对称量化
+    symmetric: bool = False                             # 是否对称量化
     search_method: SearchMethod = SearchMethod.L2_NORM  # 搜索方法
-    dtype: QDType = QDType.INT8              # 量化数据类型
-    scope: QScope = QScope.PER_TENSOR        # 量化范围
+    dtype: QDType = QDType.INT8                         # 量化数据类型
+    scope: QScope = QScope.PER_TENSOR                   # 量化范围
 ```
 
-### 搜索方法枚举
+**搜索方法枚举**
 
 ```python
 class SearchMethod(str, Enum):
-    L2_NORM = "l2_norm"           # L2范数搜索
+    L2_NORM = "l2_norm"              # L2范数搜索
     KL_DIVERGENCE = "kl_divergence"  # KL散度搜索
 ```
 
@@ -245,7 +246,7 @@ class SearchMethod(str, Enum):
 
 ### 配置错误
 
-**问题描述**：日志提示中，出现ValidationError。
+**现象**：日志提示中，出现ValidationError。
 
 **可能原因**：
 

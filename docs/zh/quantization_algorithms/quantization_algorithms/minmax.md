@@ -35,11 +35,9 @@ MinMax 算法基于以下公式计算量化参数：
 
 ## 功能介绍
 
-### 使用说明
-
-MinMax 作为 [`linear_quant`](linear_quant.md) 处理器中激活值或权重的量化方法，通过 `qconfig.act.method` 或 `qconfig.weight.method` 字段指定。
-
 ### YAML配置示例
+
+MinMax 作为 [`linear_quant`](linear_quant.md) 处理器中激活值或权重的量化方法，通过 `qconfig.act.method` 或 `qconfig.weight.method` 字段指定，YAML配置示例如下：
 
 ```yaml
 spec:
@@ -71,6 +69,7 @@ spec:
 
 ## FAQ
 
-### 为什么 MinMax 在低比特（如 INT8、INT4）下精度下降明显？
+### 精度问题
+**现象**：MinMax 在低比特（如 INT8、INT4）下精度下降明显。
 
-MinMax 算法对离群值（Outliers）非常敏感。如果张量中存在极少数数值巨大的点，MinMax 会为了覆盖这些点而拉大整体量化范围，导致大部分正常数值的量化精度丢失。在低比特或有限位宽的浮点量化场景下，建议配合离群值抑制算法（如 SmoothQuant）或使用更高级的量化算法（如 SSZ）。
+**解决方案**：MinMax 算法对离群值（Outliers）非常敏感。如果张量中存在极少数数值巨大的点，MinMax 会为了覆盖这些点而拉大整体量化范围，导致大部分正常数值的量化精度丢失。在低比特或有限位宽的浮点量化场景下，建议配合离群值抑制算法（如 SmoothQuant）或使用更高级的量化算法（如 SSZ）。

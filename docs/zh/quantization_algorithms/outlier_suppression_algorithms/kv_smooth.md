@@ -13,6 +13,7 @@
 
 ### 原理
 
+**算法核心：**
 - 平滑 KVCache 的激活值 `key_states` ，实现方式是把缩放系数 s 融合进 RoPE 之前的 Q/K 投影或归一化权重：
     - `K' = K / s`
     - `Q' = Q × s`
@@ -23,15 +24,19 @@
 
 ### 实现
 
-- 算法在 [msmodelslim/processor/kv_smooth](../../../../msmodelslim/processor/kv_smooth) 中实现，处理流程分两阶段：
-    1. **观察阶段（preprocess）**：
-        - 通过注入观察器封装 `past_key_values`，在注意力模块调用 `Cache.update()` 时捕获 `key_states`。
-        - 使用观测器在维度 [batch, seq] 上聚合 min/max，得到每层每通道的绝对值的最大值，作为缩放的统计基准。
-    2. **平滑阶段（postprocess）**：
-        - 根据统计到的 `|key_states|` 最大值计算缩放向量，按融合方式重写位于 RoPE 之前的相应模块的 `weight`（和可选 `bias`
-          ），使 RoPE 之后写入 KVCache 的 key_states 被平滑；同时，query_states 则相应放大：
-            - `state-rope-linear`：沿 `Linear → RoPE → KVCache` 的通路，将缩放折叠进 `k_proj`/`q_proj`。
-            - `state-rope-norm`：沿 `Norm → RoPE → KVCache` 的通路，将缩放折叠进 `k_norm`/`q_norm`。
+#### 代码实现
+
+算法在 [msmodelslim/processor/kv_smooth](../../../../msmodelslim/processor/kv_smooth/) 中实现，处理流程分两阶段。
+
+#### 观察阶段
+  - 阶段：`preprocess`。
+  - 通过注入观察器封装 `past_key_values`，在注意力模块调用 `Cache.update()` 时捕获 `key_states`。
+  - 使用观测器在维度 [batch, seq] 上聚合 min/max，得到每层每通道的绝对值的最大值，作为缩放的统计基准。
+#### 平滑阶段
+  - 阶段：`postprocess`。
+  - 根据统计到的 `|key_states|` 最大值计算缩放向量，按融合方式重写位于 RoPE 之前的相应模块的 `weight`（和可选 `bias`），使 RoPE 之后写入 KVCache 的 key_states 被平滑；同时，query_states 则相应放大：
+    - `state-rope-linear`：沿 `Linear → RoPE → KVCache` 的通路，将缩放折叠进 `k_proj`/`q_proj`。
+    - `state-rope-norm`：沿 `Norm → RoPE → KVCache` 的通路，将缩放折叠进 `k_norm`/`q_norm`。
 
 ## 适用要求
 
@@ -46,6 +51,8 @@
 ## 功能介绍
 
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
@@ -124,23 +131,23 @@ class KVSmoothFusedInterface(ABC):
 
 ## FAQ
 
-### **回退未命中**
+### 回退未命中
+**现象**：告警日志中出现 `are not matched any module` 描述。
 
-    - **现象**：告警日志中出现 `are not matched any module` 描述。
-    - **解决方案**：核对完整模块名，是否填错 `include` 或 `exclude`。
+**解决方案**：核对完整模块名，是否填错 `include` 或 `exclude`。
 
-### **头维度信息缺失**
+### 头维度信息缺失
+**现象**：抛出 `UnsupportedError`，指明 `get_head_dim`、`get_num_key_value_groups`、`get_num_key_value_heads` 缺失。
 
-    - **现象**：抛出 `UnsupportedError`，指明 `get_head_dim`、`get_num_key_value_groups`、`get_num_key_value_heads` 缺失。
-    - **解决方案**：对应模型适配器确保实现 `KVSmoothFusedInterface` 接口，否则模型不适用算法。
+**解决方案**：对应模型适配器确保实现 `KVSmoothFusedInterface` 接口，否则模型不适用算法。
 
-### **注意力不适用**
+### 注意力不适用
+**现象**：日志告警 `past_key_values and past_key_value both are None`。
 
-    - **现象**：日志告警 `past_key_values and past_key_value both are None`。
-    - **解决方案**：检查 `Transformers` 中的模型文件，确保 `Attention` 层 `forward` 传入 `past_key_values` 和
+**解决方案**：检查 `Transformers` 中的模型文件，确保 `Attention` 层 `forward` 传入 `past_key_values` 和
       `past_key_value`，否则模型不适用算法。
 
-### **模块名不一致**
+### 模块名不一致
+**现象**：抛出 `ToDoError`，指明 `has no submodule`。
 
-    - **现象**：抛出 `ToDoError`，指明 `has no submodule`。
-    - **解决方案**：检查模型适配器，确认 `fused_from_query_states_name` 和 `fused_from_key_states_name` 取值与实际融合子模块命名一致
+**解决方案**：检查模型适配器，确认 `fused_from_query_states_name` 和 `fused_from_key_states_name` 取值与实际融合子模块命名一致。

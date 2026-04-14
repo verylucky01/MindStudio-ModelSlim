@@ -13,7 +13,13 @@
 
 ### 原理
 
-Flex Smooth Quant算法使用以下公式计算平滑缩放因子：
+**算法核心：**
+
+- 基于收集的激活统计信息计算每通道的缩放因子。
+- 使用 `flex_smooth_quant` 算法对子图进行灵活平滑量化优化。
+- 支持可配置的平滑参数：`alpha`（激活缩放系数）、`beta`（权重缩放系数），若用户不配置的话，采用二阶段网格搜索方法搜索最佳alpha和beta参数。
+
+**算法公式：** 
 
 ```text
 scales = (A_scale**alpha / W_scale**beta).clamp(min=1e-5)
@@ -28,9 +34,7 @@ scales = (A_scale**alpha / W_scale**beta).clamp(min=1e-5)
 
 ### 支持的子图类型
 
-Flex Smooth Quant 算法支持与 Iterative Smooth 相同的四种标准子图类型，并额外支持**非融合子图**（NonFusionSubgraph）：
-
-#### 1. NormLinearSubgraph（归一化-线性子图）
+#### NormLinearSubgraph（归一化-线性子图）
 
 适用于包含归一化层和多个线性层的结构，如：
 
@@ -45,7 +49,7 @@ y = torch.cat([linear(x) for linear in linears], dim=-1)
 - 对每个线性层应用正向缩放。
 - 对归一化层应用反向缩放（1/scales）。
 
-#### 2. LinearLinearSubgraph（线性-线性子图）
+#### LinearLinearSubgraph（线性-线性子图）
 
 适用于两个连续线性层的结构：
 
@@ -59,7 +63,7 @@ y = linear2(linear1(x))
 - 对linear2应用正向缩放。
 - 对linear1应用反向缩放（1/scales）。
 
-#### 3. OVSubgraph（注意力输出-值子图）
+#### OVSubgraph（注意力输出-值子图）
 
 适用于注意力机制中的输出投影和值投影：
 
@@ -73,7 +77,7 @@ y = linear2(linear1(x))
 - 对o_proj应用正向缩放。
 - 对v_proj应用反向缩放（1/scales）。
 
-#### 4. UpDownSubgraph（上投影-下投影子图）
+#### UpDownSubgraph（上投影-下投影子图）
 
 适用于MLP门控机制：
 
@@ -87,7 +91,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 - 对down_proj应用正向缩放。
 - 对up_proj应用反向缩放（1/scales）。
 
-#### 5. NonFusionSubgraph（非融合子图）
+#### NonFusionSubgraph（非融合子图）
 
 适用于**仅对若干线性层做平滑、且不融合到前置层**的场景。当映射中 `source` 为 `None`、仅提供 `targets` 时，处理器会走非融合分支，将 `targets` 中的线性层组成非融合子图进行 Flex Smooth 平滑。
 
@@ -106,9 +110,11 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 ### 实现
 
-算法在 `msmodelslim/processor/anti_outlier/flex_smooth/processor.py` 中实现，处理流程分两阶段：
+#### 代码实现
 
-#### 1) 预处理阶段（preprocess）
+算法在 `msmodelslim/processor/anti_outlier/flex_smooth/processor.py` 中实现，处理流程分两阶段。
+
+#### 预处理阶段
 
 **子图发现与构建：**
 
@@ -122,7 +128,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
   - **激活张量数据**：收集完整的激活张量，用于后续平滑计算。
   - **每通道绝对最大值**：计算激活值的每通道绝对最大值，作为平滑缩放因子的基础。
 
-#### 2) 后处理阶段（postprocess）
+#### 后处理阶段
 
 **按优先级处理子图：**
 
@@ -153,40 +159,23 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 ## 功能介绍
 
-### 使用说明
-
-作为 Processor 使用
-
-```yaml
-- type: "flex_smooth_quant"           # 固定为 `flex_smooth_quant`，用于指定 Processor。
-  alpha: 0.8                          # 浮点数, 0-1之间，默认 None，通过算法自动搜索最佳alpha，也支持用户自行配置，激活缩放的系数。
-  beta: 0.7                           # 浮点数, 0-1之间，默认 None，通过算法自动搜索最佳beta，也支持用户自行配置，权重缩放的系数。
-  enable_subgraph_type:               # 字符串列表，指定启用的子图类型，默认启用所有四种类型。
-    - 'norm-linear'
-    - 'linear-linear'
-    - 'ov'
-    - 'up-down'
-  include:                            # 包含的层，支持通配符。
-    - "*"
-  exclude:                            # 排除的层，支持通配符。
-    - "*self_attn*"
-```
-
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
   process:
-    - type: "flex_smooth_quant"
-      alpha: 0.8                          # 激活缩放的权重系数，0-1之间，默认None（自动搜索）。
-      beta: 0.7                           # 权重缩放的权重系数，0-1之间，默认None（自动搜索）。
-      enable_subgraph_type:               # 开启的子图类型。
+    - type: "flex_smooth_quant"  # 固定为 `flex_smooth_quant`，用于指定 Processor。
+      alpha: 0.8                 # 激活缩放的权重系数，0-1之间，默认 None，通过算法自动搜索最佳alpha，也支持用户自行配置。
+      beta: 0.7                  # 权重缩放的权重系数，0-1之间，默认 None，通过算法自动搜索最佳beta，也支持用户自行配置。
+      enable_subgraph_type:      # 字符串列表，指定启用的子图类型，默认启用所有四种类型。
         - 'norm-linear'
         - 'linear-linear'
         - 'ov'
         - 'up-down'
-      include: ["*"]                      # 包含的层，支持通配符。
-      exclude: ["*self_attn*"]            # 排除的层，支持通配符。
+      include: ["*"]             # 包含的层，支持通配符。
+      exclude: ["*self_attn*"]   # 排除的层，支持通配符。
 ```
 
 ### YAML配置字段详解
@@ -340,27 +329,32 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 
 ## FAQ
 
-### 1. 模块名不匹配
+### 模块名不匹配
 
-**现象**: `include/exclude` 未命中时，日志提示未匹配模式。  
+**现象**: `include/exclude` 未命中时，日志提示未匹配模式。
+
 **解决方案**: 核对完整模块名是否与 `named_modules()` 返回的路径一致。
 
-### 2. 子图配置错误
+### 子图配置错误
 
-**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。  
+**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。
+
 **解决方案**: 检查配置中的 `source` 和 `targets` 字段是否正确。
 
-### 3. 模块不存在
+### 模块不存在
 
-**现象**: 配置中指定的模块名称在模型中不存在。  
+**现象**: 配置中指定的模块名称在模型中不存在。
+
 **解决方案**: 通过 `model.named_modules()` 验证模块是否确实存在。
 
-### 4. 子图类型不支持
+### 子图类型不支持
 
-**现象**: 配置的子图类型不被支持。  
+**现象**: 配置的子图类型不被支持。
+
 **解决方案**: 确保配置的子图类型在 `ENABLE_SUBGRAPH_TYPES` 列表中。
 
-### 6. 映射关系错误
+### 映射关系错误
 
-**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。  
+**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。
+
 **解决方案**: 检查 `MappingConfig` 中的 `source` 和 `targets` 是否指向正确的模块。

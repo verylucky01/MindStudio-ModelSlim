@@ -50,7 +50,7 @@ flowchart TD
 
 ## 多模态模型接入
 
-以下内容将以 [Qwen3-VL-MoE](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)（Mixture of Experts，混合专家架构的多模态模型）W8A8混合量化场景（简称“场景示例”）的模型接入为例。
+以下内容将以 [Qwen3-VL-MoE](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)（MoE: Mixture of Experts，混合专家架构）W8A8混合量化场景（简称"场景示例"）的模型接入为例。
 
 **Qwen3-VL-MoE的加载策略**：
 
@@ -470,7 +470,7 @@ qwen3_vl_moe = msmodelslim.model.qwen3_vl_moe.model_adapter:Qwen3VLMoeModelAdapt
 
 ### 校准数据准备
 
-校准数据由 YAML 的 `dataset` 字段指定。`dataset` 可配置为短名称（在 [`lab_calib`](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_calib/__init__.py) 下查找）、绝对路径或相对路径。支持三种使用方式（index.json/index.jsonl、纯图像目录、图像目录+单个 json/jsonl），详见[一键量化使用说明 — dataset 校准数据路径配置](../feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置)。
+校准数据由 YAML 的 `dataset` 字段指定。`dataset` 可配置为短名称（在 [`lab_calib`](../../../lab_calib) 下查找）、绝对路径或相对路径。支持三种使用方式（index.json/index.jsonl、纯图像目录、图像目录+单个 json/jsonl），详见[一键量化使用说明 — dataset 校准数据路径配置](../feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置)。
 
 ### 准备量化配置
 
@@ -535,15 +535,7 @@ spec:
   default_text: "Describe this image in detail."  # 图片默认的文本prompt
 ```
 
-配置中各字段说明：
-
-| 配置块 | 说明 | 详细参数参考 |
-| ------ | ---- | ----------- |
-| `process` → `linear_quant`（非专家层） | 对非 MoE 专家层做 per-tensor 静态 W8A8 量化；`exclude` 中跳过 `*experts*`、`*merger*`、`*deepstack_merger_list*`、`*mlp.gate` 等不适合量化的层 | [linear_quant 配置示例](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置示例) · [配置字段详解](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置字段详解) |
-| `process` → `linear_quant`（MoE专家层） | 对 `*experts*` 层做 per-token 动态 W8A8 量化，避免因激活稀疏导致精度损失 | [linear_quant 配置示例](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置示例) · [配置字段详解](../quantization_algorithms/quantization_algorithms/linear_quant.md#yaml配置字段详解) |
-| `save` → `ascendv1_saver` | 保存为 Ascend 格式 safetensors 文件；`part_file_size` 控制每个分片最大大小（单位 GB） | [save 保存器配置](../feature_guide/quick_quantization_v1/usage.md#save---保存器配置字段-vlm) |
-| `dataset` | 校准数据集路径，可配置为短名称（在 `lab_calib/` 下查找）、绝对路径或 index.jsonl 文件路径 | [dataset 校准数据路径配置](../feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置) |
-| `default_text` | 图片默认文本 prompt，在校准数据条目缺少 `text` 字段时使用 | [default_text 配置](../feature_guide/quick_quantization_v1/usage.md#default_text---默认文本prompt配置) |
+配置中各字段说明详见[量化配置协议详解](../feature_guide/quick_quantization_v1/usage.md#multimodal_vlm_modelslim_v1-配置详解)。
 
 ## 量化自有模型
 

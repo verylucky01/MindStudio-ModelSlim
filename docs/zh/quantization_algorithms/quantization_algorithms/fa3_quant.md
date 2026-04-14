@@ -13,15 +13,15 @@
 
 ### 原理
 
-- **量化目标**：对注意力机制中的 Q、K、V 激活值进行 per-head 粒度的 INT8 量化。
-- **量化粒度**：per-head（每个注意力头独立量化参数），适应不同 head 的激活分布差异。
-- **量化时机**：在 Multi-head Latent Attention (MLA) 计算的关键位置插入量化节点
-- **量化策略**：
-  - **per-head**：对每个注意力头独立计算量化参数。
+**核心思想：**
 
-算法流程：
+1. **量化目标**：对注意力机制中的 Q、K、V 激活值进行 per-head 粒度的 INT8 量化。
+2. **量化粒度**：per-head（每个注意力头独立量化参数），适应不同 head 的激活分布差异。
+3. **量化时机**：在 Multi-head Latent Attention (MLA) 计算的关键位置插入量化节点
+4. **量化策略**：per-head：对每个注意力头独立计算量化参数。
 
-```text
+**算法流程：**
+
 1. 收集每个 head 的激活统计数据：
    - 输入：激活张量 x，shape 为 (B, H, S, D)
      其中 B=batch_size, H=num_heads, S=seq_len, D=head_dim
@@ -50,23 +50,33 @@
      * abs_max[h] = max(abs(min_values[h]), abs(max_values[h]))
      * scale[h] = abs_max[h] / 127
    - 输出：量化参数 q_param
-```
 
 ### 实现
 
-- FA3 量化在 [processor.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/processor/quant/fa3/processor.py) 中实现，处理流程分三阶段：
-  1. **注入阶段（preprocess）**：
-     - 调用模型适配器的 `inject_fa3_placeholders()` 方法。
-     - 适配器负责在 MLA 计算流程中的关键位置插入占位器 `FA3QuantPlaceHolder`。
-     - 支持通过 `include/exclude` 配置选择性注入。
-  2. **校准阶段（process）**：
-     - 占位符被替换为监听器 `_FA3PerheadObserver`。
-     - 校准数据流经注意力层时，监听器收集每个 head 的激活统计信息。
-     - 根据滑动窗口的思想找到包含指定比例数据的最小数值分布区间。
-  3. **伪量化部署阶段（postprocess）**：
-     - 从监听器提取每个 head 的 min/max 值。
-     - 调用 `calculate_qparam()` 计算对称量化参数。
-     - 创建 IR 替换监听器。
+#### 代码实现
+
+- FA3 量化在 [processor.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/processor/quant/fa3/processor.py) 中实现，处理流程分三阶段。
+
+#### 注入阶段
+
+  - 阶段：`preprocess`。
+  - 调用模型适配器的 `inject_fa3_placeholders()` 方法。
+  - 适配器负责在 MLA 计算流程中的关键位置插入占位器 `FA3QuantPlaceHolder`。
+  - 支持通过 `include/exclude` 配置选择性注入。
+
+#### 校准阶段
+
+  - 阶段：`process`。
+  - 占位符被替换为监听器 `_FA3PerheadObserver`。
+  - 校准数据流经注意力层时，监听器收集每个 head 的激活统计信息。
+  - 根据滑动窗口的思想找到包含指定比例数据的最小数值分布区间。
+
+#### 伪量化部署阶段
+
+  - 阶段：`postprocess`。
+  - 从监听器提取每个 head 的 min/max 值。
+  - 调用 `calculate_qparam()` 计算对称量化参数。
+  - 创建 IR 替换监听器。
 
 ## 适用要求
 
