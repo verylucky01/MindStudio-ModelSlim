@@ -60,13 +60,13 @@ model = AutoModelForCausalLM.from_pretrained(
 ### 使用前准备
 
 前提条件：config文件，用于配置基础数据集的路径，名称包括 boolq、ceval_5_shot、gsm8k、mmlu
-    <br>数据集下载链接
-    ```text
-https://huggingface.co/datasets/ceval/ceval-exam
-    https://huggingface.co/datasets/google/boolq
-    https://huggingface.co/datasets/cais/mmlu
-    https://huggingface.co/datasets/openai/gsm8k
-    ```
+
+数据集下载链接：
+
+- [ceval-exam](https://huggingface.co/datasets/ceval/ceval-exam)
+- [boolq](https://huggingface.co/datasets/google/boolq)
+- [mmlu](https://huggingface.co/datasets/cais/mmlu)
+- [gsm8k](https://huggingface.co/datasets/openai/gsm8k)
 
 ### 功能介绍
 
