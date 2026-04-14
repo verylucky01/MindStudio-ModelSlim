@@ -1,0 +1,18 @@
+process:
+  - type: layer_analysis
+    configs:
+      - type: linear_quant
+        qconfig:
+          act:
+            scope: per_block
+            dtype: mxfp4
+            symmetric: true
+            method: minmax
+          weight:
+            scope: per_block
+            dtype: mxfp4
+            symmetric: true
+            method: minmax
+        include: ${patterns}
+    metrics: mse_layer_wise
+    patterns: ${patterns}

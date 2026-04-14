@@ -39,6 +39,7 @@ METRIC_TO_YAML: Dict[str, str] = {
     "std": "std.yaml",
     "kurtosis": "kurtosis.yaml",
     "attention_mse": "attention_mse.yaml",
+    "mse_layer_wise": "mse_layer_wise.yaml",
     "mse_model_wise": "mse_model_wise.yaml",
 }
 

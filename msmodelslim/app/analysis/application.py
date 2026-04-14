@@ -42,6 +42,7 @@ class AnalysisMetrics(str, Enum):
     QUANTILE = 'quantile'
     KURTOSIS = 'kurtosis'
     ATTENTION_MSE = 'attention_mse'
+    MSE_LAYER_WISE = 'mse_layer_wise'
     MSE_MODEL_WISE = 'mse_model_wise'
 
 
@@ -77,7 +78,7 @@ class LayerAnalysisApplication:
             model_path: Path to the model
             patterns: List of layer name patterns to analyze (e.g., ['*linear*', 'attention.*'])
             device: Device to run analysis on
-            metrics: Analysis metrics ('quantile', 'std', 'kurtosis', 'attention_mse')
+            metrics: Analysis metrics ('quantile', 'std', 'kurtosis', 'attention_mse', 'mse_layer_wise')
             calib_dataset: Dataset path for calibration
             topk: Number of top layers to output for disable_names
             trust_remote_code: Whether to trust remote code
