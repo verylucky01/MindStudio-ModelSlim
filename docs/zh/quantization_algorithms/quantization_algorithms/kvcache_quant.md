@@ -14,30 +14,39 @@
 
 ### 原理
 
-- **量化目标**：对注意力机制中写入 KVCache 的 `key_states` 和 `value_states` 进行 INT8 量化。
-- **量化时机**：在 `DynamicCache.update()` 调用时，拦截 Key/Value 状态应用量化校准。
-- **量化策略**：
-  - **per_channel**：按隐藏层维度计算量化参数，平衡精度和效率。
-- **内存优化**：量化后的缓存状态理论上可减少约 50% 的cache内存占用（FP16→INT8）。
+**核心思想：**
+
+1. **量化目标**：对注意力机制中写入 KVCache 的 `key_states` 和 `value_states` 进行 INT8 量化。
+3. **量化时机**：在 `DynamicCache.update()` 调用时，拦截 Key/Value 状态应用量化校准。
+3. **量化策略**：per_channel：按隐藏层维度计算量化参数，平衡精度和效率。
+4. **内存优化**：量化后的缓存状态理论上可减少约 50% 的cache内存占用（FP16→INT8）。
 
 ### 实现
 
-- 算法在 [msmodelslim/processor/quant/attention.py](../../../../msmodelslim/processor/quant/attention.py) 中实现，处理流程分三阶段：
-  1. **检测阶段（pre_run）**：
-     - 自动检测模型中的注意力层，基于模块命名规则识别 `self_attn` 模块。
-     - 为每个注意力层创建对应的 `DynamicCacheQuantizer`，配置量化参数。
-     - 在目标注意力层的第一层安装触发钩子，检测推理开始。
-  2. **校准阶段（运行时）**：
-     - 通过钩子机制在 `DynamicCache.update()` 调用时拦截 Key/Value 状态。
-     - 使用 `DynamicCacheQuantizer` 对缓存状态进行伪量化，收集量化统计信息。
-     - 支持增量式校准，适应动态序列长度变化。
-  3. **伪量化部署阶段（postprocess）**：
-     - 将校准完成的量化器转换为推理优化的 `FakeQuantDynamicCache` IR。
-     - 保持与原有缓存机制的兼容性，无需修改上层推理逻辑。
+#### 代码实现
 
-### 量化器实现
+- 算法在 [msmodelslim/processor/quant/attention.py](../../../../msmodelslim/processor/quant/attention.py) 中实现，处理流程分三阶段。
 
-#### 核心组件
+#### 检测阶段
+  - 阶段：`pre_run`。
+  - 自动检测模型中的注意力层，基于模块命名规则识别 `self_attn` 模块。
+  - 为每个注意力层创建对应的 `DynamicCacheQuantizer`，配置量化参数。
+  - 在目标注意力层的第一层安装触发钩子，检测推理开始。
+  
+#### 校准阶段
+  - 阶段：`run`。
+  - 通过钩子机制在 `DynamicCache.update()` 调用时拦截 Key/Value 状态。
+  - 使用 `DynamicCacheQuantizer` 对缓存状态进行伪量化，收集量化统计信息。
+  - 支持增量式校准，适应动态序列长度变化。
+  
+#### 伪量化部署阶段
+  - 阶段：`postprocess`。
+  - 将校准完成的量化器转换为推理优化的 `FakeQuantDynamicCache` IR。
+  - 保持与原有缓存机制的兼容性，无需修改上层推理逻辑。
+
+### 核心组件
+
+#### 量化器实现
 
 ```python
 # DynamicCacheQuantizer：校准阶段的量化器
@@ -108,6 +117,11 @@ class FakeQuantDynamicCache(AutoFakeQuantDynamicCache):
   
 ## 功能介绍
 
+### 模型支持
+
+- Qwen2.5系列
+- Qwen3系列
+
 ### YAML配置示例
 
 作为Processor使用，YAML配置示例如下：
@@ -138,21 +152,17 @@ class FakeQuantDynamicCache(AutoFakeQuantDynamicCache):
 | include | 包含的注意力层 | array[string] | ["*"] | 支持通配符匹配，指定要执行KVCache量化的注意力层。 |
 | exclude | 排除的注意力层 | array[string] | [] | 支持通配符匹配，优先级高于include。 |
 
-## 已验证模型列表
-
-- Qwen2.5系列
-- Qwen3系列
 
 ## FAQ
 
 ### 缓存未被量化
 
-    问题现象：缓存未被量化。
+**现象**：缓存未被量化。
 
-    解决方案：确认注意力前向接受了一个 `cache` 参数并正确调用 `cache.update()`。
+**解决方案**：确认注意力前向接受了一个 `cache` 参数并正确调用 `cache.update()`。
 
 ### 新缓存类型不支持
 
-    问题现象：新缓存类型不支持。
+**现象**：新缓存类型不支持。
 
-    解决方案：确认自定义缓存实现了标准的 `update` 接口，并正确处理返回值。 
+**解决方案**：确认自定义缓存实现了标准的 `update` 接口，并正确处理返回值。 

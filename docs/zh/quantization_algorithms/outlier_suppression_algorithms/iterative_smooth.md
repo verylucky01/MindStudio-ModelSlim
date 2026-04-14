@@ -13,7 +13,13 @@
 
 ### 原理
 
-算法使用以下公式计算平滑缩放因子：
+**算法核心：**
+
+- 基于收集的激活统计信息计算每通道的缩放因子。
+- 使用 `iter_smooth` 算法对子图进行迭代平滑优化。
+- 支持可配置的平滑参数：`alpha`（平滑强度）、`scale_min`（最小缩放）、`symmetric`（对称量化）。
+
+**算法公式：**
 
 ```text
 scales = (A_scale**α / W_scale**(1-α)).clamp(min=scale_min)
@@ -105,9 +111,11 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 ### 实现
 
-算法在 [msmodelslim/processor/anti_outlier/iter_smooth/processor.py](../../../../msmodelslim/processor/anti_outlier/iter_smooth/processor.py) 中实现，处理流程分两阶段：
+#### 代码实现
 
-#### 1) 预处理阶段（preprocess）
+算法在 [msmodelslim/processor/anti_outlier/iter_smooth/processor.py](../../../../msmodelslim/processor/anti_outlier/iter_smooth/processor.py) 中实现，处理流程分两阶段。
+
+#### 预处理阶段
 
 **子图发现与构建：**
 
@@ -123,7 +131,7 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
   - 通道偏移量（用于对称量化）
 - 支持分布式训练环境下的统计信息聚合。
 
-#### 2) 后处理阶段（postprocess）
+#### 后处理阶段
 
 **按优先级处理子图：**
 
@@ -154,35 +162,17 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 ## 功能介绍
 
-### 使用说明
-
-作为 Processor 使用
-
-```yaml
-- type: "iter_smooth"                    # 固定为 `iter_smooth`，用于指定 Processor。
-  alpha: 0.9                             # 浮点数, > 0, 默认 0.9，平衡参数，控制激活和权重的相对重要性。
-  scale_min: 1e-5                        # 浮点数, > 0, 默认 1e-5，缩放因子的下界，防止数值过小导致数值不稳定。
-  symmetric: True                        # 布尔型，默认为True，是否启用对称，True为对称，False为非对称。
-  enable_subgraph_type:                  # 字符串列表，代表开启的子图类型。
-    - 'norm-linear'
-    - 'linear-linear'
-    - 'ov'
-    - 'up-down'
-  include:                                # 包含的层，支持通配符。
-    - "*"
-  exclude:                                # 排除的层，支持通配符。
-    - "*self_attn*"
-```
-
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
   process:
-    - type: "iter_smooth"
+    - type: "iter_smooth"                  # 固定为 `iter_smooth`，用于指定 Processor。
       alpha: 0.9                           # 平衡参数，控制激活和权重的相对重要性，默认0.9。
       scale_min: 1e-5                      # 缩放因子的最小值，防止数值不稳定，默认1e-5。
-      symmetric: True                     # 是否启用对称量化，默认True。
+      symmetric: True                      # 是否启用对称量化，默认True。
       enable_subgraph_type:                # 开启的子图类型。
         - 'norm-linear'
         - 'linear-linear'
@@ -343,32 +333,38 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 
 ## FAQ
 
-### 1. 模块名不匹配
+### 模块名不匹配
 
-**现象**: `include/exclude` 未命中时，日志提示未匹配模式。  
+**现象**: `include/exclude` 未命中时，日志提示未匹配模式。
+
 **解决方案**: 核对完整模块名是否与 `named_modules()` 返回的路径一致。
 
-### 2. 子图配置错误
+### 子图配置错误
 
-**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。  
+**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。
+
 **解决方案**: 检查配置中的 `source` 和 `targets` 字段是否正确。
 
-### 3. 模块不存在
+### 模块不存在
 
-**现象**: 配置中指定的模块名称在模型中不存在。  
+**现象**: 配置中指定的模块名称在模型中不存在。
+
 **解决方案**: 通过 `model.named_modules()` 验证模块是否确实存在。
 
-### 4. 子图类型不支持
+### 子图类型不支持
 
-**现象**: 配置的子图类型不被支持。  
+**现象**: 配置的子图类型不被支持。
+
 **解决方案**: 确保配置的子图类型在 `ENABLE_SUBGRAPH_TYPES` 列表中。
 
-### 5. 映射关系错误
+### 映射关系错误
 
-**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。  
+**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。
+
 **解决方案**: 检查 `MappingConfig` 中的 `source` 和 `targets` 是否指向正确的模块。
 
-### 6. 非融合子图不生效
+### 非融合子图不生效
 
-**现象**: 已配置 `source=None` 和 `targets`，但未走非融合平滑。  
+**现象**: 已配置 `source=None` 和 `targets`，但未走非融合平滑。
+
 **解决方案**: 确认 `mapping.source` 为 `None`（Python 中显式传入 `None`），且 `mapping.targets` 非空；确认这些目标模块在 `include` 范围内且未被 `exclude` 过滤掉。

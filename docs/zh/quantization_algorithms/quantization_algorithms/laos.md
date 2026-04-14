@@ -33,6 +33,8 @@
 
 ### YAML配置示例
 
+作为Processor使用，YAML配置示例如下：
+
 ```yaml
 apiversion: modelslim_v1
 

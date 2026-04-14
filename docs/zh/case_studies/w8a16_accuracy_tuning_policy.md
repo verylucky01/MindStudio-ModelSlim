@@ -218,7 +218,7 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
     return calib_dataset
 ```
 
-注： [Precision Tool 使用方法说明及数据集下载链接](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#精度定位方法)  
+注： [Precision Tool 使用方法说明及数据集下载链接](../feature_guide/traditional_quantization_v0/fake_quantization_accuracy_testing_tool.md)  
 
 ### 4 量化回退
 

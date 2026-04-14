@@ -13,7 +13,13 @@
 
 ### 原理
 
-Flex AWQ SSZ算法使用以下公式计算平滑缩放因子：
+**算法核心：**
+
+- 使用激活值的均值（mean）计算激活缩放因子：`Act_Mean_Abs = mean(abs(act))`。
+- 使用实际量化器（LinearQuantizer）评估不同alpha参数下的量化误差。
+- 自动搜索或使用配置的alpha参数，beta固定为0。
+
+**算法公式：**
 
 ```text
 scales = (Act_Mean_Abs**alpha / Weight_Max_Abs**beta).clamp(min=1e-5)
@@ -45,8 +51,6 @@ scales = (Act_Mean_Abs**alpha / Weight_Max_Abs**beta).clamp(min=1e-5)
 4. **选择最优参数**：选择使MSE误差最小的alpha值。
 
 ### 支持的子图类型
-
-Flex AWQ SSZ算法支持与Flex Smooth Quant相同的四种标准子图类型：
 
 #### NormLinearSubgraph（归一化-线性子图）
 
@@ -111,15 +115,11 @@ y = down_proj(ReLU(gate_proj(x)) * up_proj(x))
 
 ### 实现
 
-Flex AWQ SSZ算法核心：
+#### 代码实现
 
-- 使用激活值的均值（mean）计算激活缩放因子：`Act_Mean_Abs = mean(abs(act))`。
-- 使用实际量化器（LinearQuantizer）评估不同alpha参数下的量化误差。
-- 自动搜索或使用配置的alpha参数，beta固定为0。
+算法在 [msmodelslim/processor/anti_outlier/flex_smooth/processor.py](../../../../msmodelslim/processor/anti_outlier/flex_smooth/processor.py) 中实现，处理流程分两阶段。
 
-算法在 [msmodelslim/processor/anti_outlier/flex_smooth/processor.py](../../../../msmodelslim/processor/anti_outlier/flex_smooth/processor.py) 中实现，处理流程分两阶段：
-
-#### 预处理阶段（preprocess）
+#### 预处理阶段
 
 **子图发现与构建：**
 
@@ -133,7 +133,7 @@ Flex AWQ SSZ算法核心：
   - **激活张量数据**：收集完整的激活张量，用于后续平滑计算。
   - **使用第一个linear的激活统计信息**：Flex AWQ SSZ使用子图targets中第一个线性层的激活统计信息。
 
-#### 后处理阶段（postprocess）
+#### 后处理阶段
 
 **按优先级处理子图：**
 
@@ -164,58 +164,29 @@ Flex AWQ SSZ算法核心：
 
 ## 功能介绍
 
-### 使用说明
-
-作为 Processor 使用
-
-```yaml
-- type: "flex_awq_ssz"              # 固定为 `flex_awq_ssz`，用于指定 Processor。
-  alpha: 0.8                       # 激活缩放的系数，取值范围为0-1之间，默认值为None（自动搜索），也支持用户自行配置。
-  qconfig:                         # 量化配置，为必填参数。
-    act:                           # 激活值量化配置。
-      scope: "per_token"           # 量化范围：per_token 或 per_tensor。
-      dtype: "int8"                # 量化数据类型：int8。
-      symmetric: True              # 是否对称量化：True 或 False。
-      method: "minmax"            # 量化方法：minmax 或其他方法。
-    weight:                        # 权重量化配置。
-      scope: "per_channel"         # 量化范围：per_channel。
-      dtype: "int4"                # 量化数据类型：int4 或 int8。
-      symmetric: True              # 是否对称量化：True。
-      method: "ssz"                # 量化方法：ssz（Smooth Scale Zero）。
-      ext:                         # 扩展配置（可选）。
-        step: 10                   # SSZ方法的步长参数。
-  enable_subgraph_type:            # 字符串列表，指定启用的子图类型，默认启用所有四种类型。
-    - 'norm-linear'
-    - 'linear-linear'
-    - 'ov'
-    - 'up-down'
-  include:                         # 包含的层，支持通配符。
-    - "*"
-  exclude:                         # 排除的层，支持通配符。
-    - "*self_attn*"
-```
-
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
   process:
-    - type: "flex_awq_ssz"
+    - type: "flex_awq_ssz"                # 固定为 `flex_awq_ssz`，用于指定 Processor。
       alpha: 0.8                          # 激活缩放的系数，取值范围为0-1之间，默认值为None（自动搜索），也支持用户自行配置。
-      qconfig:                             # 量化配置，为必填参数。
-        act:
-          scope: "per_token"
-          dtype: "int8"
-          symmetric: True
-          method: "minmax"
-        weight:
-          scope: "per_channel"
-          dtype: "int4"
-          symmetric: True
-          method: "ssz"
-          ext:
-            step: 10
-      enable_subgraph_type:                # 开启的子图类型。
+      qconfig:                            # 量化配置，为必填参数。
+        act:                              # 激活值量化配置。
+          scope: "per_token"              # 量化范围：per_token 或 per_tensor。
+          dtype: "int8"                   # 量化数据类型：int8。
+          symmetric: True                 # 是否对称量化：True 或 False。
+          method: "minmax"                # 量化方法：minmax 或其他方法。
+        weight:                           # 权重量化配置。
+          scope: "per_channel"            # 量化范围：per_channel。
+          dtype: "int4"                   # 量化数据类型：int4 或 int8。
+          symmetric: True                 # 是否对称量化：True。
+          method: "ssz"                   # 量化方法：ssz（Smooth Scale Zero）。
+          ext:                            # 扩展配置（可选）。
+            step: 10                      # SSZ方法的步长参数。
+      enable_subgraph_type:               # 字符串列表，指定启用的子图类型，默认启用所有四种类型。
         - 'norm-linear'
         - 'linear-linear'
         - 'ov'
@@ -391,30 +362,36 @@ def get_adapter_config_for_subgraph(self) -> List[AdapterConfig]:
 
 ### 模块名不匹配
 
-**现象**: `include/exclude` 未命中时，日志提示未匹配模式。  
-**解决方案**: 核对完整模块名是否与 `named_modules()` 返回的路径一致。  
+**现象**: `include/exclude` 未命中时，日志提示未匹配模式。
+
+**解决方案**: 核对完整模块名是否与 `named_modules()` 返回的路径一致。
 
 ### 子图配置错误
 
-**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。  
-**解决方案**: 检查配置中的 `source` 和 `targets` 字段是否正确。   
+**现象**: `get_adapter_config_for_subgraph()` 返回的配置不正确。
+
+**解决方案**: 检查配置中的 `source` 和 `targets` 字段是否正确。
 
 ### 模块不存在
 
-**现象**: 配置中指定的模块名称在模型中不存在。  
+**现象**: 配置中指定的模块名称在模型中不存在。
+
 **解决方案**: 通过 `model.named_modules()` 验证模块是否确实存在。
 
 ### 子图类型不支持
 
-**现象**: 配置的子图类型不被支持。  
+**现象**: 配置的子图类型不被支持。
+
 **解决方案**: 确保配置的子图类型在支持列表中，当前支持 `norm-linear`、`linear-linear`、`ov`、`up-down`四种子图类型。
 
 ### qconfig配置缺失
 
-**现象**: 报错提示qconfig为必填参数。  
+**现象**: 报错提示qconfig为必填参数。
+
 **解决方案**: 在YAML配置中添加qconfig字段，包含act和weight的量化配置。
 
 ### 映射关系错误
 
-**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。  
+**现象**: `MappingConfig` 中的 `source` 和 `targets` 指向错误的模块。
+
 **解决方案**: 检查 `MappingConfig` 中的 `source` 和 `targets` 是否指向正确的模块。

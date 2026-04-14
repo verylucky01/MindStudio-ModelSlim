@@ -6,6 +6,10 @@
 
 在 msModelSlim 中，线性量化通过 `linear_quant` 处理器实现，专门用于对模型的线性层（`torch.nn.Linear` 模块）进行量化处理。它支持对线性层的权重（Weight）和激活值（Activation）进行灵活的量化配置。
 
+## 使用前准备
+
+安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
+
 ## 原理和实现
 
 ### 原理
@@ -42,11 +46,18 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
 3. **混合量化 (Mixed/Hybrid Quantization)**：
    - **原理**：结合静态和动态量化的优点。例如 **PDMIX** 算法，在 Prefilling 阶段使用动态量化以保证首字精度，在 Decoding 阶段使用静态量化以提升生成速度。
 
-## 使用前准备
-
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
-
 ## 功能介绍
+
+### 支持的量化算法
+
+在 `linear_quant` 处理器中，可以通过 `method` 参数选择不同的量化算法：
+
+| 算法名称 | 适用对象 | 简介 | 详细说明 |
+| :--- | :--- | :--- | :--- |
+| **MinMax** | 权重 / 激活 | 最基础的量化算法，通过统计最大最小值确定量化范围。简单高效，INT8 场景首选。 | [MinMax 说明](minmax.md) |
+| **Histogram** | 激活 | 通过直方图分析激活值分布，自动截断离群值以优化量化范围。精度通常优于 MinMax。 | [Histogram 说明](histogram_activation_quantization.md) |
+| **SSZ** | 权重 | 通过迭代搜索最优缩放因子，最小化量化误差。专为 INT4 等低比特权重量化设计。 | [SSZ 说明](ssz.md) |
+| **GPTQ** | 权重 | 通过逐列优化方式，将量化误差在后续未权重中进行补偿，进而达到最小化量化误差。| [GPTQ说明](gptq.md) |
 
 ### 静态量化与动态量化的核心差异
 
@@ -147,9 +158,9 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
 | 参数名 | 作用 | 可选值                                       | 说明                                                                                                               | 默认值 |
 |--------|------|-------------------------------------------|------------------------------------------------------------------------------------------------------------------|--------|
 | scope | 量化范围 | `"per_tensor"`, `"per_token"`, `"pd_mix"` | per_tensor: 整个张量使用相同参数<br/>per_token: 每个token独立参数（动态量化）<br/>pd_mix: prefilling时per_token，decoding时per_tensor | `"per_tensor"` |
-| dtype | 量化数据类型 | `"int8"`, `"int4"`                        | 8位/4位整数量化                                                                                                        | `"int8"` |
-| symmetric | 是否对称量化 | `true`, `false`                           | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整                                                                           | `false` |
-| method | 量化方法 | `"minmax"`, `"histogram"`                 | minmax: 最小最大值量化<br/>histogram: 直方图量化                                                                             | `"minmax"` |
+| dtype | 量化数据类型 | `"int8"`, `"int4"`, `"float"` | int8: 8位整数量化<br/>int4: 4位整数量化<br/>float: 16位浮点激活（此时需设置scope为"per_tensor"，symmetric为"true"，method为"none"） | `"int8"` |
+| symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `false` |
+| method | 量化方法 | `"minmax"`, `"histogram"` | minmax: 最小最大值量化<br/>histogram: 直方图量化 | `"minmax"` |
 
 #### qconfig.weight (权重量化配置)
 
@@ -162,16 +173,6 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
 | symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `true` |
 | method | 量化方法 | `"minmax"`, `"ssz"`, `"gptq"` | minmax: 最小最大值量化<br/>ssz: ssz权重量化<br/>gptq: gptq权重量化 | `"minmax"` |
 
-### 支持的量化算法
-
-在 `linear_quant` 处理器中，你可以通过 `method` 参数选择不同的量化算法：
-
-| 算法名称 | 适用对象 | 简介 | 详细说明 |
-| :--- | :--- | :--- | :--- |
-| **MinMax** | 权重 / 激活 | 最基础的量化算法，通过统计最大最小值确定量化范围。简单高效，INT8 场景首选。 | [MinMax 说明](minmax.md) |
-| **Histogram** | 激活 | 通过直方图分析激活值分布，自动截断离群值以优化量化范围。精度通常优于 MinMax。 | [Histogram 说明](histogram_activation_quantization.md) |
-| **SSZ** | 权重 | 通过迭代搜索最优缩放因子，最小化量化误差。专为 INT4 等低比特权重量化设计。 | [SSZ 说明](ssz.md) |
-| **GPTQ** | 权重 | 通过逐列优化方式，将量化误差在后续未权重中进行补偿，进而达到最小化量化误差。| [GPTQ说明](gptq.md) |
 
 ### 层过滤机制详解
 
@@ -199,9 +200,9 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
     - 如果层名匹配任何exclude模式，该层被排除。
     - 即使该层在第一步中被include包含，也会被exclude排除。
 
-### 使用示例
+#### 使用示例
 
-#### 示例1: 基础过滤
+**示例1**: 基础过滤
 
 ```yaml
 include: [ "*" ]
@@ -210,7 +211,7 @@ exclude: [ "*down_proj*" ]
 
 - **结果**: 包含所有层，但排除包含"down_proj"的层。
 
-#### 示例2: 选择性包含
+**示例2**: 选择性包含
 
 ```yaml
 include: [ "*self_attn*", "*mlp*" ]
@@ -219,7 +220,7 @@ exclude: [ ]
 
 - **结果**: 只包含包含"self_attn"或"mlp"的层。
 
-#### 示例3: 复杂过滤
+**示例3**: 复杂过滤
 
 ```yaml
 include: [ "*attention*", "*mlp*" ]
@@ -228,7 +229,7 @@ exclude: [ "*down_proj*", "*gate*" ]
 
 - **结果**: 包含包含"attention"或"mlp"的层，但排除包含"down_proj"或"gate"的层。
 
-#### 示例4: 精确匹配
+**示例4**: 精确匹配
 
 ```yaml
 include: [ "model.layers.*.self_attn.*" ]
@@ -237,9 +238,9 @@ exclude: [ "model.layers.*.self_attn.down_proj" ]
 
 - **结果**: 只包含self_attn层，但排除其中的down_proj子层。
 
-### 常见层名模式
+#### 常见层名模式
 
-#### Transformer架构常见层名
+**Transformer架构常见层名**
 
 | 模式 | 描述 | 典型用途 |
 |------|------|----------|
@@ -251,7 +252,7 @@ exclude: [ "model.layers.*.self_attn.down_proj" ]
 | `*down_proj*` | 下投影层 | 降维投影层 |
 | `*up_proj*` | 上投影层 | 升维投影层 |
 
-#### 量化策略建议
+**量化策略建议**
 
 | 策略 | 配置 | 说明 |
 |------|------|------|
@@ -264,17 +265,15 @@ exclude: [ "model.layers.*.self_attn.down_proj" ]
 
 ### 量化组合有效性
 
-**重要提醒**：并非所有配置组合都是有效的量化组合，当检测到无效的量化配置组合时，无效组合会抛出`UnsupportedError`异常。
+**现象**：并非所有配置组合都是有效的量化组合，当检测到无效的量化配置组合时，无效组合会抛出`UnsupportedError`异常。
 
-#### 解决方案
-
-- 异常信息会详细说明具体的配置冲突原因，请根据异常信息调整配置参数。
+**解决方案**：异常信息会详细说明具体的配置冲突原因，请根据异常信息调整配置参数。
 
 ### 层匹配告警
 
-**重要提醒**: 当include/exclude模式未匹配到任何层时，工具会进行告警，请务必关注这些告警信息。
+**现象**: 当include/exclude模式未匹配到任何层时，工具会进行告警，请务必关注这些告警信息。
 
-#### 常见匹配失败原因
+**常见匹配失败原因**：
 
 1. **层名不匹配**
 
@@ -320,7 +319,7 @@ exclude: [ "model.layers.*.self_attn.down_proj" ]
    # LinearQuantProcess只处理nn.Linear层，其他层会被忽略
    ```
 
-#### 排查步骤
+**解决方案**：
 
 1. **检查层名**: 使用模型分析工具查看实际的层名结构。
 2. **验证模式**: 使用简单的通配符模式进行测试。

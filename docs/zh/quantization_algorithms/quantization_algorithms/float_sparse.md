@@ -13,28 +13,28 @@
 
 ### 原理
 
-浮点稀疏算法基于以下核心思想：
+**核心思想：**
 
 1. **ADMM优化**：使用交替方向乘子法求解带约束的优化问题，找到最优的权重稀疏模式。
 2. **激活统计**：通过前向hook收集激活统计信息，构建Hessian矩阵。
 3. **迭代稀疏**：通过多次迭代逐步优化稀疏模式，平衡稀疏率和模型精度。
 4. **精度保护**：使用L2量化保持重要位置的精度，避免关键权重被过度压缩。
 
-算法流程：
+**算法流程：**
 
-```text
-1. 预处理阶段：安装前向hook，收集激活统计信息，构建Hessian矩阵。
-2. ADMM稀疏化：使用ADMM算法求解最优稀疏模式。
-3. 迭代优化：通过多次迭代优化稀疏结果。
-4. 精度保护：识别重要权重位置，应用L2量化保持精度。
-5. 模块部署：将稀疏化后的模块转换为量化模块。
-```
+1. **预处理阶段**：安装前向hook，收集激活统计信息，构建Hessian矩阵。
+2. **ADMM稀疏化**：使用ADMM算法求解最优稀疏模式。
+3. **迭代优化**：通过多次迭代优化稀疏结果。
+4. **精度保护**：识别重要权重位置，应用L2量化保持精度。
+5. **模块部署**：将稀疏化后的模块转换为量化模块。
 
 ### 实现
 
+#### 代码实现
+
 - 算法在 [msmodelslim/processor/sparse/float_sparse.py](../../../../msmodelslim/processor/sparse/float_sparse.py) 和 [admm.py](../../../../msmodelslim/processor/sparse/admm.py) 中实现：
 
-#### ADMM稀疏器核心类
+**ADMM稀疏器核心类**
 
 ```python
 class AdmmPruner:
@@ -51,7 +51,7 @@ class AdmmPruner:
         ...
 ```
 
-#### 浮点稀疏处理器
+**浮点稀疏处理器**
 
 ```python
 class FloatSparseProcessor(AutoSessionProcessor):
@@ -65,7 +65,7 @@ class FloatSparseProcessor(AutoSessionProcessor):
         ...
 ```
 
-### 核心算法步骤
+#### 核心算法步骤
 
 1. **统计信息收集**：
    - 安装前向hook收集输入激活数据。
@@ -124,9 +124,9 @@ spec:
 | include | 包含的层 | array[string] | ["*"] | 支持通配符匹配，指定要执行浮点稀疏量化的层。 |
 | exclude | 排除的层 | array[string] | [] | 支持通配符匹配，优先级高于include。 |
 
-## 算法参数
+### 算法参数
 
-浮点稀疏算法内部使用以下参数（可通过修改源码调整，[admm.py](../../../../msmodelslim/processor/sparse/admm.py)）：
+浮点稀疏算法内部使用以下参数（可通过修改源码调整，[msmodelslim/processor/sparse/admm.py](../../../../msmodelslim/processor/sparse/admm.py)）：
 
 ```python
 # ADMM参数
@@ -135,16 +135,6 @@ KEEP_PROPORTION = 0.02          # 保持精度的比例：2%
 PERCDAMP = 0.1                  # 阻尼系数
 ITERATIVE_PRUNE = 15            # 迭代稀疏次数
 ITERS = 20                      # ADMM最大迭代次数
-```
-
-## 稀疏配置参数
-
-```python
-FloatSparseProcessorConfig(
-    sparse_ratio=0.3,           # 稀疏比例：取值范围为 0.0~1.0，默认0.3。
-    include=["*"],              # 包含的模块名称模式
-    exclude=[]                  # 排除的模块名称模式
-)
 ```
 
 ## 性能特点

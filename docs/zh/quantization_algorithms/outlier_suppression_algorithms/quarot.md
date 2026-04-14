@@ -29,6 +29,8 @@
 
 ### 实现
 
+#### 代码实现
+
 算法在 [msmodelslim/processor/quarot/offline_quarot/quarot.py](../../../../msmodelslim/processor/quarot/offline_quarot/quarot.py) 中实现。
 
 #### 处理流程时序图
@@ -160,29 +162,18 @@ QuaRot算法目前支持以下模型系列：
   `online: True`。
 - 对于未实现在线旋转接口的模型，配置`online: True`会导致错误。
 
-### 使用说明
-
-作为 Processor 使用
-
-```yaml
-- type: "quarot"                         # 固定为 `quarot`，用于指定 Processor 类型。
-  online: False                          # 控制是否启用在线旋转，默认为 False。
-  block_size: -1                         # 整数, 取值范围为-1或大于0的2的幂，表示启用块对角矩阵时每个块的大小，若为-1，表示不进行块对角矩阵处理。
-  max_tp_size: 4                         # 整数，默认为4，该配置项仅在启用在线旋转时生效。最大张量并行大小，必须大于0且为2的幂或等于1，拉起模型时设置的tp值必须<=max_tp_size。
-  down_proj_online_layers: [ ]            # 整数列表，默认为空。用于指定哪些层的down_proj使用在线旋转。
-  export_extra_info: True                # 布尔值，默认为 True。为 True 时注入相应 HookIR；若使用 ascend_v1_saver，会在量化权重路径下生成 optional 目录保存额外 safetensors（含全局旋转矩阵），并在 quant_model_description.json 中追加描述字段；设为 False 则不导出。
-```
-
 ### YAML配置示例
+
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
   process:
-    - type: "quarot"
+    - type: "quarot"                     # 固定为 `quarot`，用于指定 Processor 类型。
       online: False                      # 控制是否启用在线旋转，默认为 False。
       block_size: -1                     # 旋转矩阵启用块对角矩阵时每个块的大小, 取值范围为-1或2的幂次方，如果大于0必须为2的幂，若为-1，表示不进行块对角矩阵处理
       max_tp_size: 4                     # 最大张量并行大小，默认为4，仅在启用在线旋转时生效，必须大于0且为2的幂，拉起模型时设置的tp值必须<=max_tp_size
-      down_proj_online_layers: [ ]        # 用于指定哪些层的down_proj使用在线旋转，默认为空
+      down_proj_online_layers: [ ]       # 用于指定哪些层的down_proj使用在线旋转，默认为空
       export_extra_info: True            # 是否导出全局旋转矩阵：使用 ascend_v1_saver 时在量化权重路径下生成 optional 目录及 quant_model_description.json 追加字段，默认为 True
 ```
 
@@ -390,32 +381,39 @@ class LAOSOnlineRotationInterface:
 
 ### 旋转矩阵创建失败
 
-- **现象**：输入模型的维度暂未被支持，导致旋转矩阵创建失败。
-- **解决方案**：请先确定指定维度的 Hadamard 矩阵存在，参考 [msmodelslim/processor/quarot/common/hadamard_txt](../../../../msmodelslim/processor/quarot/common/hadamard_txt) 添加特定维度的矩阵，并在 [msmodelslim/processor/quarot/common/hadamard.py](../../../../msmodelslim/processor/quarot/common/hadamard.py) 进行补充。
+**现象**：输入模型的维度暂未被支持，导致旋转矩阵创建失败。
+
+**解决方案**：请先确定指定维度的 Hadamard 矩阵存在，参考 [msmodelslim/processor/quarot/common/hadamard_txt](../../../../msmodelslim/processor/quarot/common/hadamard_txt) 添加特定维度的矩阵，并在 [msmodelslim/processor/quarot/common/hadamard.py](../../../../msmodelslim/processor/quarot/common/hadamard.py) 进行补充。
 
 ### 张量并行配置错误
 
-- **现象**：在使用推理引擎以TP并行的方式进行部署时出现精度异常。
-- **原因**：`tp_size`不是2的幂，或者`tp_size`大于QuaRot配置的`max_tp_size`。
-- **解决方案**：
+**现象**：在使用推理引擎以TP并行的方式进行部署时出现精度异常。
+
+**原因**：`tp_size`不是2的幂，或者`tp_size`大于QuaRot配置的`max_tp_size`。
+
+**解决方案**：
     - 确保`tp_size`为2的幂（如1、2、4、8等）。
     - 确保`tp_size` ≤ `max_tp_size`。
     - 检查推理引擎是否支持在线旋转算子。
 
 ### 在线旋转性能问题
 
-- **现象**：启用在线旋转后推理性能下降明显。
-- **原因**：在线旋转需要插入额外的算子，会增加计算开销。
-- **解决方案**：
-    - 根据精度要求权衡是否启用在线旋转。
-    - 考虑仅使用离线旋转（`online: False`）来平衡精度和性能。
-    - 确保推理框架对在线旋转算子有良好支持。
+**现象**：启用在线旋转后推理性能下降明显。
+
+**原因**：在线旋转需要插入额外的算子，会增加计算开销。
+
+**解决方案**：
+- 根据精度要求权衡是否启用在线旋转。
+- 考虑仅使用离线旋转（`online: False`）来平衡精度和性能。
+- 确保推理框架对在线旋转算子有良好支持。
 
 ### 模型适配失败
 
-- **现象**：模型适配器无法正确识别模型结构，导致旋转操作插入失败。
-- **原因**：模型结构不兼容或适配器实现不完整。
-- **解决方案**：
-    - 确保模型基于Transformer decoder架构。
-    - 检查适配器是否正确实现了所有`QuaRotInterface`接口方法（如果启用在线旋转，还需实现`LAOSOnlineRotationInterface`）。
-    - 参考 [msmodelslim/model/qwen3/model_adapter.py](../../../../msmodelslim/model/qwen3/model_adapter.py) 或 [msmodelslim/model/deepseek_v3/model_adapter.py](../../../../msmodelslim/model/deepseek_v3/model_adapter.py) 的实现示例。
+**现象**：模型适配器无法正确识别模型结构，导致旋转操作插入失败。
+
+**原因**：模型结构不兼容或适配器实现不完整。
+
+**解决方案**：
+- 确保模型基于Transformer decoder架构。
+- 检查适配器是否正确实现了所有`QuaRotInterface`接口方法（如果启用在线旋转，还需实现`LAOSOnlineRotationInterface`）。
+- 参考 [msmodelslim/model/qwen3/model_adapter.py](../../../../msmodelslim/model/qwen3/model_adapter.py) 或 [msmodelslim/model/deepseek_v3/model_adapter.py](../../../../msmodelslim/model/deepseek_v3/model_adapter.py) 的实现示例。

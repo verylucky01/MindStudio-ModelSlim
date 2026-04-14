@@ -31,7 +31,7 @@
 | `config.json` | 原始模型的配置文件，包含模型架构、层数、隐藏维度等关键参数 |
 | `generation_config.json` | 原始模型的生成配置文件，包含采样策略、最大生成长度等推理相关参数 |
 | `quant_model_description.json` | **量化权重描述文件**，记录每个权重张量的量化类型和元数据 |
-| `quant_model_weight_{quant_type}.safetensors` | **量化权重文件**，包含实际存储的量化后的模型权重数据（若权重较大可能分片保存为多个文件，通过 `model.safetensors.index.json` 索引）。文件名中的 `{quant_type}` 取决于量化类型，如 `w8a8`、`w4a8`、`w8a16` 等 |
+| `quant_model_weights.safetensors` | **量化权重文件**，包含实际存储的量化后的模型权重数据（若权重较大可能分片保存为多个文件，通过 `model.safetensors.index.json` 索引）。 |
 | `tokenizer_config.json` | 原始分词器的配置文件，包含特殊 token、词表大小等信息 |
 | `tokenizer.json` | 原始分词器的词汇表文件，定义 token 与 ID 的映射关系 |
 | `{model_type}_best_practice.yaml` | **量化配置协议文件**，记录本次量化所使用的完整配置信息，参考[量化配置协议详解](usage.md#量化配置协议详解) |
@@ -55,9 +55,13 @@
   "model.layers.0.self_attn.o_proj.weight": "W8A8",
   "model.layers.0.mlp.gate_proj.weight": "W8A8",
   "model.layers.0.mlp.up_proj.weight": "W8A8",
-  "model.layers.0.mlp.down_proj.weight": "W8A8"
+  "model.layers.0.mlp.down_proj.weight": "W8A8",
+  "metadata": {},
+  "optional": {}
 }
 ```
+> [!Note] 说明
+> `*.weight` 字段名称由模型本身决定。
 
 ### 字段类型说明
 
@@ -518,41 +522,6 @@ model.layers.0.self_attn.q_proj.linear.weight
 
 ---
 
-#### QuaRot（旋转量化）
-
-QuaRot 是一种基于旋转的量化方法，用于保持量化后模型的功能等价性。
-
-**量化参数**（在 safetensors 中的存储）：
-
-| 参数名 | 数据类型 | 说明 |
-|--------|----------|------|
-| `heads_rotation` | float32 | 多头注意力旋转矩阵 |
-| `kronecker_rotation_m` | float32 | Kronecker 旋转矩阵 M |
-| `kronecker_rotation_n` | float32 | Kronecker 旋转矩阵 N |
-| `global_rotation` | float32 | 全局旋转矩阵（保存在 optional 目录） |
-
-**说明**：
-
-- `heads_rotation` 用于多头注意力的旋转
-- `kronecker_rotation_m` 和 `kronecker_rotation_n` 用于 MLP 层的旋转
-- `global_rotation` 保存在 `optional/quarot.safetensors` 文件中
-
-**quant_model_description.json 标识**：启用 `export_extra_info` 后，`quant_model_description.json` 中新增 `optional.quarot` 域：
-
-```jsonc
-{
-  "optional": { // 可选导出件总入口
-    "quarot": { // QuaRot 额外导出域
-      "rotation_map": { // 旋转信息映射表
-        "global_rotation": "optional/quarot.safetensors" // 全局旋转矩阵文件（相对路径）
-      }
-    }
-  }
-}
-```
-
----
-
 #### FAQuant（Flash Attention 量化）
 
 FAQuant 是 Flash Attention 量化模式。
@@ -579,22 +548,39 @@ model.layers.0.self_attn.q_proj.offset
 > 2. NonFusionSmoothQuant 的参数由内部 Linear 层的量化类型决定，额外包含 `div.mul_scale` 参数
 > 3. QuaRot 的旋转矩阵参数根据具体实现可能包含部分或全部旋转矩阵
 
-## QuaRot 导出结果
+## QuaRot （旋转量化）
 
-当使用 QuaRot 算法且配置 `export_extra_info: True` 时，量化工具会在 `save_path` 目录下额外生成 `optional/` 子目录。
+### 参数详解
 
-### 目录结构
+QuaRot 是一种基于旋转的量化方法，用于保持量化后模型的功能等价性。
+
+**量化参数**（在 safetensors 中的存储）：
+
+| 参数名 | 数据类型 | 说明 |
+|--------|----------|------|
+| `heads_rotation` | float32 | 多头注意力旋转矩阵 |
+| `kronecker_rotation_m` | float32 | Kronecker 旋转矩阵 M |
+| `kronecker_rotation_n` | float32 | Kronecker 旋转矩阵 N |
+| `global_rotation` | float32 | 全局旋转矩阵（保存在 optional 目录） |
+
+**说明**：
+
+- `heads_rotation` 用于多头注意力的旋转
+- `kronecker_rotation_m` 和 `kronecker_rotation_n` 用于 MLP 层的旋转
+- `global_rotation` 保存在 `optional/quarot.safetensors` 文件中
+
+### 文件说明
+
+#### optional/quarot.safetensors
+
+当使用 QuaRot 算法且配置 `export_extra_info: True` 时，量化工具会在 `save_path` 目录下额外生成 `optional/` 子目录，以 SafeTensors 格式存储 QuaRot 使用的全局旋转矩阵 `Q`。其目录结构如下：
 
 ```bash
 optional/
 └── quarot.safetensors       # QuaRot 全局旋转矩阵文件
 ```
 
-### 文件说明
-
-#### optional/quarot.safetensors
-
-以 SafeTensors 格式存储 QuaRot 使用的全局旋转矩阵 `Q`：
+全局旋转矩阵 `Q`：
 
 | 键名 | 数据类型 | 说明 |
 |------|----------|------|
@@ -602,14 +588,37 @@ optional/
 
 #### quant_model_description.json 中的描述字段
 
-启用导出后，`quant_model_description.json` 中会新增 `optional.quarot` 域，推理侧可据此按描述加载对应文件：
+**启用online**：`quant_model_description.json` 中新增 `metadata.quarot` 域：
+```jsonc
+{
+  "metadata": {                                 // 其他元数据信息
+    "quarot": {                                 // QuaRot 额外导出域
+      "max_tp_size": 4,                         // 最大 TP 大小，由quarot量化配置中max_tp_size参数设置
+      "heads_rotation": {                       // 多头注意力旋转矩阵
+        "layers": [                             // 使用在线旋转的层（o层）
+          "model.layers.0.self_attn.o_proj.",
+          "model.layers.1.self_attn.o_proj.",
+          "model.layers.2.self_attn.o_proj."
+        ]
+      },
+      "kronecker_rotation": {                   // Kronecker 旋转矩阵
+        "layers": [                             // 使用在线旋转的层（down层），由quarot量化配置down_proj_online_layers参数指定，并由safetensors文件中相应层的kronecker_rotation_m和kronecker_rotation_n描述
+          "model.layers.2.mlp.down_proj."
+        ]
+      }
+    }
+  }
+}
+```
+
+**启用export_extra_info**：`quant_model_description.json` 中新增 `optional.quarot` 域：
 
 ```jsonc
 {
-  "optional": {                                              // 可选导出件总入口
-    "quarot": {                                              // QuaRot 额外导出域
-      "rotation_map": {                                      // 旋转信息映射表
-        "global_rotation": "optional/quarot.safetensors"    // 全局旋转矩阵文件（相对路径）
+  "optional": {                                           // 可选导出件总入口
+    "quarot": {                                           // QuaRot 额外导出域
+      "rotation_map": {                                   // 旋转信息映射表
+        "global_rotation": "optional/quarot.safetensors"  // 全局旋转矩阵文件（相对路径）
       }
     }
   }

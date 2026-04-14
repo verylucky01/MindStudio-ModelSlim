@@ -13,14 +13,14 @@
 
 ### 原理
 
-SSZ算法基于以下核心思想：
+**核心思想：**
 
 1. **迭代优化**：通过多次迭代来逐步优化量化参数。
 2. **最小二乘法**：使用最小二乘法计算当前最优的 scale 和 offset。
 3. **贪心更新**：只保留能改善量化误差的参数。
 4. **收敛判断**：通过相对和绝对误差变化来判断收敛。
 
-算法流程：
+**算法流程：**
 
 1. 使用 MinMax 观察器初始量化参数 scale 和 offset。
 2. 通过最小二乘法计算当前最优的 scale 和 offset。
@@ -35,21 +35,21 @@ SSZ算法基于以下核心思想：
 
 #### 初始化阶段
 
-    - 使用MinMax观察器计算权重的统计信息（min/max值）。
-    - 基于统计信息计算初始的量化参数（scale和offset）。
+- 使用MinMax观察器计算权重的统计信息（min/max值）。
+- 基于统计信息计算初始的量化参数（scale和offset）。
 
 #### 迭代优化阶段
 
-    - 对称量化：offset固定为0，只优化scale。
-    - 非对称量化：同时优化scale和offset。
-    - 使用最小二乘法计算最优参数。
-    - 贪心更新策略：只保留能改善量化误差的参数。
+- 对称量化：offset固定为0，只优化scale。
+- 非对称量化：同时优化scale和offset。
+- 使用最小二乘法计算最优参数。
+- 贪心更新策略：只保留能改善量化误差的参数。
 
 #### 收敛判断
 
-    - 相对误差变化：`(best_mse - current_mse) / best_mse < threshold`。
-    - 绝对误差变化：`|best_mse - current_mse| < threshold`。
-    - 所有通道都满足收敛条件时提前退出。
+- 相对误差变化：`(best_mse - current_mse) / best_mse < threshold`。
+- 绝对误差变化：`|best_mse - current_mse| < threshold`。
+- 所有通道都满足收敛条件时提前退出。
 
 ## 适用要求
 
@@ -66,6 +66,7 @@ SSZ算法基于以下核心思想：
 ## 功能介绍
 
 ### YAML配置示例
+作为Processor使用，YAML配置示例如下：
 
 ```yaml
 spec:
@@ -81,6 +82,8 @@ spec:
 
 ### YAML配置字段详解
 
+#### qconfig.weight (权重量化配置)
+
 | 参数名 | 作用 | 可选值 | 说明 | 默认值 |
 |--------|------|--------|------|--------|
 | scope | 量化范围 | `"per_channel"` | per_channel: 每个通道独立参数 | `"per_channel"` |
@@ -88,7 +91,7 @@ spec:
 | symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `true` |
 | method | 量化方法 | `"ssz"` | ssz: ssz权重量化 | `"ssz"` |
 
-## 算法参数
+### 算法参数
 
 SSZ算法内部使用以下参数（可通过修改源码调整，[msmodelslim/core/quantizer/impl/ssz.py](../../../../msmodelslim/core/quantizer/impl/ssz.py)）：
 
@@ -102,20 +105,24 @@ SCALE_SEARCH_MIN_SCALE = 1e-5                 # 最小缩放因子
 
 ### 权重维度错误
 
-**现象**：输入的权重维度错误，导致量化失败。  
+**现象**：输入的权重维度错误，导致量化失败。
+
 **解决方案**：检查权重维度是否正确，确保权重是2D张量。
 
 ### 量化配置错误
 
-**现象**：量化配置错误，导致量化失败。  
+**现象**：量化配置错误，导致量化失败。
+
 **解决方案**：检查dtype、scope、method、symmetric参数设置是否正确。
 
 ### 初始化顺序错误
 
-**现象**：初始化顺序错误，导致量化失败。  
+**现象**：初始化顺序错误，导致量化失败。
+
 **解决方案**：必须先调用init_weight，再调用forward。
 
 ### 收敛问题
 
-**现象**：如果算法不收敛，可以调整SCALE_SEARCH_CONVERGE_THRESHOLD参数。  
+**现象**：如果算法不收敛，可以调整SCALE_SEARCH_CONVERGE_THRESHOLD参数。
+
 **解决方案**：调整SCALE_SEARCH_CONVERGE_THRESHOLD参数。
