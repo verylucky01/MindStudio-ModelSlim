@@ -15,7 +15,7 @@ quantize_model(config_file, model, *input_data)
 | 参数名| 输入/返回值 | 含义 | 使用限制 |
 | ------ | ------ | ------ | ------ |
 | config_file | 输入 | 通过create_quant_config接口生成的量化配置文件，用于指定模型中量化层的配置情况。必选。| 数据类型：string。 |
-| model | 输入 | 已加载过训练参数MindSpore网络模型。必选。| 数据类型：MindSpore模型。 |
+| model | 输入 | 已加载过训练参数的MindSpore网络模型。必选。| 数据类型：MindSpore模型。 |
 | input_data | 输入 | 用户网络输入数据。必选。| 数据类型：MindSpore的Tensor。需要与MindSpore模型的input保持一致的shape。 |
 
 ## 调用示例

@@ -27,7 +27,7 @@ CalibrationData(config_path, save_path, tokenizer=None, model=None)
 # 添加用户自定义数据集接口，需在set_sample_size(sample_size)之前调用，可选。
 # 输入dataset_name: 用户自定义数据集名称，数据类型为string，应与set_sample_size(sample_size)中的用户自定义数据集名称保持一致
 # 输入processor：用户自定义数据集处理类实例，继承自DatasetProcessorBase类，
-#               需重写DatasetProcessorBase.process_data(indexs)和DatasetProcessorBase.verify_positive_prompt(prompts, labels)方法
+#               需重写DatasetProcessorBase.process_data(indexes)和DatasetProcessorBase.verify_positive_prompt(prompts, labels)方法
 CalibrationData.add_custormized_dataset_processor(dataset_name=customized_dataset_name, processor=customized_processor)
 ```
 

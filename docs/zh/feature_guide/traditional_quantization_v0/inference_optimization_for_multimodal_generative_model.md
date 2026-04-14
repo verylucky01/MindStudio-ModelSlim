@@ -31,7 +31,7 @@ cd ../python
 PYTHONPATH=$PYTHONPATH:. python3 setup.py install --user
 
 # Install other requirements
-cd <Open-Sora-Plan-1.2.0>
+cd /path/to/Open-Sora-Plan-1.2.0
 pip install -e .[train]
 ```
 
@@ -312,7 +312,7 @@ torchrun --nnodes=1 --nproc_per_node 8 --master_port 29503 \
 ### 1. 运行原始模型推理，生成baseline视频搜索校准
 
 ```bash
-cd <Open-Sora-Plan-1.2.0>
+cd /path/to/Open-Sora-Plan-1.2.0
 # Before run, please make sure the model is downloaded and the model path in the script is correct
 bash scripts/text_condition/gpu/sample_t2v_sp.sh
 ```

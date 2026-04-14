@@ -490,7 +490,7 @@ from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 ```bash
 
 ├── config.json
-├── modeling_qwen2.py
+├── modeling_qwen2_fa3.py
 ├── generation_config.json
 ├── merges.txt
 ├── model-00001-of-00004.safetensors
