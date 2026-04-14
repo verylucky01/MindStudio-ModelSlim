@@ -120,7 +120,7 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
       scope: "per_channel"     # 权重量化粒度：逐通道量化
       dtype: "int4"            # 数据类型：int4（低比特权重量化）
       symmetric: true          # 对称量化：true
-      method: "minmax"         # 量化方法：minmax
+      method: "ssz"            # 量化方法：ssz
   include: [ "*" ]             # 包含所有层
 ```
 

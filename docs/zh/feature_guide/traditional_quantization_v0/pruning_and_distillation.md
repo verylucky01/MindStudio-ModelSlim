@@ -99,7 +99,7 @@ prune_config.set_steps(['prune_blocks', 'prune_bert_intra_block']). \
 
 - 说明：若set_steps方法中配置的剪枝步骤包含“prune_blocks”，则必须调用“add_blocks_params”方法进行配置。
 
-5.使用prune_model_weight接口调用剪枝配置项修改预训练的模型权重，并将剪枝后的权重载入小模型中，小模型通过较小的初始化参数生成。
+5.使用prune_model_weight接口调用剪枝配置项修改预训练的模型权重，并将剪枝后的权重加载小模型中，小模型通过较小的初始化参数生成。
 以Bert为例，初始化较小模型时，需提前修改bert_config下的json配置，例如intermediate_size参数改小为1536，num_hidden_layers 参数改小为7。修改后在Python脚本中导入如下内容进行配置。
 
 ```python

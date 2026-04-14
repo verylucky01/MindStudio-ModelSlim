@@ -22,5 +22,5 @@ set_hard_label(weight, index)
 ```python
 from msmodelslim.common.knowledge_distill.knowledge_distill import KnowledgeDistillConfig
 distill_config = KnowledgeDistillConfig()
-distill_config.set_hard_label (0.5, 0)
+distill_config.set_hard_label(0.5, 0)
 ```

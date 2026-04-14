@@ -106,7 +106,7 @@ weight_scale = weight_scale.reshape((n * k / group_size, 1))
 deq_weight = ((weight - weight_offset) * weight_scale).reshape((n, k))
 ```
 
-**注意** npu量化算子计算时实际的逻辑为(weight + weight_offset) * weight_scale，昇腾推理框架在加载量化权重时进行了取负操作
+**注意** NPU量化算子计算时实际的逻辑为(weight + weight_offset) * weight_scale，昇腾推理框架在加载量化权重时进行了取负操作
 
 代码实现可以参考demo样例MSModelSlimWeightProcessor.weight_process，请根据开源权重的反量化公式和msmodelslim工具的反量化公式进行相应修改
 
