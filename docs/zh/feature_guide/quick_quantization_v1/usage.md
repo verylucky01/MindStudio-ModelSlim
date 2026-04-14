@@ -577,7 +577,7 @@ spec:
 
 #### 使用示例
 
-- Wan2.1模型W8A8动态量化：[wan2_1_w8a8_dynamic.yaml](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_practice/wan2_1/wan2_1_w8a8_dynamic.yaml)
+- Wan2.1模型W8A8动态量化：[wan2_1_w8a8_dynamic.yaml](../../../../lab_practice/wan2_1/wan2_1_w8a8_dynamic.yaml)
 
 ### multimodal_vlm_modelslim_v1 配置详解
 
@@ -721,8 +721,8 @@ calib_data.jsonl 示例：
 
 #### 使用示例
 
-- Qwen2.5-Omni模型W8A8量化：[qwen2_5_omni_thinker_w8a8.yaml](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_practice/qwen2_5_omni_thinker/qwen2_5_omni_thinker_w8a8.yaml)
-- Qwen3-VL-MoE模型W8A8混合量化：[qwen3_vl_moe_w8a8.yaml](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_practice/qwen3_vl_moe/qwen3_vl_moe_w8a8.yaml)
+- Qwen2.5-Omni模型W8A8量化：[qwen2_5_omni_thinker_w8a8.yaml](../../../../lab_practice/qwen2_5_omni_thinker/qwen2_5_omni_thinker_w8a8.yaml)
+- Qwen3-VL-MoE模型W8A8混合量化：[qwen3_vl_moe_w8a8.yaml](../../../../lab_practice/qwen3_vl_moe/qwen3_vl_moe_w8a8.yaml)
 
 ### modelslim_v0 配置说明
 

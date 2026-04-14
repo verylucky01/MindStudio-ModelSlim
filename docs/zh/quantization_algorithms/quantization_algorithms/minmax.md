@@ -31,7 +31,7 @@ MinMax 算法基于以下公式计算量化参数：
 
 ### 实现
 
-算法在 [`msmodelslim/core/quantizer/impl/minmax.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quantizer/impl/minmax.py) 中实现。
+算法在 [`msmodelslim/core/quantizer/impl/minmax.py`](../../../../msmodelslim/core/quantizer/impl/minmax.py) 中实现。
 
 ## 功能介绍
 

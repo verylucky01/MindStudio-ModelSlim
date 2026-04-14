@@ -18,7 +18,7 @@
 
 ### 实现
 
-- 算法在 [`msmodelslim/core/quantizer/impl/histogram.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quantizer/impl/histogram.py) 和 [`msmodelslim/core/observer/histogram.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/observer/histogram.py) 中实现，处理流程分4步。
+- 算法在 [`msmodelslim/core/quantizer/impl/histogram.py`](../../../../msmodelslim/core/quantizer/impl/histogram.py) 和 [`msmodelslim/core/observer/histogram.py`](../../../../msmodelslim/core/observer/histogram.py) 中实现，处理流程分4步。
 
 1. **直方图统计**：
    - 将输入张量的值域划分为固定数量的bins（默认2048）。
@@ -272,7 +272,7 @@ class SearchMethod(str, Enum):
      method: "minmax" # 不支持直方图权重量化，此处不应配置为"histogram"
 ```
 
-- 排查对应的quantizer在初始化时是否存在AutoActQuantizer。可以根据 YAML 中 `process` 列表项的 `type` 字段查找对应的量化器名称，在 [`msmodelslim/core/quantizer`](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/core/quantizer) 中查看对应的代码。
+- 排查对应的quantizer在初始化时是否存在AutoActQuantizer。可以根据 YAML 中 `process` 列表项的 `type` 字段查找对应的量化器名称，在 [`msmodelslim/core/quantizer`](../../../../msmodelslim/core/quantizer) 中查看对应的代码。
 
 ```python
 class LinearQuantizer(nn.Module):

@@ -49,7 +49,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 ### 使用样例
 
-[Deepseek w8a8量化示例](https://gitcode.com/Ascend/msmodelslim/blob/master/example/DeepSeek/README.md)
+[Deepseek w8a8量化示例](../../../../example/DeepSeek/README.md)
 
 ## 混合校准数据集使用方法说明
 
@@ -590,8 +590,8 @@ from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 
 | 脚本文件                                          | 参考资料                                                     |
 | ------------------------------------------------- | ------------------------------------------------------------ |
-| [quant_qwen.py](https://gitcode.com/Ascend/msmodelslim/blob/master/example/Qwen/quant_qwen.py)    | [Qwen2.5-72B 支持Attention量化](https://gitcode.com/Ascend/msmodelslim/blob/master/example/Qwen/README.md#qwen25-72b-支持attention量化) |
-| [quant_llama.py](https://gitcode.com/Ascend/msmodelslim/blob/master/example/Llama/quant_llama.py) | [Llama3.1-70B W8A8量化搭配Attention量化](https://gitcode.com/Ascend/msmodelslim/blob/master/example/Llama/README.md#llama31-70b-w8a8量化搭配attention量化) |
+| [quant_qwen.py](../../../../example/Qwen/quant_qwen.py)    | [Qwen2.5-72B 支持Attention量化](../../../../example/Qwen/README.md#qwen25-72b-支持attention量化) |
+| [quant_llama.py](../../../../example/Llama/quant_llama.py) | [Llama3.1-70B W8A8量化搭配Attention量化](../../../../example/Llama/README.md#llama31-70b-w8a8量化搭配attention量化) |
 
 #### 本文仅给出FA3场景下Llama3.1-70B和Qwen2.5-72B的量化推荐配置，可按实际情况进行参数调整，详见[精度调优策略](../../case_studies/w8a8_accuracy_tuning_policy.md) 
 
@@ -708,4 +708,4 @@ fa_quant(fa_amp=5)
 
 ### 多模态FA3量化关键步骤说明如下
 
-请参考[Flux FA3量化](https://gitcode.com/Ascend/msmodelslim/blob/master/example/multimodal_sd/Flux/README.md#flux-fa3-量化)与[HunyuanVideo FA3](https://gitcode.com/Ascend/msmodelslim/blob/master/example/multimodal_sd/HunYuanVideo/README.md#hunyuanvideo-fa3-量化)的详细使用说明。
+请参考[Flux FA3量化](../../../../example/multimodal_sd/Flux/README.md#flux-fa3-量化)与[HunyuanVideo FA3](../../../../example/multimodal_sd/HunYuanVideo/README.md#hunyuanvideo-fa3-量化)的详细使用说明。

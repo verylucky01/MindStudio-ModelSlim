@@ -170,7 +170,7 @@ searched_config = cache_adaptor.search(
 )
 ```
 
-完整的搜索脚本示例 [dit_cache_search_t2v_sp.sh](https://gitcode.com/Ascend/msmodelslim/blob/master/example/osp1_2/dit_cache_search_t2v_sp.sh)：
+完整的搜索脚本示例 [dit_cache_search_t2v_sp.sh](../../../../example/osp1_2/dit_cache_search_t2v_sp.sh)：
 
 ```bash
 #!/bin/bash
@@ -254,7 +254,7 @@ for step_id, t in enumerate(timesteps):
 
 #### 5.3 完整推理脚本
 
-完整的推理脚本示例 [dit_cache_sample_t2v_sp.sh](https://gitcode.com/Ascend/msmodelslim/blob/master/example/osp1_2/dit_cache_sample_t2v_sp.sh)：
+完整的推理脚本示例 [dit_cache_sample_t2v_sp.sh](../../../../example/osp1_2/dit_cache_sample_t2v_sp.sh)：
 
 ```bash
 #!/bin/bash
@@ -319,7 +319,7 @@ bash scripts/text_condition/gpu/sample_t2v_sp.sh
 
 ### 2. 搜索 timestep
 
-获取到模型pipeline对象后，设置采样优化参数，传入生成的校准视频文件夹目录，调用`ReStepAdaptor`类进行 `timestep` 搜索，完整示例脚本： [search_t2v_sp.sh](https://gitcode.com/Ascend/msmodelslim/blob/master/example/osp1_2/search_t2v_sp.sh)。
+获取到模型pipeline对象后，设置采样优化参数，传入生成的校准视频文件夹目录，调用`ReStepAdaptor`类进行 `timestep` 搜索，完整示例脚本： [search_t2v_sp.sh](../../../../example/osp1_2/search_t2v_sp.sh)。
 
 ```python3
 # Load pipeline, for example
@@ -345,7 +345,7 @@ scheduler_timestep = restep_adaptor.search()
 
 ### 3. 用搜索的 timestep 进行推理
 
-示例推理命令（完整脚本请参考[sample_t2v_sp.sh](https://gitcode.com/Ascend/msmodelslim/blob/master/example/osp1_2/sample_t2v_sp.sh)）： 
+示例推理命令（完整脚本请参考[sample_t2v_sp.sh](../../../../example/osp1_2/sample_t2v_sp.sh)）： 
 
 ```shell
 torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
@@ -362,4 +362,4 @@ torchrun --nnodes=1 --nproc_per_node 8  --master_port 29503 \
 ```
 
 其中，`--schedule_timestep` 为搜索得到的 timestep 文件路径。
-可参考[search_t2v_sp.sh](https://gitcode.com/Ascend/msmodelslim/blob/master/example/osp1_2/search_t2v_sp.sh)修改模型参数路径和搜索得到的 timestep 文件路径，执行带采样优化的推理生成。
+可参考[search_t2v_sp.sh](../../../../example/osp1_2/search_t2v_sp.sh)修改模型参数路径和搜索得到的 timestep 文件路径，执行带采样优化的推理生成。

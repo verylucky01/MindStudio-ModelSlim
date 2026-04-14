@@ -1,8 +1,8 @@
 感谢您贡献的Pull Request！
-在提交之前，请务必阅读 [CONTRIBUTING.md](https://gitcode.com/Ascend/msmodelslim/blob/master/CONTRIBUTING.md)。
+在提交之前，请务必阅读 [CONTRIBUTING.md](../docs/zh/appendix/CONTRIBUTING.md)。
 
 Thanks for sending a pull request!
-BEFORE SUBMITTING, PLEASE READ [CONTRIBUTING.md](https://gitcode.com/Ascend/msmodelslim/blob/master/CONTRIBUTING.md).
+BEFORE SUBMITTING, PLEASE READ [CONTRIBUTING.md](../docs/zh/appendix/CONTRIBUTING.md).
 
 ## PR描述 (What this PR does / why we need it?)
 

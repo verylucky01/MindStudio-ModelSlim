@@ -18,14 +18,14 @@
 
 - [good-first-issue](https://gitcode.com/Ascend/msmodelslim/issues?categorysearch=%255B%257B%22field%22:%22order_by_sort%22,%22value%22:%22created_at_desc%22,%22label%22:%22%E6%9C%80%E8%BF%91%E5%88%9B%E5%BB%BA%22%257D,%257B%22field%22:%22labels%22,%22value%22:%255B%257B%22id%22:22797,%22name%22:%22good-first-issue%22%257D%255D,%22label%22:%22good-first-issue%22%257D%255D&state=all&order_by=created_at&sort=desc&scope=all&page=1)
 - [help-wanted](https://gitcode.com/Ascend/msmodelslim/issues?categorysearch=%255B%257B%22field%22:%22order_by_sort%22,%22value%22:%22created_at_desc%22,%22label%22:%22%E6%9C%80%E8%BF%91%E5%88%9B%E5%BB%BA%22%257D,%257B%22field%22:%22labels%22,%22value%22:%255B%257B%22id%22:22796,%22name%22:%22help-wanted%22%257D%255D,%22label%22:%22help-wanted%22%257D%255D&state=all&order_by=created_at&sort=desc&scope=all&page=1)
-- 除了上述两个新手友好issue外，我们也提供了其他的[issue模板](https://gitcode.com/Ascend/msmodelslim/tree/master/.gitcode/ISSUE_TEMPLATE)来作为参考。
+- 除了上述两个新手友好issue外，我们也提供了其他的[issue模板](../../../.gitcode/ISSUE_TEMPLATE/)来作为参考。
 - 此外，您也可以通过 [RFC](https://gitcode.com/Ascend/msmodelslim/issues?categorysearch=%255B%257B%22field%22:%22order_by_sort%22,%22value%22:%22created_at_desc%22,%22label%22:%22%E6%9C%80%E8%BF%91%E5%88%9B%E5%BB%BA%22%257D,%257B%22field%22:%22labels%22,%22value%22:%255B%257B%22id%22:25328,%22name%22:%22rfc%22%257D%255D,%22label%22:%22rfc%22%257D%255D&state=all&order_by=created_at&sort=desc&scope=all&page=1) 和 [Roadmap](https://gitcode.com/Ascend/msmodelslim/issues?categorysearch=%255B%257B%22field%22:%22labels%22,%22value%22:%255B%257B%22id%22:22807,%22name%22:%22roadmap%22%257D%255D,%22label%22:%22roadmap%22%257D,%257B%22field%22:%22order_by_sort%22,%22value%22:%22created_at_desc%22,%22label%22:%22%E6%8E%92%E5%BA%8F%22%257D%255D&state=all&order_by=created_at&sort=desc&scope=all&page=1)来了解开发计划与规划。
 
 # Pull Requests 与 Code Reviews
 
 感谢您提交 PR！为优化审查流程，请遵循以下指南：
 
-遵循我们的 Pull Request [模板与规范](https://gitcode.com/Ascend/msmodelslim/blob/master/.gitcode/PULL_REQUEST_TEMPLATE.md)
+遵循我们的 Pull Request [模板与规范](../../../.gitcode/PULL_REQUEST_TEMPLATE.md)
 
 参考开发者文档 [模型接入指南](https://msmodelslim.readthedocs.io/zh-cn/latest/zh/developer_guide/integrating_models/)
 

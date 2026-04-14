@@ -24,7 +24,7 @@
 
 ### 实现
 
-算法实现在 [`msmodelslim/core/quantizer/impl/gptq.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quantizer/impl/gptq.py) 中：
+算法实现在 [`msmodelslim/core/quantizer/impl/gptq.py`](../../../../msmodelslim/core/quantizer/impl/gptq.py) 中：
 
   - `per_channel`实现类：`WeightPerChannelGPTQ`
   - `per_group`实现类：`WeightPerGroupGPTQ`

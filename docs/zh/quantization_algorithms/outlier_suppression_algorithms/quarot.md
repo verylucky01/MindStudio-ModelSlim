@@ -29,7 +29,7 @@
 
 ### 实现
 
-算法在 [msmodelslim/processor/quarot/offline_quarot/quarot.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/processor/quarot/offline_quarot/quarot.py) 中实现。
+算法在 [msmodelslim/processor/quarot/offline_quarot/quarot.py](../../../../msmodelslim/processor/quarot/offline_quarot/quarot.py) 中实现。
 
 #### 处理流程时序图
 
@@ -377,7 +377,7 @@ class LAOSOnlineRotationInterface:
         - 实现`get_ln_fuse_map()`：返回LayerNorm与Linear层的融合映射。
         - 实现`get_bake_names()`：返回需要mean融合的Linear层名称列表（通常返回空列表）。
         - 实现`get_rotate_map(block_size)`：返回旋转映射对，包括pre_run和preprocess阶段的旋转配置。
-        - 可参考 [msmodelslim/model/qwen3/model_adapter.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3/model_adapter.py) 或 [msmodelslim/model/deepseek_v3/model_adapter.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/deepseek_v3/model_adapter.py) 的实现。
+        - 可参考 [msmodelslim/model/qwen3/model_adapter.py](../../../../msmodelslim/model/qwen3/model_adapter.py) 或 [msmodelslim/model/deepseek_v3/model_adapter.py](../../../../msmodelslim/model/deepseek_v3/model_adapter.py) 的实现。
 
     2. **实现LAOSOnlineRotationInterface（可选，仅当需要在线旋转时）**：
         - 如果配置中`online: True`，需要同时实现`LAOSOnlineRotationInterface`接口。
@@ -391,7 +391,7 @@ class LAOSOnlineRotationInterface:
 ### 旋转矩阵创建失败
 
 - **现象**：输入模型的维度暂未被支持，导致旋转矩阵创建失败。
-- **解决方案**：请先确定指定维度的 Hadamard 矩阵存在，参考 [msmodelslim/processor/quarot/common/hadamard_txt](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/processor/quarot/common/hadamard_txt) 添加特定维度的矩阵，并在 [msmodelslim/processor/quarot/common/hadamard.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/processor/quarot/common/hadamard.py) 进行补充。
+- **解决方案**：请先确定指定维度的 Hadamard 矩阵存在，参考 [msmodelslim/processor/quarot/common/hadamard_txt](../../../../msmodelslim/processor/quarot/common/hadamard_txt) 添加特定维度的矩阵，并在 [msmodelslim/processor/quarot/common/hadamard.py](../../../../msmodelslim/processor/quarot/common/hadamard.py) 进行补充。
 
 ### 张量并行配置错误
 
@@ -418,4 +418,4 @@ class LAOSOnlineRotationInterface:
 - **解决方案**：
     - 确保模型基于Transformer decoder架构。
     - 检查适配器是否正确实现了所有`QuaRotInterface`接口方法（如果启用在线旋转，还需实现`LAOSOnlineRotationInterface`）。
-    - 参考 [msmodelslim/model/qwen3/model_adapter.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3/model_adapter.py) 或 [msmodelslim/model/deepseek_v3/model_adapter.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/deepseek_v3/model_adapter.py) 的实现示例。
+    - 参考 [msmodelslim/model/qwen3/model_adapter.py](../../../../msmodelslim/model/qwen3/model_adapter.py) 或 [msmodelslim/model/deepseek_v3/model_adapter.py](../../../../msmodelslim/model/deepseek_v3/model_adapter.py) 的实现示例。

@@ -54,7 +54,7 @@
 
 ### 实现
 
-- FA3 量化在 [processor.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/processor/quant/fa3/processor.py) 中实现，处理流程分三阶段：
+- FA3 量化在 [processor.py](../../../../msmodelslim/processor/quant/fa3/processor.py) 中实现，处理流程分三阶段：
   1. **注入阶段（preprocess）**：
      - 调用模型适配器的 `inject_fa3_placeholders()` 方法。
      - 适配器负责在 MLA 计算流程中的关键位置插入占位器 `FA3QuantPlaceHolder`。
@@ -131,7 +131,7 @@ class ModelAdapter(FA3QuantAdapterInterface):
     - 适配器能够访问模型的注意力模块并修改其 forward 方法。
 
 - **步骤**：
-  可参考 DeepSeek 的 [model_adapter.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/deepseek_v3/model_adapter.py) 的实现：
+  可参考 DeepSeek 的 [model_adapter.py](../../../../msmodelslim/model/deepseek_v3/model_adapter.py) 的实现：
     1. 模型适配器继承 `FA3QuantAdapterInterface` 接口。
     2. 遍历模型，通过 `should_inject`在注意力层中选择性注入占位器 FA3QuantPlaceHolder 作为子模块。
     3. 定位Q、K、V 激活流向 Attention 计算的临界位置，该位置即为需要插入 FA3 量化的节点。

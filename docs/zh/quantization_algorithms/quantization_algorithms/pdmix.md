@@ -31,9 +31,9 @@
 
 具体实践位置如下：
 
-- 量化校准：[`msmodelslim/core/quantizer/impl/minmax.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quantizer/impl/minmax.py) 中的 `ActPDMixMinmax`
-- 量化模式 IR：[`msmodelslim/ir/w8a8_pdmix.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/ir/w8a8_pdmix.py) 中的 `W8A8PDMixFakeQuantLinear`
-- 相关常量：[`msmodelslim/ir/const.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/ir/const.py) 定义 `int8_pd_mix_asym`
+- 量化校准：[`msmodelslim/core/quantizer/impl/minmax.py`](../../../../msmodelslim/core/quantizer/impl/minmax.py) 中的 `ActPDMixMinmax`
+- 量化模式 IR：[`msmodelslim/ir/w8a8_pdmix.py`](../../../../msmodelslim/ir/w8a8_pdmix.py) 中的 `W8A8PDMixFakeQuantLinear`
+- 相关常量：[`msmodelslim/ir/const.py`](../../../../msmodelslim/ir/const.py) 定义 `int8_pd_mix_asym`
 
 ## 功能介绍
 

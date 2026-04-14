@@ -50,7 +50,7 @@ flowchart TD
 
 ## 多模态模型接入
 
-以下内容将以 [Qwen3-VL-MoE](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)（Mixture of Experts，混合专家架构的多模态模型）W8A8混合量化场景（简称“场景示例”）的模型接入为例。
+以下内容将以 [Qwen3-VL-MoE](../../../msmodelslim/model/qwen3_vl_moe/model_adapter.py)（Mixture of Experts，混合专家架构的多模态模型）W8A8混合量化场景（简称“场景示例”）的模型接入为例。
 
 **Qwen3-VL-MoE的加载策略**：
 
@@ -61,11 +61,11 @@ flowchart TD
 
 ### 新建模型适配器目录和文件
 
-建议在 [`msmodelslim/model/`](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/model) 下创建独立目录，如 `qwen3_vl_moe/`，包含以下文件：
+建议在 [`msmodelslim/model/`](../../../msmodelslim/model/__init__.py) 下创建独立目录，如 `qwen3_vl_moe/`，包含以下文件：
 
-- [`model_adapter.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)：模型适配器主文件
-- [`__init__.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/__init__.py)：导出适配器类
-- [`moe_utils.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/moe_utils.py)（可选）：MoE融合权重等特殊结构的辅助转换工具
+- [`model_adapter.py`](../../../msmodelslim/model/qwen3_vl_moe/model_adapter.py)：模型适配器主文件
+- [`__init__.py`](../../../msmodelslim/model/qwen3_vl_moe/__init__.py)：导出适配器类
+- [`moe_utils.py`](../../../msmodelslim/model/qwen3_vl_moe/moe_utils.py)（可选）：MoE融合权重等特殊结构的辅助转换工具
 
 ### 定义适配器类并继承必要接口
 
@@ -92,7 +92,7 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,  # 提供多模态通用能力
 
 #### `handle_dataset`：处理多模态校准数据
 
-将校准数据（`VlmCalibSample`）转换为多模态理解模型支持的输入，`VlmCalibSample`的定义可参考[`vlm_dataset_loader.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)：
+将校准数据（`VlmCalibSample`）转换为多模态理解模型支持的输入，`VlmCalibSample`的定义可参考[`vlm_dataset_loader.py`](../../../msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)：
 
 **关键点**：
 
@@ -180,7 +180,7 @@ def handle_dataset(self, dataset: Any, device: DeviceType = DeviceType.NPU) -> L
 - 通过临时设置 `num_hidden_layers=1` 来控制仅加载一个语言部分解码层
 - 视觉部分会被完整加载（所有blocks、patch_embed、merger、deepstack_merger_list等）
 - 使用 `from_pretrained` 而非手动加载权重，更简洁可靠
-- 如果首层是MoE层，需要进行3D权重转换（参考 [`moe_utils.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/moe_utils.py)）
+- 如果首层是MoE层，需要进行3D权重转换（参考 [`moe_utils.py`](../../../msmodelslim/model/qwen3_vl_moe/moe_utils.py)）
 
 ```python
 def init_model(self, device: DeviceType = DeviceType.NPU) -> nn.Module:
@@ -456,7 +456,7 @@ def generate_model_forward(self, model: nn.Module, inputs: Any) -> Generator[Pro
 
 ### 注册模型名
 
-在 [`config/config.ini`](https://gitcode.com/Ascend/msmodelslim/blob/master/config/config.ini) 中注册模型：
+在 [`config/config.ini`](../../../config/config.ini) 中注册模型：
 
 ```ini
 [ModelAdapter]
@@ -470,11 +470,11 @@ qwen3_vl_moe = msmodelslim.model.qwen3_vl_moe.model_adapter:Qwen3VLMoeModelAdapt
 
 ### 校准数据准备
 
-校准数据由 YAML 的 `dataset` 字段指定。`dataset` 可配置为短名称（在 [`lab_calib`](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_calib/__init__.py) 下查找）、绝对路径或相对路径。支持三种使用方式（index.json/index.jsonl、纯图像目录、图像目录+单个 json/jsonl），详见[一键量化使用说明 — dataset 校准数据路径配置](../feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置)。
+校准数据由 YAML 的 `dataset` 字段指定。`dataset` 可配置为短名称（在 [`lab_calib`](../../../lab_calib/__init__.py) 下查找）、绝对路径或相对路径。支持三种使用方式（index.json/index.jsonl、纯图像目录、图像目录+单个 json/jsonl），详见[一键量化使用说明 — dataset 校准数据路径配置](../feature_guide/quick_quantization_v1/usage.md#dataset---校准数据路径配置)。
 
 ### 准备量化配置
 
-创建量化配置文件（YAML），例如 [`qwen3_vl_moe_w8a8.yaml`](https://gitcode.com/Ascend/msmodelslim/blob/master/lab_practice/qwen3_vl_moe/qwen3_vl_moe_w8a8.yaml)：
+创建量化配置文件（YAML），例如 [`qwen3_vl_moe_w8a8.yaml`](../../../lab_practice/qwen3_vl_moe/qwen3_vl_moe_w8a8.yaml)：
 
 ```yaml
 apiversion: multimodal_vlm_modelslim_v1
@@ -587,7 +587,7 @@ msmodelslim quant --model_path ${MODEL_PATH} \
 **解决**：
 
 - 参考[辅助方法动态加载语言部分的权重](#辅助方法动态加载语言部分的权重)中 `_convert_single_moe_layer` 方法，实现3D权重切分为多个Linear层
-- 参考 [`moe_utils.py`](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/moe_utils.py) 的等价替换底层逻辑实现
+- 参考 [`moe_utils.py`](../../../msmodelslim/model/qwen3_vl_moe/moe_utils.py) 的等价替换底层逻辑实现
 
 ### 校准数据格式错误
 
@@ -694,8 +694,8 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,
 ### 参考资料
 
 - [模型接入指南](integrating_models.md)：大模型基础接入指导
-- [Qwen2.5-Omni模型适配器](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen2_5_omni_thinker/model_adapter.py)：端到端多模态（文本/图像/音频/视频）适配示例
-- [Qwen3-VL-MoE模型适配器](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3_vl_moe/model_adapter.py)：完整实现示例
-- [VLM数据集加载器](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)与[dataset_loader](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/infra/dataset_loader/)：校准数据加载处理
-- [多模态VLM量化服务](https://gitcode.com/Ascend/msmodelslim/tree/master/msmodelslim/core/quant_service/multimodal_vlm_v1)：服务层实现
+- [Qwen2.5-Omni模型适配器](../../../msmodelslim/model/qwen2_5_omni_thinker/model_adapter.py)：端到端多模态（文本/图像/音频/视频）适配示例
+- [Qwen3-VL-MoE模型适配器](../../../msmodelslim/model/qwen3_vl_moe/model_adapter.py)：完整实现示例
+- [VLM数据集加载器](../../../msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)与[dataset_loader](../../../msmodelslim/infra/dataset_loader/)：校准数据加载处理
+- [多模态VLM量化服务](../../../msmodelslim/core/quant_service/multimodal_vlm_v1)：服务层实现
 - [一键量化使用说明](../feature_guide/quick_quantization_v1/usage.md)：命令行参数详解

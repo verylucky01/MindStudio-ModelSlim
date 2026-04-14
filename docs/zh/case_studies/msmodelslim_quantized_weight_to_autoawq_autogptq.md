@@ -69,7 +69,7 @@ calibrator.save(output_path, safetensors_name=None, json_name=None, save_type=No
 
 ### 转换脚本使用说明
 
-转换脚本路径位于：[ms_to_vllm.py](https://gitcode.com/Ascend/msmodelslim/blob/master/example/ms_to_vllm.py)
+转换脚本路径位于：[ms_to_vllm.py](../../../example/ms_to_vllm.py)
 
 经过上一步1.1使用msModelSlim对权重进行量化，生成quant_model_description_w4a16.json和quant_model_weight_w4a16.safetensors，再使用转换脚本ms_to_vllm.py进行权重格式转换，生成转换后的safetensors文件，用法如下：
 
