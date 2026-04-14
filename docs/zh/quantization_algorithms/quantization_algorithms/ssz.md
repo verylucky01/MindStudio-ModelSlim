@@ -30,6 +30,7 @@ SSZ算法基于以下核心思想：
 ### 实现
 
 #### 代码实现
+
 算法在 [msmodelslim/core/quantizer/impl/ssz.py](../../../../msmodelslim/core/quantizer/impl/ssz.py) 中实现，核心函数为 `ssz_calculate_qparam`。
 
 #### 初始化阶段

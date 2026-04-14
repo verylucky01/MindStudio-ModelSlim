@@ -75,7 +75,7 @@ pip install accelerate
 
 ## 4. 为什么量化权重时出现报错**PTA call acl api failed. *** The param dtype not implemented for DT_BFLOAT16, should be in dtype support list [\*\*\*]**
 
-部分Ascend硬件(例如Atlas 300I/300T系列)只支持float16精度推理，如果模型权重采用`bfloat16`精度量化，可能会导致量化失败。
+部分Ascend硬件（例如Atlas 300I/300T系列）只支持float16精度推理，如果模型权重采用`bfloat16`精度量化，可能会导致量化失败。
 
 ### 解决方法
 

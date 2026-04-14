@@ -6,7 +6,7 @@
 - √ 表示该量化策略已通过msModelSlim官方验证，功能完整、性能稳定，建议优先采用。
 - \- 表示该量化策略暂未通过msModelSlim官方验证，用户可根据实际需求进行配置尝试，但量化效果和功能稳定性无法得到官方保证。
 - 标记了“一键量化”的“模型名称-量化模式（w8a8s等）”组合可在[安装](../getting_started/install_guide.md)后使用如下[一键量化](../feature_guide/quick_quantization_v1/usage.md)命令行执行模型量化。
-- 因 Qwen 系列推出能力更强的新版本，Qwen1.5-14B/32B/72B 模型已超维护周期，后续将对该系列老模型实施日落处理，其现网版本量化模式不再提供维护支持。
+- 因 Qwen 系列推出能力更强的新版本，Qwen1.5-14B/32B/72B 模型已超出维护周期，后续将对该系列老模型实施日落处理，其现网版本量化模式不再提供维护支持。
 
 ```bash
 msmodelslim quant --model_path ${MODEL_PATH} --save_path ${SAVE_PATH} --device npu --model_type ${模型名称} --quant_type ${量化模式} --trust_remote_code True

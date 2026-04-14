@@ -25,7 +25,7 @@ add_output_soft_label(config)
 ```python
 from msmodelslim.common.knowledge_distill.knowledge_distill import KnowledgeDistillConfig
 distill_config = KnowledgeDistillConfig()
-distill_config.set_hard_label (0.5, 0) \
+distill_config.set_hard_label(0.5, 0) \
   .add_output_soft_label({
     't_output_idx': 0,
     's_output_idx': 0,

@@ -56,7 +56,7 @@ PruneTorch(model, torch.ones([1, 3, 224, 224]).type(torch.float32)).prune_by_des
 
 ### 简介
 
-msModelSlim工具提供了API方式的Transformer类模型权重剪枝调优，可将模型权重进行裁剪，并加载到同一模型结构下的小模型中。用户只需提供同一模型结构下小模型(通过配置较小初始化参数得到的模型实例，例如Bert模型中缩小intermediate_size和num_hidden_layers参数)和原始模型权重文件，即可调用剪枝API完成模型权重的剪枝。
+msModelSlim工具提供了API方式的Transformer类模型权重剪枝调优，可将模型权重进行裁剪，并加载到同一模型结构下的小模型中。用户只需提供同一模型结构下小模型（通过配置较小初始化参数得到的模型实例，例如Bert模型中缩小intermediate_size和num_hidden_layers参数）和原始模型权重文件，即可调用剪枝API完成模型权重的剪枝。
 
 ### 使用前准备
 

@@ -256,7 +256,7 @@ class AutoroundQuantProcessor(AutoSessionProcessor):
 
   1. 在配置文件中定义量化策略，支持针对不同的层使用不同的量化策略。
   2. 在配置文件中使用`"autoround_quant"`指定autoround处理器，并且配置相关参数。
-  3. 如需使用自定义校准集，可参考 [msmodelslim/lab_calib](../../../../lab_calib/)添加数据集，并在配置文件中指定数据集名称。
+  3. 如需使用自定义校准集，可参考 [msmodelslim/lab_calib](../../../../lab_calib)添加数据集，并在配置文件中指定数据集名称。
 
 ## FAQ
 

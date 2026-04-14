@@ -3,7 +3,7 @@
 ## 概述
 
 W8A16量化是仅对权重进行量化，适用于对精度要求较高的场景。
-W8A16量化精度调优策略是结合msModelSlim量化工具和精度测试工具precision tool进行精度验证和调优开展。因为W8A16本身量化后精度就很高，大部分模型量化后都精度能满足需求，所以就不结合具体的案例展开精度调试过程，如果发现有W8A16量化后精度不合格，可以参考本文的精度调优策略进行调试。另外，本文是精度调优策略，本文仅对涉及精度调优的参数以及方法进行说明。
+W8A16量化精度调优策略是结合msModelSlim量化工具和精度测试工具precision tool进行精度验证和调优开展。因为W8A16本身量化后精度就很高，大部分模型量化后都能精度满足需求，所以就不结合具体的案例展开精度调试过程，如果发现有W8A16量化后精度不合格，可以参考本文的精度调优策略进行调试。另外，本文是精度调优策略，本文仅对涉及精度调优的参数以及方法进行说明。
 
 注：
 Transformers 版本适配说明：ChatGLM2-6B 模型需依赖 4.40.2 版本的 Transformers 库，若运行时出现 Transformers 相关报错，可尝试将库版本降至 4.40.2 以解决兼容性问题。
@@ -85,7 +85,7 @@ calib_set = []
 i = 0
 with open(entry, encoding="utf-8") as file:
     for line in file:
-        data =json.loads(line) # 将字符串转换为字典
+        data = json.loads(line) # 将字符串转换为字典
         while i < 50: # 获取50条校准数据
             calib_set.append(data)
             i += 1
@@ -203,7 +203,7 @@ GPTQ是一种针对大规模预训练模型的高效后量化算法。
 中英文兼顾的模型考虑使用中英文混合的校准集合。  
 3.剔除量化前后模型输出变化较大的数据作为校准集。  
 4.注意校准集格式：  
-在下述示例中，get_calib_dataset的作用是调整校准集格式，以boolq数据集做校准集为例，boolq数据集格式为 dict={"question":str, "title":str, "answer":bool, "passage":str}，而tokenizer中需要传入的数据格式为："str"（单个提示词）、"List[str]"（批量或单个提示词）或 "List[List[str]]"（批量提示词）。
+在下述示例中，get_calib_dataset的作用是调整校准集格式，以boolq数据集作为校准集为例，boolq数据集格式为 dict={"question":str, "title":str, "answer":bool, "passage":str}，而tokenizer中需要传入的数据格式为："str"（单个提示词）、"List[str]"（批量或单个提示词）或 "List[List[str]]"（批量提示词）。
 
 ```python
 def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
@@ -227,7 +227,7 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
 怎么判定敏感：终端的日志中会显示每一层算子激活量化输入的range_parm数值，range_parm数值越大越敏感。  
 
 仅权重量化操作流程：
-1.判断需要回退的层，通过看日志中range_parm的数值,数值越大表明越需要回退。比如down_proj层，o_proj层。
+1.判断需要回退的层，通过看日志中range_parm的数值，数值越大表明越需要回退。比如down_proj层，o_proj层。
 2.操作方式：QuantConfig里设置参数，disable_names设置需要手动回退的量化敏感层。
 
 另外，W8A16仅支持手动回退，不支持自动回退（设置disable_level='L0'）。
