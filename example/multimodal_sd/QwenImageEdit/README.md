@@ -41,7 +41,7 @@ msmodelslim quant \
     --model_path /path/to/Qwen-Image-Edit-2509 \
     --save_path /path/to/qwen_image_edit_quantized_weights \
     --device npu \
-    --model_type qwen_image_edit \
+    --model_type Qwen-Image-Edit-2509 \
     --config_path lab_practice/qwen_image_edit/qwen-image-edit-w8a8f8-mxfp.yaml \
     --trust_remote_code True
 ```
