@@ -8,6 +8,8 @@ FLUX的推理量化依赖于FLUX.1-dev推理工程仓：[MindIE/FLUX.1-dev](http
 - 硬件支持：Atlas 800I A2
 - 软件支持：FLUX.1-dev推理工程仓，commit ID `12e09174353b1bd57bf7fcb80386f59b09fbbefe`
 
+**注意**：diffusers仅支持>=0.33.0,<=0.33.1
+
 ## 操作流程
 
 - 克隆工程仓代码；

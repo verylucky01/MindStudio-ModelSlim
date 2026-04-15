@@ -102,3 +102,9 @@ torch_npu.npu.set_compile_mode(jit_compile=False)
 # 然后执行量化操作
 # ... 后续的量化代码
 ```
+
+## 6. 量化结束告警：**sys:1: DeprecationWarning: builtin type swigvarlink has no module attribute**
+
+### 问题原因：旧版 SWIG 生成的第三方库与 Python 3.10+ 不兼容。
+
+### 解决方法：此告警不影响量化结果，升级触发该警告的第三方库即可消除（如 sentencepiece）。
