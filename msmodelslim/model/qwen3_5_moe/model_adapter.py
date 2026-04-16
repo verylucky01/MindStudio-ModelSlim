@@ -667,6 +667,37 @@ class Qwen3_5ModelAdapter(
                 for ckpt_key in keys:
                     tensor = f.get_tensor(ckpt_key)
                     if ckpt_key not in params_dict:
+                        # Try to unpack experts if they are packed
+                        if ".experts.gate_up_proj" in ckpt_key:
+                            base_key, suffix = ckpt_key.split(".experts.gate_up_proj", 1)
+                            num_experts = tensor.shape[0]
+                            for expert_idx in range(num_experts):
+                                gate_up_weight = tensor[expert_idx]
+                                gate_weight, up_weight = gate_up_weight.chunk(2, dim=0)
+                                
+                                gate_key = f"{base_key}.experts.{expert_idx}.gate_proj{suffix}.weight"
+                                up_key = f"{base_key}.experts.{expert_idx}.up_proj{suffix}.weight"
+                                
+                                if gate_key in params_dict:
+                                    params_dict[gate_key].data.copy_(gate_weight)
+                                    loaded.add(gate_key)
+                                if up_key in params_dict:
+                                    params_dict[up_key].data.copy_(up_weight)
+                                    loaded.add(up_key)
+                            continue
+                            
+                        elif ".experts.down_proj" in ckpt_key:
+                            base_key, suffix = ckpt_key.split(".experts.down_proj", 1)
+                            num_experts = tensor.shape[0]
+                            for expert_idx in range(num_experts):
+                                down_weight = tensor[expert_idx]
+                                down_key = f"{base_key}.experts.{expert_idx}.down_proj{suffix}.weight"
+                                
+                                if down_key in params_dict:
+                                    params_dict[down_key].data.copy_(down_weight)
+                                    loaded.add(down_key)
+                            continue
+
                         raise InvalidModelError(
                             f"Unexpected MTP checkpoint key: {ckpt_key}",
                             action="Please verify MTP model definition matches checkpoint parameter names.",
