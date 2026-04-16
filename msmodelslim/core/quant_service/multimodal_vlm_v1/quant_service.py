@@ -29,6 +29,7 @@ from msmodelslim.core.quant_service import DatasetLoaderInfra
 from msmodelslim.core.quant_service import KeyInfoPersistenceInfra
 from msmodelslim.core.runner.layer_wise_runner import LayerWiseRunner
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
+from msmodelslim.core.runner.optional_interface import LayerWiseOffloadOptionalInterface
 from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.utils.logging import get_logger, logger_setter
 from msmodelslim.utils.seed import seed_all
@@ -210,7 +211,19 @@ class MultimodalVLMModelslimV1QuantService(IQuantService):
             get_logger().warning(
                 f"runner for multimodal_vlm_modelslim_v1 is not layer_wise, will be converted to layer_wise.")
 
-        runner = LayerWiseRunner(adapter=model_adapter, offload_device="cpu")
+        offload_device = "cpu"
+        if isinstance(model_adapter, LayerWiseOffloadOptionalInterface):
+            preferred_offload = model_adapter.get_layer_wise_offload_device()
+            if isinstance(preferred_offload, str) and preferred_offload:
+                if preferred_offload in ("cpu", "meta"):
+                    offload_device = preferred_offload
+                else:
+                    get_logger().warning(
+                        f"Invalid offload device {preferred_offload} from model adapter, fallback to 'cpu'. "
+                        "Supported: ['cpu', 'meta']."
+                    )
+
+        runner = LayerWiseRunner(adapter=model_adapter, offload_device=offload_device)
         ctx = self.context_factory.create()
         get_logger().info(f"Created runner LayerWiseRunner successfully")
         with ContextManager(ctx=ctx):

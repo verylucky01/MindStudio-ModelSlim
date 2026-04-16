@@ -28,7 +28,6 @@ import torch.distributed as dist
 from pydantic import Field, BaseModel
 from torch import nn
 
-from ascend_utils.common.security.path import json_safe_load, json_safe_dump
 from msmodelslim import logger, ir as qir
 from msmodelslim.ir.qal.qregistry import QABCRegistry
 from msmodelslim.model import IModel
@@ -37,6 +36,7 @@ from msmodelslim.utils.distributed import DistHelper
 from msmodelslim.utils.exception import ToDoError, SchemaValidateError
 from msmodelslim.utils.logging import logger_setter
 from msmodelslim.utils.security import safe_copy_file, get_write_directory
+from msmodelslim.utils.security import json_safe_load, json_safe_dump
 from .interface import AscendV1SaveInterface, AscendV1GlobalModelDtypeInterface
 from .saver import AutoSaverProcessor, AutoSaverBaseConfig, _convert_hookir_to_wrapper
 from .utils.deqscale import deqscale2int64_by_dtype
@@ -66,7 +66,7 @@ def copy_files(input_path, output_path):
 
 def remove_quantization_config(output_path):
     """
-    从config.json文件中移除quantization_config字段
+    从config.json文件中移除quantization_config字段（包括顶层和text_config中的）
     @param output_path: 目标目录
     """
     config_file = os.path.join(output_path, "config.json")
@@ -77,8 +77,16 @@ def remove_quantization_config(output_path):
     try:
         config_data = json_safe_load(config_file, check_user_stat=True)
 
+        removed = False
         if 'quantization_config' in config_data:
             del config_data['quantization_config']
+            removed = True
+        if 'text_config' in config_data and isinstance(config_data['text_config'], dict):
+            if 'quantization_config' in config_data['text_config']:
+                del config_data['text_config']['quantization_config']
+                removed = True
+
+        if removed:
             json_safe_dump(config_data, config_file, indent=2, check_user_stat=True)
     except Exception as e:
         logger.warning(f"Failed to remove quantization_config in config.json!")
