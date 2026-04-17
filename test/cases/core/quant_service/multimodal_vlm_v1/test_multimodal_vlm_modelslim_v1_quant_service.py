@@ -43,6 +43,7 @@ from msmodelslim.core.quant_service.multimodal_vlm_v1.quant_service import (
     MultimodalVLMModelslimV1QuantServiceConfig,
 )
 from msmodelslim.core.runner.pipeline_interface import PipelineInterface
+from msmodelslim.core.runner.optional_interface import LayerWiseOffloadOptionalInterface
 from msmodelslim.utils.exception import SchemaValidateError
 from msmodelslim.core.context import IContextFactory
 
@@ -296,3 +297,100 @@ class TestMultimodalVLMModelslimV1QuantService:
         # 非 layer_wise 的 runner 应触发 warning 日志
         mock_logger = mock_get_logger.return_value
         mock_logger.warning.assert_called_once()
+
+    @staticmethod
+    def _make_quant_config_for_offload_case():
+        spec = Mock()
+        spec.dataset = "cpu_dataset"
+        spec.default_text = "cpu prompt"
+        spec.process = []
+        spec.save = []
+        spec.runner = "layer_wise"
+
+        quant_cfg = Mock()
+        quant_cfg.spec = spec
+        return quant_cfg
+
+    @staticmethod
+    def _make_adapter_for_offload_case(preferred_offload=None, with_optional_interface=True):
+        def handle_dataset(*_args, **_kwargs):
+            return []
+
+        def init_model(*_args, **_kwargs):
+            return Mock()
+
+        def generate_model_visit(*_args, **_kwargs):
+            yield from ()
+
+        def generate_model_forward(*_args, **_kwargs):
+            yield from ()
+
+        def enable_kv_cache(*_args, **_kwargs):
+            return None
+
+        attrs = {
+            "model_type": property(lambda self: "test_model"),
+            "model_path": property(lambda self: Path("/tmp/test_model")),
+            "trust_remote_code": property(lambda self: False),
+            "handle_dataset": handle_dataset,
+            "init_model": init_model,
+            "generate_model_visit": generate_model_visit,
+            "generate_model_forward": generate_model_forward,
+            "enable_kv_cache": enable_kv_cache,
+        }
+        if with_optional_interface:
+            attrs["get_layer_wise_offload_device"] = lambda self: preferred_offload
+
+        bases = (PipelineInterface, LayerWiseOffloadOptionalInterface) if with_optional_interface else (PipelineInterface,)
+        adapter_cls = type("AdapterForOffloadCase", bases, attrs)
+        return adapter_cls()
+
+    @pytest.mark.parametrize(
+        "preferred_offload, with_optional_interface, expected_offload, expect_invalid_warning",
+        [
+            ("meta", True, "meta", False),
+            ("gpu", True, "cpu", True),
+            ("", True, "cpu", False),
+            (None, False, "cpu", False),
+        ],
+    )
+    @patch("msmodelslim.core.quant_service.multimodal_vlm_v1.quant_service.get_logger")
+    @patch("msmodelslim.core.quant_service.multimodal_vlm_v1.quant_service.LayerWiseRunner")
+    @patch("msmodelslim.core.quant_service.multimodal_vlm_v1.quant_service.seed_all")
+    def test_quant_process_when_model_adapter_offload_setting_changes_then_runner_uses_expected_device(
+            self,
+            mock_seed_all,
+            mock_runner_cls,
+            mock_get_logger,
+            preferred_offload,
+            with_optional_interface,
+            expected_offload,
+            expect_invalid_warning,
+    ):
+        quant_cfg = self._make_quant_config_for_offload_case()
+        adapter = self._make_adapter_for_offload_case(
+            preferred_offload=preferred_offload,
+            with_optional_interface=with_optional_interface,
+        )
+
+        runner = Mock()
+        mock_runner_cls.return_value = runner
+
+        self.service.quant_process(
+            quant_config=quant_cfg,
+            model_adapter=adapter,
+            save_path=None,
+            device=DeviceType.CPU,
+            device_indices=None,
+        )
+
+        mock_seed_all.assert_called_once()
+        mock_runner_cls.assert_called_once()
+        assert mock_runner_cls.call_args.kwargs["offload_device"] == expected_offload
+
+        mock_logger = mock_get_logger.return_value
+        has_invalid_warning = any(
+            "Invalid offload device" in str(args[0])
+            for args, _ in mock_logger.warning.call_args_list
+        )
+        assert has_invalid_warning is expect_invalid_warning
