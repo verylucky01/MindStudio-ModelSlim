@@ -188,7 +188,7 @@ msmodelslim quant \
     --save_path /path/to/hunyuan_quantized_weights \
     --device npu \
     --model_type hunyuan_video \
-    --config_path /lab_pratice/hunyuan_video/hunyuan_video_w8a8f8_mxfp.yaml \
+    --config_path /lab_practice/hunyuan_video/hunyuan_video_w8a8f8_mxfp.yaml \
     --trust_remote_code True
 ```
 

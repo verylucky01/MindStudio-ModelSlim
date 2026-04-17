@@ -219,7 +219,6 @@ spec:
 | symmetric | 是否对称量化 | `true`, `false` | true: 对称量化；false: 非对称量化 |
 | method | 量化方法 | `"histogram"` | 固定值，启用直方图激活值量化 |
 
-
 ### 算法参数
 
 **HistogramObserverConfig**

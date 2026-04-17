@@ -173,7 +173,6 @@ $$Q = \text{clamp}(\text{round}(\frac{V}{S}) + Z, Q_{min}, Q_{max})$$
 | symmetric | 是否对称量化 | `true`, `false` | true: 对称量化，零点为0<br/>false: 非对称量化，零点可调整 | `true` |
 | method | 量化方法 | `"minmax"`, `"ssz"`, `"gptq"` | minmax: 最小最大值量化<br/>ssz: ssz权重量化<br/>gptq: gptq权重量化 | `"minmax"` |
 
-
 ### 层过滤机制详解
 
 #### 过滤规则

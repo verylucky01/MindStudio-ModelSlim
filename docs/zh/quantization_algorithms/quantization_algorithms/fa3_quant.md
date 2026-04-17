@@ -23,33 +23,42 @@
 **算法流程：**
 
 1. 收集每个 head 的激活统计数据：
-   - 输入：激活张量 x，shape 为 (B, H, S, D)
-     其中 B=batch_size, H=num_heads, S=seq_len, D=head_dim
-   - 将 x reshape 为 (H, N)，N = B * S * D
-   - 每个 head 独立收集 N 个数据点
+
+    - 输入：激活张量 x，shape 为 `(B, H, S, D)`
+    - 其中 B=batch_size, H=num_heads, S=seq_len, D=head_dim
+    - 将 x reshape 为 `(H, N)`，`N = B * S * D`
+    - 每个 head 独立收集 N 个数据点
 
 2. 对每个 head 使用 Recall Window 算法找到最小量化范围：
-   - 输入：head_data (N,), ratio (默认 0.9999)
-   - 对 N 个数据点进行排序：sorted_data = sort(head_data)
-   - 计算目标元素数量：target_num = int(ratio * N)
-   - 滑动窗口搜索最小范围：
-     * 遍历所有可能的窗口起点 i = 0 到 (N - target_num)
-     * 窗口范围：[sorted_data[i], sorted_data[i + target_num - 1]]
-     * 计算窗口长度：window_length = sorted_data[i + target_num - 1] - sorted_data[i]
-     * 保留窗口长度最小的窗口
-   - 输出：该 head 的 (min_val, max_val)
+
+    - 输入：head_data (N,), ratio (默认 0.9999)
+    - 对 N 个数据点进行排序：sorted_data = sort(head_data)
+    - 计算目标元素数量：target_num = int(ratio * N)
+    - 滑动窗口搜索最小范围：
+
+      - 遍历所有可能的窗口起点 i = 0 到 (N - target_num)
+      - 窗口范围：[sorted_data[i], sorted_data[i + target_num - 1]]
+      - 计算窗口长度：window_length = sorted_data[i + target_num - 1] - sorted_data[i]
+      - 保留窗口长度最小的窗口
+
+    - 输出：该 head 的 (min_val, max_val)
 
 3. 跨批次累积统计：
-   - 对每个校准批次，计算当前批次的 (min_val, max_val)
-   - 更新累积统计值，确保量化范围覆盖所有校准数据：
-     * min_values[h] = min(min_values[h], current_min[h])
-     * max_values[h] = max(max_values[h], current_max[h])
+
+    - 对每个校准批次，计算当前批次的 (min_val, max_val)
+    - 更新累积统计值，确保量化范围覆盖所有校准数据：
+
+      - min_values[h] = min(min_values[h], current_min[h])
+      - max_values[h] = max(max_values[h], current_max[h])
 
 4. 计算每个 head 的量化参数：
-   - 对称量化公式：
-     * abs_max[h] = max(abs(min_values[h]), abs(max_values[h]))
-     * scale[h] = abs_max[h] / 127
-   - 输出：量化参数 q_param
+
+    - 对称量化公式：
+
+      - abs_max[h] = max(abs(min_values[h]), abs(max_values[h]))
+      - scale[h] = abs_max[h] / 127
+
+    - 输出：量化参数 q_param
 
 ### 实现
 
@@ -59,24 +68,24 @@
 
 #### 注入阶段
 
-  - 阶段：`preprocess`。
-  - 调用模型适配器的 `inject_fa3_placeholders()` 方法。
-  - 适配器负责在 MLA 计算流程中的关键位置插入占位器 `FA3QuantPlaceHolder`。
-  - 支持通过 `include/exclude` 配置选择性注入。
+- 阶段：`preprocess`。
+- 调用模型适配器的 `inject_fa3_placeholders()` 方法。
+- 适配器负责在 MLA 计算流程中的关键位置插入占位器 `FA3QuantPlaceHolder`。
+- 支持通过 `include/exclude` 配置选择性注入。
 
 #### 校准阶段
 
-  - 阶段：`process`。
-  - 占位符被替换为监听器 `_FA3PerheadObserver`。
-  - 校准数据流经注意力层时，监听器收集每个 head 的激活统计信息。
-  - 根据滑动窗口的思想找到包含指定比例数据的最小数值分布区间。
+- 阶段：`process`。
+- 占位符被替换为监听器 `_FA3PerheadObserver`。
+- 校准数据流经注意力层时，监听器收集每个 head 的激活统计信息。
+- 根据滑动窗口的思想找到包含指定比例数据的最小数值分布区间。
 
 #### 伪量化部署阶段
 
-  - 阶段：`postprocess`。
-  - 从监听器提取每个 head 的 min/max 值。
-  - 调用 `calculate_qparam()` 计算对称量化参数。
-  - 创建 IR 替换监听器。
+- 阶段：`postprocess`。
+- 从监听器提取每个 head 的 min/max 值。
+- 调用 `calculate_qparam()` 计算对称量化参数。
+- 创建 IR 替换监听器。
 
 ## 适用要求
 
@@ -136,13 +145,16 @@ class ModelAdapter(FA3QuantAdapterInterface):
 ### 适配步骤
 
 - **前置要求**：
-    - 模型基于 Transformer 架构，包含明确的注意力层。
-    - 注意力层的 Q、K、V 激活值在计算流程中可定位。
-    - 适配器能够访问模型的注意力模块并修改其 forward 方法。
+
+  - 模型基于 Transformer 架构，包含明确的注意力层。
+  - 注意力层的 Q、K、V 激活值在计算流程中可定位。
+  - 适配器能够访问模型的注意力模块并修改其 forward 方法。
 
 - **步骤**：
+
   可参考 DeepSeek 的 [model_adapter.py](../../../../msmodelslim/model/deepseek_v3/model_adapter.py) 的实现：
-    1. 模型适配器继承 `FA3QuantAdapterInterface` 接口。
-    2. 遍历模型，通过 `should_inject`在注意力层中选择性注入占位器 FA3QuantPlaceHolder 作为子模块。
-    3. 定位Q、K、V 激活流向 Attention 计算的临界位置，该位置即为需要插入 FA3 量化的节点。
-    4. 包裹注意力层的 forward 方法，在定位到的临界位置插入对 FA3 量化的调用。
+
+  1. 模型适配器继承 `FA3QuantAdapterInterface` 接口。
+  2. 遍历模型，通过 `should_inject` 在注意力层中选择性注入占位器 `FA3QuantPlaceHolder` 作为子模块。
+  3. 定位 Q、K、V 激活流向 Attention 计算的临界位置，该位置即为需要插入 FA3 量化的节点。
+  4. 包裹注意力层的 `forward` 方法，在定位到的临界位置插入对 FA3 量化的调用。

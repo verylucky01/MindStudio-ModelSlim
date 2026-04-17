@@ -708,4 +708,4 @@ fa_quant(fa_amp=5)
 
 ### 多模态FA3量化关键步骤说明如下
 
-请参考[Flux FA3量化](../../../../example/multimodal_sd/Flux/README.md#flux-fa3-量化)与[HunyuanVideo FA3](../../../../example/multimodal_sd/HunYuanVideo/README.md#hunyuanvideo-fa3-量化)的详细使用说明。
+请参考[Flux FA3量化](../../../../example/multimodal_sd/Flux/README.md#flux-fa3-quantization)与[HunyuanVideo FA3](../../../../example/multimodal_sd/HunYuanVideo/README.md#hunyuanvideo-fa3-量化)的详细使用说明。
