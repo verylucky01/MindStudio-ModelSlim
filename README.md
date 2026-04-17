@@ -24,6 +24,10 @@
 
 ## 🔥 最新消息
 
+### 🗓️ 2026年4月
+
+- msModelSlim 支持 Kimi-K2.5 W4A8 量化
+
 ### 🗓️ 2026年3月
 
 - msModelSlim 支持 GLM-4.6V W8A8 量化
