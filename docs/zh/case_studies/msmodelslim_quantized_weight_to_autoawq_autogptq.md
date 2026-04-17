@@ -94,12 +94,12 @@ python ms_to_vllm.py --model ./quant_model_weight_w4a16.safetensors --json ./qua
 
 ### 前期准备
 
-开源工具相关的环境配置、量化和推理参考github上的readme.md，链接：https://github.com/casper-hansen/AutoAWQ
+开源工具相关的环境配置、量化和推理参考 github 上的 readme.md，链接：[AutoAWQ README](https://github.com/casper-hansen/AutoAWQ)。
 
 ### 量化使用说明
 
-AutoAWQ量化, 需要注意的是，Version使用GEMM，如果没有传入数据集可能会报错，需要传入数据集val.jsonl文件, 参考网址：https://github.com/casper-hansen/AutoAWQ/issues/506
-，数据集获取地址：https://huggingface.co/datasets/mit-han-lab/pile-val-backup/blob/main/val.jsonl.zst 。请注意`trust_remote_code`为`True`时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。     
+AutoAWQ量化。需要注意的是，Version 使用 GEMM 时，如果没有传入数据集可能会报错，需要传入数据集 val.jsonl 文件，参考：[AutoAWQ issue #506](https://github.com/casper-hansen/AutoAWQ/issues/506)。
+数据集获取地址：[val.jsonl.zst](https://huggingface.co/datasets/mit-han-lab/pile-val-backup/blob/main/val.jsonl.zst)。请注意 `trust_remote_code` 为 `True` 时可能执行浮点模型权重中的代码文件，请确保浮点模型来源安全可靠。
 AutoAWQ量化脚本示例如下：
 
 ```python
@@ -196,7 +196,7 @@ for idx, item in enumerate(res):
 
 ### 前期准备
 
-开源工具相关的环境配置、量化和推理参考github上的readme.md，链接如下：https://github.com/AutoGPTQ/AutoGPTQ  
+开源工具相关的环境配置、量化和推理参考 github 上的 readme.md，链接如下：[AutoGPTQ README](https://github.com/AutoGPTQ/AutoGPTQ)。
 
 ### 量化使用说明
 

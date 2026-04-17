@@ -36,7 +36,7 @@
 | `tokenizer.json` | 原始分词器的词汇表文件，定义 token 与 ID 的映射关系 |
 | `{model_type}_best_practice.yaml` | **量化配置协议文件**，记录本次量化所使用的完整配置信息，参考[量化配置协议详解](usage.md#量化配置协议详解) |
 | `vocab.json` | 原始词汇映射文件，部分模型（如 GPT 风格模型）会包含此文件 |
-| `optional/quarot.safetensors` | **QuaRot 全局旋转矩阵文件**（仅在使用 QuaRot 且 `export_extra_info: True` 时生成），存储全局旋转矩阵 `Q`。详见[QuaRot 导出结果](#quarot-导出结果) |
+| `optional/quarot.safetensors` | **QuaRot 全局旋转矩阵文件**（仅在使用 QuaRot 且 `export_extra_info: True` 时生成），存储全局旋转矩阵 `Q`。详见[QuaRot 旋转量化](#quarot-旋转量化) |
 | `debug_info/` | **调试信息目录**（仅在启用 `--debug` 参数时生成），包含量化过程中的上下文信息，用于问题排查和算法分析。详见[调试信息输出](#调试信息输出) |
 
 ## quant_model_description.json 详解
@@ -60,6 +60,7 @@
   "optional": {}
 }
 ```
+
 > [!Note] 说明
 > `*.weight` 字段名称由模型本身决定。
 
@@ -589,6 +590,7 @@ optional/
 #### quant_model_description.json 中的描述字段
 
 **启用online**：`quant_model_description.json` 中新增 `metadata.quarot` 域：
+
 ```jsonc
 {
   "metadata": {                                 // 其他元数据信息

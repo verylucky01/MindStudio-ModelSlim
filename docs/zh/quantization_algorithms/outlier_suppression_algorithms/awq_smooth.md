@@ -122,7 +122,6 @@ AWQ 算法的代码组织在 [msmodelslim/processor/anti_outlier/awq/](../../../
 | [common.py](../../../../msmodelslim/processor/anti_outlier/awq/common.py)                           | `AWQConfig`, `AWQContext`, `offload()`, `onload()` | 算法配置、运行时上下文和张量迁移工具   |
 | [interface.py](../../../../msmodelslim/processor/anti_outlier/awq/interface.py)                     | `AWQInterface`                                     | 模型适配器需要实现的抽象接口           |
 
-
 #### 预处理阶段
 
 - 通过 `AWQInterface.get_adapter_config_for_subgraph()` 获取子图配置。

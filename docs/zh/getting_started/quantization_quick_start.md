@@ -289,4 +289,4 @@ A: 量化方式选择建议：
 A: 两种方式生成的权重文件格式相同，都可以用于推理。主要区别在于：
 
 - 一键量化使用最佳实践配置，可能包含一些优化
-- 传统量化支持生成MindIE推理框架独占格式，可用于老版本兼容；一键量化支持AscendV1格式（关于该格式的更多信息，请参考 [AscendV1Config](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/core/quant_service/modelslim_v1/save/ascendv1.py#L87) 中的说明），可用于多框架（MindIE、vllm-ascend、SGLang）使用。
+- 传统量化支持生成MindIE推理框架独占格式，可用于老版本兼容；一键量化支持AscendV1格式（关于该格式的更多信息，请参考 [AscendV1Config](../../../msmodelslim/core/quant_service/modelslim_v1/save/ascendv1.py) 中的说明），可用于多框架（MindIE、vllm-ascend、SGLang）使用。

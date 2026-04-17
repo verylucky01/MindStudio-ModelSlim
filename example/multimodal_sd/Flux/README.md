@@ -186,7 +186,7 @@ msmodelslim quant \
     --save_path /path/to/flux1_quantized_weights \
     --device npu \
     --model_type FLUX.1-dev \
-    --config_path /lab_pratice/flux1/flux1_w8a8f8_mxfp.yaml \
+    --config_path /lab_practice/flux1/flux1_w8a8f8_mxfp.yaml \
     --trust_remote_code True
 ```
 

@@ -403,6 +403,7 @@ class LAOSOnlineRotationInterface:
 **原因**：在线旋转需要插入额外的算子，会增加计算开销。
 
 **解决方案**：
+
 - 根据精度要求权衡是否启用在线旋转。
 - 考虑仅使用离线旋转（`online: False`）来平衡精度和性能。
 - 确保推理框架对在线旋转算子有良好支持。
@@ -414,6 +415,7 @@ class LAOSOnlineRotationInterface:
 **原因**：模型结构不兼容或适配器实现不完整。
 
 **解决方案**：
+
 - 确保模型基于Transformer decoder架构。
 - 检查适配器是否正确实现了所有`QuaRotInterface`接口方法（如果启用在线旋转，还需实现`LAOSOnlineRotationInterface`）。
 - 参考 [msmodelslim/model/qwen3/model_adapter.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/qwen3/model_adapter.py) 或 [msmodelslim/model/deepseek_v3/model_adapter.py](https://gitcode.com/Ascend/msmodelslim/blob/master/msmodelslim/model/deepseek_v3/model_adapter.py) 的实现示例。

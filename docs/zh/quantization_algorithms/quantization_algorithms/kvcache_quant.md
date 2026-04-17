@@ -17,7 +17,7 @@
 **核心思想：**
 
 1. **量化目标**：对注意力机制中写入 KVCache 的 `key_states` 和 `value_states` 进行 INT8 量化。
-3. **量化时机**：在 `DynamicCache.update()` 调用时，拦截 Key/Value 状态应用量化校准。
+2. **量化时机**：在 `DynamicCache.update()` 调用时，拦截 Key/Value 状态应用量化校准。
 3. **量化策略**：per_channel：按隐藏层维度计算量化参数，平衡精度和效率。
 4. **内存优化**：量化后的缓存状态理论上可减少约 50% 的cache内存占用（FP16→INT8）。
 
@@ -28,18 +28,21 @@
 - 算法在 [msmodelslim/processor/quant/attention.py](../../../../msmodelslim/processor/quant/attention.py) 中实现，处理流程分三阶段。
 
 #### 检测阶段
+
   - 阶段：`pre_run`。
   - 自动检测模型中的注意力层，基于模块命名规则识别 `self_attn` 模块。
   - 为每个注意力层创建对应的 `DynamicCacheQuantizer`，配置量化参数。
   - 在目标注意力层的第一层安装触发钩子，检测推理开始。
   
 #### 校准阶段
+
   - 阶段：`run`。
   - 通过钩子机制在 `DynamicCache.update()` 调用时拦截 Key/Value 状态。
   - 使用 `DynamicCacheQuantizer` 对缓存状态进行伪量化，收集量化统计信息。
   - 支持增量式校准，适应动态序列长度变化。
   
 #### 伪量化部署阶段
+
   - 阶段：`postprocess`。
   - 将校准完成的量化器转换为推理优化的 `FakeQuantDynamicCache` IR。
   - 保持与原有缓存机制的兼容性，无需修改上层推理逻辑。
@@ -151,7 +154,6 @@ class FakeQuantDynamicCache(AutoFakeQuantDynamicCache):
 | method | 量化方法 | string | "minmax" | 量化算法方法，当前仅支持"minmax"算法。 |
 | include | 包含的注意力层 | array[string] | ["*"] | 支持通配符匹配，指定要执行KVCache量化的注意力层。 |
 | exclude | 排除的注意力层 | array[string] | [] | 支持通配符匹配，优先级高于include。 |
-
 
 ## FAQ
 
