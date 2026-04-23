@@ -222,17 +222,11 @@ def check_w4a8_mx_dynamic_per_block_export(module: W4A8MXDynamicPerBlockFakeQuan
     assert weight_key in all_tensors, f"Weight tensor {weight_key} must exist in safetensors file"
     weight_tensor = all_tensors[weight_key]
 
-    assert weight_tensor.dtype == torch.float8_e4m3fn, \
-        f"Weight tensor {weight_key} should be float8_e4m3fn, got {weight_tensor.dtype}"  # torch.int8
-    assert weight_tensor.shape == module.weight.shape, \
-        f"Weight tensor {weight_key} shape mismatch: expected {module.weight.shape}, got {weight_tensor.shape}"
-    weight_float32 = weight_tensor.to(dtype=torch.float32)
-    max_val = weight_float32.max().item()
-    min_val = weight_float32.min().item()
-    assert max_val <= torch.tensor([+448.0], device=weight_tensor.device), \
-        f"Weight tensor {weight_key} max value should be less than 448.0, got {max_val}"
-    assert min_val >= torch.tensor([-448.0], device=weight_tensor.device), \
-        f"Weight tensor {weight_key} min value should be greater than -448.0, got {min_val}"
+    assert weight_tensor.dtype == torch.uint8, \
+        f"Weight tensor {weight_key} should be uint8, got {weight_tensor.dtype}"
+    expected_weight_shape = (module.weight.shape[0], module.weight.shape[1] // 2)
+    assert weight_tensor.shape == expected_weight_shape, \
+        f"Weight tensor {weight_key} shape mismatch: expected {expected_weight_shape}, got {weight_tensor.shape}"
 
     # 验证权重缩放因子tensor必须存在
     assert weight_scale_key in all_tensors, \
@@ -264,18 +258,11 @@ def check_w4a4_mx_dynamic_per_block_export(module: W4A4MXDynamicPerBlockFakeQuan
     assert weight_key in all_tensors, f"Weight tensor {weight_key} must exist in safetensors file"
     weight_tensor = all_tensors[weight_key]
 
-    assert weight_tensor.dtype == torch.float8_e4m3fn, \
-        f"Weight tensor {weight_key} should be float8_e4m3fn, got {weight_tensor.dtype}"  # torch.int8
-    assert weight_tensor.shape == module.weight.shape, \
-        f"Weight tensor {weight_key} shape mismatch: expected {module.weight.shape}, \
-        got {weight_tensor.shape}"
-    weight_float32 = weight_tensor.to(dtype=torch.float32)
-    max_val = weight_float32.max().item()
-    min_val = weight_float32.min().item()
-    assert max_val <= torch.tensor([+448.0], device=weight_tensor.device), \
-        f"Weight tensor {weight_key} max value should be less than 448.0, got {max_val}"
-    assert min_val >= torch.tensor([-448.0], device=weight_tensor.device), \
-        f"Weight tensor {weight_key} min value should be greater than -448.0, got {min_val}"
+    assert weight_tensor.dtype == torch.uint8, \
+        f"Weight tensor {weight_key} should be uint8, got {weight_tensor.dtype}"
+    expected_weight_shape = (module.weight.shape[0], module.weight.shape[1] // 2)
+    assert weight_tensor.shape == expected_weight_shape, \
+        f"Weight tensor {weight_key} shape mismatch: expected {expected_weight_shape}, got {weight_tensor.shape}"
 
     # 验证权重缩放因子tensor必须存在
     assert weight_scale_key in all_tensors, \

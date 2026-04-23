@@ -85,3 +85,36 @@ def process_scale(name, bias, tp_num):
         down_bias = 8 * down_bias.sum(dim=1, keepdim=True)
         bias = down_bias.reshape(pre_shape, -1)
     return bias
+
+def pack_fp4_to_uint8(x: torch.Tensor) -> torch.Tensor:
+    FLOAT_TO_E2M1 = [
+        0.0,
+        0.5,
+        1.0,
+        1.5,
+        2.0,
+        3.0,
+        4.0,
+        6.0,
+    ]
+    m, n = x.shape
+    device = x.device
+    # Create lookup table for FP4 values to indices
+    # Map the absolute values to 0-7 indices
+    kE2M1 = torch.tensor(FLOAT_TO_E2M1, device=device, dtype=x.dtype)
+    # Find closest valid FP4 value index for each element
+    abs_x = torch.abs(x)
+    abs_diff_x = torch.abs(abs_x.unsqueeze(-1) - kE2M1)  # [m, n, 8]
+    abs_indices = torch.argmin(abs_diff_x, dim=-1)  # [m, n]
+    # Apply sign bit (bit 3) to get final 4-bit representation
+    indices = abs_indices + (torch.signbit(x).to(torch.long) << 3)
+    # Reshape to prepare for packing pairs of values
+    indices = indices.reshape(-1)
+    # Handle odd length by padding if necessary
+    if indices.numel() % 2 != 0:
+        indices = torch.cat([indices, torch.zeros(1, dtype=torch.long, device=device)])
+    # Reshape to pair consecutive elements
+    indices = indices.reshape(-1, 2)
+    # Pack pairs of 4-bit values into 8-bit values
+    packed = (indices[:, 0] | (indices[:, 1] << 4)).to(torch.uint8)
+    return packed.reshape(m, n // 2)

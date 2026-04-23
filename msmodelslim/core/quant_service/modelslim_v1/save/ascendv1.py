@@ -41,7 +41,7 @@ from .interface import AscendV1SaveInterface, AscendV1GlobalModelDtypeInterface
 from .saver import AutoSaverProcessor, AutoSaverBaseConfig, _convert_hookir_to_wrapper
 from .utils.deqscale import deqscale2int64_by_dtype
 from .utils.json import JsonWriter
-from .utils.pack import w4a8_pack_int4, process_scale
+from .utils.pack import w4a8_pack_int4, process_scale, pack_fp4_to_uint8
 from .utils.safetensors import SafetensorsWriter, BufferedSafetensorsWriter
 
 
@@ -439,7 +439,7 @@ class AscendV1Saver(AutoSaverProcessor):
                 raise SchemaValidateError("w_axes must be int or list[int].")
             weight_scale = module.weight_scale
             self.group_size = 32
-            self.write_tensor(prefix + ".weight", "W4A4_MXFP4", module.weight.cpu().to(torch.float8_e4m3fn))
+            self.write_tensor(prefix + ".weight", "W4A4_MXFP4", pack_fp4_to_uint8(module.weight.cpu()))
             self.write_tensor(
                 prefix + ".weight_scale",
                 "W4A4_MXFP4",
@@ -457,7 +457,7 @@ class AscendV1Saver(AutoSaverProcessor):
                 raise SchemaValidateError("w_axes must be int or list[int].")
             weight_scale = module.weight_scale
             self.group_size = 32
-            self.write_tensor(prefix + ".weight", "W4A8_MXFP", module.weight.cpu().to(torch.float8_e4m3fn))
+            self.write_tensor(prefix + ".weight", "W4A8_MXFP", pack_fp4_to_uint8(module.weight.cpu()))
             self.write_tensor(
                 prefix + ".weight_scale",
                 "W4A8_MXFP",
