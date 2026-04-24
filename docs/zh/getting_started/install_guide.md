@@ -36,7 +36,7 @@ bash install.sh
 
 2.如果需要进行稀疏量化和压缩，则需要安装CANN（8.2.RC1以上版本）：
 
-下载[CANN](https://www.hiascend.com/developer/download/community/result?module=cann)，请根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/softwareinst/instg/instg_0008.html?Mode=PmIns&InstallType=local&OS=Debian&Software=cannToolKit)。
+安装CANN软件需要根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN快速安装](https://www.hiascend.com/cann/download)。
 
 ```shell
 # 1.git clone msmodelslim代码
@@ -85,7 +85,7 @@ pip install ./msmodelslim-{version}-py3-none-any.whl # 安装whl包
 
 ### CANN安装
 
-下载[CANN](https://www.hiascend.com/developer/download/community/result?module=cann)，请根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/softwareinst/instg/instg_0008.html?Mode=PmIns&InstallType=local&OS=Debian&Software=cannToolKit)。
+安装CANN软件需要根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN快速安装](https://www.hiascend.com/cann/download)。
 
 ### PTA安装
 
