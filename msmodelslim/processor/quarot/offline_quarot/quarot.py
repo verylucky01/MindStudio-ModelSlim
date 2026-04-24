@@ -35,7 +35,7 @@ from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.utils.logging import get_logger
 from .laos_online import LAOSOnlineRotationProcessor
 from .quarot_interface import QuaRotInterface, RotSide, get_rotate_command
-from ..common.quarot_utils import fuse_ln_linear, rotate_linear, is_power_of_two, bake_mean_into_linear
+from ..common.quarot_utils import fuse_ln_linear, rotate_linear, is_power_of_two, bake_mean_into_linear, rotate_weight
 
 
 class QuaRotProcessorConfig(AutoProcessorConfig):
@@ -241,9 +241,14 @@ class QuaRotProcessor(AutoSessionProcessor):
     def _rotate(self, rotate_commands: List[str]):
         for command in rotate_commands:
             get_logger().debug(f"start to {command.side.value} rotate linear: {command.target}")
-            mod = self.model.get_submodule(command.target)
             try:
+                mod = self.model.get_submodule(command.target)
                 rotate_linear(mod, command.rot, command.side == RotSide.RIGHT)
+            except AttributeError as e:
+                path_list = command.target.split('.')
+                mod = self.model.get_submodule('.'.join(path_list[:-1]))
+                weight = getattr(mod, path_list[-1])
+                rotate_weight(weight, command.rot, command.side == RotSide.RIGHT)
             except UnsupportedError as e:
                 raise UnsupportedError(f"{command.side.value} rotate linear error!",
                                     action=f"Please check whether the {command.target} size is equal \

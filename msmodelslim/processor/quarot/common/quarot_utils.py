@@ -138,6 +138,29 @@ def rotate_linear(linear: torch.nn.Linear,
             linear.bias.data = torch.matmul(rot.T.to(weight_data), bias_data).to(dtype=dtype)
 
 
+def rotate_weight(weight: torch.Tensor,
+                  rot: Any,
+                  right_rotate: bool = True) -> None:
+    if isinstance(rot, list) or isinstance(rot, tuple):
+        rot = torch.block_diag(*rot)
+    dtype = weight.data.dtype
+    device = weight.device
+
+    weight_data = weight.data.to(device=device, dtype=GLOBAL_DTYPE)
+    dim_size = weight_data.shape[1] if right_rotate else weight_data.shape[0]
+    # support diag block rotate automatically
+    if dim_size != rot.shape[0]:
+        block_num = dim_size // rot.shape[0]
+        if dim_size % rot.shape[0] != 0:
+            raise UnsupportedError("rotate matrix dim must be a divisor of weight dim!",
+                                   action="Please check the weight dim and rotate matrix dim!")
+        rot = torch.block_diag(* [rot] * block_num)
+    if right_rotate:
+        weight.data = torch.matmul(weight_data, rot.to(weight_data)).to(dtype=dtype)
+    else:
+        weight.data = torch.matmul(rot.T.to(weight_data), weight_data).to(dtype=dtype)
+
+
 def fuse_ln_linear(layernorms: List[torch.nn.Module], linear_layers: List[torch.nn.Linear]) -> None:
     ln_data = []
     ln_bias_data = []

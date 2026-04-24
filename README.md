@@ -26,6 +26,7 @@
 
 ### 🗓️ 2026年4月
 
+- msModelSlim 支持 DeepSeek-V4-Flash W8A8 量化
 - msModelSlim 支持 Kimi-K2.5 W4A8 量化
 
 ### 🗓️ 2026年3月
