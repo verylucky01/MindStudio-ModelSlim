@@ -10,10 +10,9 @@
 
 ## 源码安装
 
-[!NOTE] 说明
-
-- 使用 `msModelSlim` 命令行工具时，请勿在 `msModelSlim` 的源码目录下直接运行命令。这可能会因 Python 在导入模块时出现源码路径和安装路径冲突，导致命令执行失败。
-- 若安装 `msmodelslim` 时遇到报错，请先查阅 [FAQ](../appendix/faq.md) 寻找解决方案。如问题仍未解决，欢迎提交 [Issue](https://gitcode.com/Ascend/msmodelslim/issues)，并附上您的运行环境及完整的错误日志，我们将尽快为您排查。
+>[!NOTE]  
+>使用 `msModelSlim` 命令行工具时，请勿在 `msModelSlim` 的源码目录下直接运行命令。这可能会因 Python 在导入模块时出现源码路径和安装路径冲突，导致命令执行失败。  
+>若安装 `msmodelslim` 时遇到报错，请先查阅 [FAQ](../appendix/faq.md) 寻找解决方案。如问题仍未解决，欢迎提交 [Issue](https://gitcode.com/Ascend/msmodelslim/issues)，并附上您的运行环境及完整的错误日志，我们将尽快为您排查。
 
 ### 基于Atlas A2 训练、推理产品，Atlas A3 训练、推理系列产品安装
 
@@ -36,7 +35,7 @@ bash install.sh
 
 2.如果需要进行稀疏量化和压缩，则需要安装CANN（8.2.RC1以上版本）：
 
-下载[CANN](https://www.hiascend.com/developer/download/community/result?module=cann)，请根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/softwareinst/instg/instg_0008.html?Mode=PmIns&InstallType=local&OS=Debian&Software=cannToolKit)。
+安装CANN软件需要根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN快速安装](https://www.hiascend.com/cann/download)。
 
 ```shell
 # 1.git clone msmodelslim代码
@@ -85,11 +84,11 @@ pip install ./msmodelslim-{version}-py3-none-any.whl # 安装whl包
 
 ### CANN安装
 
-下载[CANN](https://www.hiascend.com/developer/download/community/result?module=cann)，请根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/softwareinst/instg/instg_0008.html?Mode=PmIns&InstallType=local&OS=Debian&Software=cannToolKit)。
+安装CANN软件需要根据系统选择aarch64或x86_64对应版本，具体安装方式请参考[CANN快速安装](https://www.hiascend.com/cann/download)。
 
 ### PTA安装
 
-PyTorch安装请参考[Ascend Extension for PyTorch](https://www.hiascend.com/document/detail/zh/Pytorch/710/configandinstg/instg/insg_0004.html)配置与安装。
+PyTorch安装请参考《[Ascend Extension for PyTorch](https://www.hiascend.com/document/detail/zh/Pytorch/710/configandinstg/instg/insg_0004.html)》配置与安装。
 
 ## 卸载
 

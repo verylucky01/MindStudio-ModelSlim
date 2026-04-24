@@ -17,8 +17,7 @@ export OMP_NUM_THREADS=48
 ## 前期准备
 
 参考以下两篇文档完成工具使用前准备工作  
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)  
-以及[大模型量化工具依赖安装](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#使用前准备)  。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../getting_started/install_guide.md)》以及《[大模型量化工具依赖安装](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#使用前准备)》。
 
 ## 代码示例
 
@@ -261,7 +260,7 @@ def get_calib_dataset(tokenizer, calib_list, device=f"npu:{device_id}"):
     return calib_dataset
 ```
 
-注： 需要将msmodelslim文件夹下的[precision_tool文件夹](../../../precision_tool)和[security文件夹](../../../security)复制一份出来，和量化脚本放置于同一目录下，再将待测试数据集放入precision_tool文件夹中，具体操作见：[Precision Tool 使用方法说明及数据集下载链接](../feature_guide/traditional_quantization_v0/fake_quantization_accuracy_testing_tool.md)
+注： 需要将msmodelslim文件夹下的[precision_tool文件夹](../../../precision_tool)和[security文件夹](../../../security)复制一份出来，和量化脚本放置于同一目录下，再将待测试数据集放入precision_tool文件夹中，具体操作见：《[Precision Tool 使用方法说明及数据集下载链接](../feature_guide/traditional_quantization_v0/fake_quantization_accuracy_testing_tool.md)》。
 
 ### 4 量化回退
 

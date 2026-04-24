@@ -15,7 +15,7 @@
 
 ### 前置知识
 
-在开始之前，建议先阅读[《模型接入指南》](integrating_models.md)，了解基础的接口概念和模型适配器设计。
+在开始之前，建议先阅读《[模型接入指南](integrating_models.md)》，了解基础的接口概念和模型适配器设计。
 
 ### 多模态模型架构
 
@@ -685,9 +685,9 @@ class Qwen3VLMoeModelAdapter(VlmBaseModelAdapter,
 
 ### 参考资料
 
-- [模型接入指南](integrating_models.md)：大模型基础接入指导
+- 《[模型接入指南](integrating_models.md)》：大模型基础接入指导
 - [Qwen2.5-Omni模型适配器](../../../msmodelslim/model/qwen2_5_omni_thinker/model_adapter.py)：端到端多模态（文本/图像/音频/视频）适配示例
 - [Qwen3-VL-MoE模型适配器](../../../msmodelslim/model/qwen3_vl_moe/model_adapter.py)：完整实现示例
 - [VLM数据集加载器](../../../msmodelslim/infra/dataset_loader/vlm_dataset_loader.py)与[dataset_loader](../../../msmodelslim/infra/dataset_loader/)：校准数据加载处理
 - [多模态VLM量化服务](../../../msmodelslim/core/quant_service/multimodal_vlm_v1)：服务层实现
-- [一键量化使用说明](../feature_guide/quick_quantization_v1/usage.md)：命令行参数详解
+- 《[一键量化使用说明](../feature_guide/quick_quantization_v1/usage.md)》：命令行参数详解

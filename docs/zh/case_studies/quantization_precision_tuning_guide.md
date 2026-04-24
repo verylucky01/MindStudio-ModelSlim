@@ -33,7 +33,7 @@
 
 ## 使用前准备
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../getting_started/install_guide.md)》。
 
 ## 调优步骤详解
 
@@ -176,7 +176,7 @@
 
 ##### 第一步：敏感层分析
 
-使用msModelSlim提供的敏感层分析工具识别量化敏感层。详细使用方法请参考[量化敏感层分析使用指南](../feature_guide/sensitive_layer_analysis/analyze_api_usage.md)。
+使用msModelSlim提供的敏感层分析工具识别量化敏感层。详细使用方法请参考《[量化敏感层分析使用指南](../feature_guide/sensitive_layer_analysis/analyze_api_usage.md)》。
 
 **功能说明**：
 

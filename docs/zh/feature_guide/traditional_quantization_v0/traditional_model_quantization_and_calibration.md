@@ -175,7 +175,7 @@ ONNX模型的量化可以采用不同的模式，包括Label-Free和Data-Free模
     
 ### 使用前准备
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../../getting_started/install_guide.md)》。
 
 注意：当前 ONNX 量化功能暂不支持Python 3.12 及以上版本。 若需使用 ONNX 量化功能，请确保所用 Python 版本低于 3.12。
 
@@ -279,7 +279,7 @@ calib.export_quant_onnx(output_model_path)  # 导出量化后模型
 python3 yolov5m_quant.py
 ```
 
-量化后的ONNX模型可参考[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md#%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)中“模型推理”章节，将ONNX模型转换为OM模型，并进行精度验证。若精度损失超过预期，可参考精度保持策略减少精度损失。
+量化后的ONNX模型可参考《[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md)》中“模型推理”章节，将ONNX模型转换为OM模型，并进行精度验证。若精度损失超过预期，可参考精度保持策略减少精度损失。
 
 精度保持策略
 
@@ -317,7 +317,7 @@ def get_calib_data():
 本章节示例调用post_training_quant接口进行Label-Free量化配置，若用户需自行配置精度保持策略，可以调用squant_ptq接口进行Label-Free量化，参考Data-Free模式（以squant_ptq接口为例）的配置步骤并注意修改quant_mode和calib_data参数。
 
 前提条件
-已参考[安装指南](../../getting_started/install_guide.md)完成开发环境配置。
+已参考《[安装指南](../../getting_started/install_guide.md)》完成开发环境配置。
 训练后量化前须执行命令安装依赖。
 如下命令如果使用非root用户安装，需要在安装命令后加上--user，例如：pip3 install onnx --user。
 
@@ -345,7 +345,7 @@ pip3 install onnxruntime==1.14.1
 
 静态shape模型量化步骤（以ResNet50为例）
 
-本样例以ResNet50为例，参考[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md#%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE%E9%9B%86)中“准备数据集”章节获取ImageNet数据集即可，无需预处理，同时参考“模型推理”章节导出onnx文件。
+本样例以ResNet50为例，参考《[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md)》中“准备数据集”章节获取ImageNet数据集即可，无需预处理，同时参考“模型推理”章节导出onnx文件。
 
 新建模型量化脚本resnet50_quant.py，编辑resnet50_quant.py文件，导入如下样例代码。
 
@@ -373,11 +373,11 @@ run_quantize(input_model_path,output_model_path,quant_config)  # 使用run_quant
 
 python3 resnet50_quant.py
 
-量化后的ONNX模型可参考[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md#%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)中“模型推理”章节，将ONNX模型转换为OM模型，并进行精度验证。
+量化后的ONNX模型可参考《[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md)》中“模型推理”章节，将ONNX模型转换为OM模型，并进行精度验证。
 
 动态shape模型量化步骤（以YoloV5m为例）
 
-本样例以YoloV5m为例，参考对应[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md#%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)中“模型推理”章节，导出动态shape的onnx文件。
+本样例以YoloV5m为例，参考对应《[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md)》中“模型推理”章节，导出动态shape的onnx文件。
 
 新建模型的量化脚本yolov5m_quant.py，编辑yolov5m_quant.py文件，导入如下样例代码。
 
@@ -407,7 +407,7 @@ run_quantize(input_model_path,output_model_path,quant_config)  # 使用run_quant
 python3 yolov5m_quant.py
 ```
 
-量化后的ONNX模型可参考[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md#%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)中“模型推理”章节，将ONNX模型转换为OM模型，并进行精度验证。
+量化后的ONNX模型可参考《[README](https://gitcode.com/Ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer/README.md)》中“模型推理”章节，将ONNX模型转换为OM模型，并进行精度验证。
 
 数据预处理
 
@@ -449,11 +449,11 @@ calib_data = []
 
 ### 使用前准备
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../../getting_started/install_guide.md)》。
 
 ### 功能介绍
 
-1.用户自行准备预训练模型和数据集。本样例以ResNet50模型为例，获取模型结构定义脚本，并参考[README](https://gitee.com/mindspore/models/blob/master/official/cv/ResNet/README_CN.md)下载所需数据集， 以cifar10数据集为例，在config/resnet50_cifar10_config.yaml里配置data_path和checkpoint_file_path，并在eval.py的基础上进行修改。
+1.用户自行准备预训练模型和数据集。本样例以ResNet50模型为例，获取模型结构定义脚本，并参考《[README](https://gitee.com/mindspore/models/blob/master/official/cv/ResNet/README_CN.md)》下载所需数据集， 以cifar10数据集为例，在config/resnet50_cifar10_config.yaml里配置data_path和checkpoint_file_path，并在eval.py的基础上进行修改。
 
 2.新建模型量化脚本resnet50_quant.py，将eval.py内容复制到该文件中，删除eval_net()函数中定义损失，定义metric，计算metric相关的代码，保留如下初始化模型和加载权重相关的代码。
 
@@ -553,7 +553,7 @@ python3 resnet50_quant.py
 
 ### 使用前准备
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../../getting_started/install_guide.md)》。
 量化感知训练前须执行命令安装依赖。
 如下命令如果使用非root用户安装，需要在安装命令后加上--user，例如：pip3 install onnx --user。
 

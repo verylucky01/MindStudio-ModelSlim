@@ -11,8 +11,7 @@ Transformers 版本适配说明：ChatGLM2-6B 模型需依赖 4.40.2 版本的 T
 ## 前期准备
 
 参考以下两篇文档完成工具使用前准备工作  
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)  
-以及[大模型量化工具依赖安装](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#使用前准备)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../getting_started/install_guide.md)》以及《[大模型量化工具依赖安装](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#使用前准备)》。
 
 ## 代码示例
 

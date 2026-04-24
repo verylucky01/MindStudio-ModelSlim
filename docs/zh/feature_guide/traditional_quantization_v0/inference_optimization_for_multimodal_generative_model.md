@@ -13,7 +13,7 @@
 
 ## 软件依赖
 
-- 安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
+- 安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../../getting_started/install_guide.md)》。
 - 参考开源模型仓库[OpenSoraPlanV1.2](https://github.com/PKU-YuanGroup/Open-Sora-Plan/releases/tag/v1.2.0) 的readme，下载模型权重，完成模型所需的python环境依赖的安装。
 
 ## 环境配置
@@ -97,7 +97,7 @@ graph TD
 
 ## 详细使用步骤
 
-详细使用接口说明请参考 [DitCacheSearchConfig](../../python_api_v0/multimodal_inference_apis/DitCache/DitCacheSearchConfig.md) 和 [DitCacheAdaptor](../../python_api_v0/multimodal_inference_apis/DitCache/DitCacheAdaptor.md)。
+详细使用接口说明请参考《[DitCacheSearchConfig](../../python_api_v0/multimodal_inference_apis/DitCache/DitCacheSearchConfig.md)》和《[DitCacheAdaptor](../../python_api_v0/multimodal_inference_apis/DitCache/DitCacheAdaptor.md)》。
 
 ### 1. 准备环境和模型
 
@@ -307,7 +307,7 @@ torchrun --nnodes=1 --nproc_per_node 8 --master_port 29503 \
 
 ## 使用步骤
 
-详细使用接口说明请参考 [ReStepAdaptor.md](../../python_api_v0/multimodal_inference_apis/sampling_optimization_apis/ReStepAdaptor.md) 和 [ReStepSearchConfig.md](../../python_api_v0/multimodal_inference_apis/sampling_optimization_apis/ReStepSearchConfig.md)
+详细使用接口说明请参考《[ReStepAdaptor](../../python_api_v0/multimodal_inference_apis/sampling_optimization_apis/ReStepAdaptor.md)》和 《[ReStepSearchConfig](../../python_api_v0/multimodal_inference_apis/sampling_optimization_apis/ReStepSearchConfig.md)》。
 
 ### 1. 运行原始模型推理，生成baseline视频搜索校准
 

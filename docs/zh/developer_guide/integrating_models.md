@@ -163,4 +163,4 @@ msmodelslim quant --model_path ${MODEL_PATH} \
                   --trust_remote_code False
 ```
 
-- 详细用法与参数说明请参阅：[`一键量化使用说明`](../feature_guide/quick_quantization_v1/usage.md)
+- 详细用法与参数说明请参阅：《[`一键量化使用说明`](../feature_guide/quick_quantization_v1/usage.md)》

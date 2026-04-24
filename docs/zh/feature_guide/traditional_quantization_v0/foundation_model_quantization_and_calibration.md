@@ -49,7 +49,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 ### 使用样例
 
-[Deepseek w8a8量化示例](../../../../example/DeepSeek/README.md)
+请参见《[Deepseek w8a8量化示例](../../../../example/DeepSeek/README.md)》。
 
 ## 混合校准数据集使用方法说明
 
@@ -72,7 +72,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 ### 接口说明
 
-请参考 [CalibrationData](../../python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/CalibrationData.md)
+请参考《[CalibrationData](../../python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/CalibrationData.md)》。
 
 操作步骤：
 
@@ -508,7 +508,7 @@ from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 2.新建模型的量化脚本quant.py，
 此处可以参考：[量化脚本（NPU）](#量化脚本npu)
 
-3.启动模型量化任务，并在指定的输出目录获取模型量化参数，量化后权重文件的介绍请参见[量化后权重文件](#量化后权重文件)，若使用MindIE进行后续的推理部署任务，请保存为safetensors格式，具体请参见[大语言模型列表](https://www.hiascend.com/software/mindie/modellist)章节中已适配量化的模型。
+3.启动模型量化任务，并在指定的输出目录获取模型量化参数，量化后权重文件的介绍请参见[量化后权重文件](#量化后权重文件)，若使用MindIE进行后续的推理部署任务，请保存为safetensors格式，具体请参见《[大语言模型列表](https://www.hiascend.com/software/mindie/modellist)》章节中已适配量化的模型。
 
 ### 量化后权重文件
 
@@ -593,7 +593,7 @@ from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 | [quant_qwen.py](../../../../example/Qwen/quant_qwen.py)    | [Qwen2.5-72B 支持Attention量化](../../../../example/Qwen/README.md#qwen25-72b-支持attention量化) |
 | [quant_llama.py](../../../../example/Llama/quant_llama.py) | [Llama3.1-70B W8A8量化搭配Attention量化](../../../../example/Llama/README.md#llama31-70b-w8a8量化搭配attention量化) |
 
-#### 本文仅给出FA3场景下Llama3.1-70B和Qwen2.5-72B的量化推荐配置，可按实际情况进行参数调整，详见[精度调优策略](../../case_studies/w8a8_accuracy_tuning_policy.md) 
+本文仅给出FA3场景下Llama3.1-70B和Qwen2.5-72B的量化推荐配置，可按实际情况进行参数调整，详见《[精度调优策略](../../case_studies/w8a8_accuracy_tuning_policy.md)》 
 
 #### Llama3.1-70B 量化参数设置
 

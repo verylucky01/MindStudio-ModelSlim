@@ -1132,7 +1132,7 @@ compressor.export(compress_info, info_root, dtype=np.int64) # info数据为int64
 ### 使用前准备
 
 当前支持在训练服务器上对MindSpore和PyTorch框架下的模型进行低秩分解。  
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../../getting_started/install_guide.md)》。
 
 ### 功能介绍
 

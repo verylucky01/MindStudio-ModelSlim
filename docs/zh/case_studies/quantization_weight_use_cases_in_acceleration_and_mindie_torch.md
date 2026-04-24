@@ -8,7 +8,7 @@
 
 请参考《[MindIE安装指南](https://www.hiascend.com/document/detail/zh/mindie/10RC3/envdeployment/instg/mindie_instg_0001.html)》安装MindIE，并参考《MindIE安装指南》中“配置MindIE > [配置MindIE LLM](https://www.hiascend.com/document/detail/zh/mindie/10RC3/envdeployment/instg/mindie_instg_0028.html)”章节配置MindIE LLM。
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../getting_started/install_guide.md)》。
 
 ## 量化权重生成
 
@@ -94,7 +94,7 @@ bash examples/models/llama/generate_quant_weight.sh -src {浮点权重路径} -d
 ```
 
 3.运行推理
-以Llama2-13b-hf为例，您可以使用以下指令执行对话测试，推理内容为"What's deep learning"。详细可参考昇腾社区开发指南参考链接：[MindIE LLM 开发指南](https://www.hiascend.com/document/detail/zh/mindie/10RC3/mindiellm/llmdev/mindie_llm0281.html)。
+以Llama2-13b-hf为例，您可以使用以下指令执行对话测试，推理内容为"What's deep learning"。详细可参考昇腾社区开发指南参考链接：《[MindIE LLM 开发指南](https://www.hiascend.com/document/detail/zh/mindie/10RC3/mindiellm/llmdev/mindie_llm0281.html)》。
 
 ```shell
 # 进入加速库路径下

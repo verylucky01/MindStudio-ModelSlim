@@ -61,7 +61,7 @@
 }
 ```
 
-> [!Note] 说明
+> [!Note]  
 > `*.weight` 字段名称由模型本身决定。
 
 ### 字段类型说明
@@ -741,4 +741,4 @@ with safe_open("debug_info/debug_info.safetensors", framework="pt") as f:
 - 启用调试模式会略微增加量化时间（通常增加 5%-10%）
 - 调试信息可能包含模型的敏感信息，请妥善保管
 
-详细使用说明请参考[调试模式使用指南](debug_mode.md)。
+详细使用说明请参考《[调试模式使用指南](debug_mode.md)》。

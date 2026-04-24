@@ -20,13 +20,13 @@ AutoGPTQ：GPU
 
 ### 前期准备
 
-安装 msModelSlim 工具，详情请参见[《msModelSlim工具安装指南》](../getting_started/install_guide.md)。
+安装 msModelSlim 工具，详情请参见《[msModelSlim工具安装指南](../getting_started/install_guide.md)》。
 
 参考大模型量化中的[使用前准备](../feature_guide/traditional_quantization_v0/foundation_model_compression.md#使用前准备)，进行依赖安装。
 
 ### 量化使用说明
 
-量化脚本跟正常的量化脚本一样，可以参考：[w8a8精度调优策略](w8a8_accuracy_tuning_policy.md) 。
+量化脚本跟正常的量化脚本一样，可以参考：《[w8a8精度调优策略](w8a8_accuracy_tuning_policy.md)》。
 本文以W4A16量化方式示例进行说明。需要注意的地方有三处:  
 a.在离群值抑制配置（AntiOutlierConfig）中，a_bit和w_bit应根据量化方式进行设置。当anti_method被设置为"m3"时，代表使用AWQ算法；而对于GPTQ算法，则不需要使用离群值抑制模块，此时可以将相关配置注释掉。
 
@@ -61,7 +61,7 @@ quant_config = QuantConfig(
 
 c.关于保存的权重文件
 本脚本仅支持未切片的safetensors权重转换，所以使用保存量化权重文件的时候，不要使用分片保存。  
-参考链接：[save()接口说明](../python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_save().md)
+参考链接：《[save()接口说明](../python_api_v0/foundation_model_compression_apis/foundation_model_quantization_apis/pytorch_save().md)》
 
 ```python
 calibrator.save(output_path, safetensors_name=None, json_name=None, save_type=None, part_file_size=None)
@@ -94,7 +94,7 @@ python ms_to_vllm.py --model ./quant_model_weight_w4a16.safetensors --json ./qua
 
 ### 前期准备
 
-开源工具相关的环境配置、量化和推理参考 github 上的 readme.md，链接：[AutoAWQ README](https://github.com/casper-hansen/AutoAWQ)。
+开源工具相关的环境配置、量化和推理参考 github 上的 readme.md，链接：《[AutoAWQ README](https://github.com/casper-hansen/AutoAWQ)》。
 
 ### 量化使用说明
 
@@ -196,7 +196,7 @@ for idx, item in enumerate(res):
 
 ### 前期准备
 
-开源工具相关的环境配置、量化和推理参考 github 上的 readme.md，链接如下：[AutoGPTQ README](https://github.com/AutoGPTQ/AutoGPTQ)。
+开源工具相关的环境配置、量化和推理参考 github 上的 readme.md，链接如下：《[AutoGPTQ README](https://github.com/AutoGPTQ/AutoGPTQ)》。
 
 ### 量化使用说明
 

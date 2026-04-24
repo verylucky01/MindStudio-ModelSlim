@@ -8,7 +8,8 @@ Precision Tool为伪量化精度测试工具，在torch_npu路线下进行精度
 
 ### 使用前准备
 
-1.CANN包安装： 安装开发运行环境的昇腾 AI 推理相关驱动、固件、CANN 包，参照 [昇腾文档](https://www.hiascend.com/zh/document)
+1.CANN包安装：安装开发运行环境的昇腾 AI 推理相关驱动、固件、CANN包，参照 《[昇腾文档](https://www.hiascend.com/zh/document)》。
+
 2.设置 Python 环境变量
 
 ```bash
