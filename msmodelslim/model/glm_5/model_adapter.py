@@ -421,7 +421,7 @@ class GLM5ModelAdapter(TransformersModel,
                 offline_info = module.rotation_info
                 global_rotation = offline_info.global_rotation
         if global_rotation is None:
-            raise UnsupportedError("Global rotation is not found.")
+            return
         
         # catch the original model.norm.weight
         origin_index_path = os.path.join(self.model_path, "model.safetensors.index.json")
