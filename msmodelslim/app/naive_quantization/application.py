@@ -454,19 +454,7 @@ class NaiveQuantizationApplication:
             save_path
         )
 
-        if config_path is not None:
-            config_url = str(config_path)
-        else:
-            model_pedigree = model_adapter.get_model_pedigree()
-            config_url = self.practice_manager.get_config_url(
-                model_pedigree, practice_config.metadata.config_id
-            )
-        if config_url is not None:
-            get_logger().info(
-                f"Get best practice {practice_config.metadata.config_id} success, config: {config_url}"
-            )
-        else:
-            get_logger().info(f"Get best practice {practice_config.metadata.config_id} success.")
+        get_logger().info(f"Get best practice {practice_config.metadata.config_id} success.")
 
         get_logger().info(f"===========QUANTIZE MODEL===========")
         self.quant_service.quantize(
