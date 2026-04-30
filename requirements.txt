@@ -5,3 +5,4 @@ wcmatch>=10.0
 accelerate>=0.28.0
 requests
 scipy
+pygtrie

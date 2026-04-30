@@ -36,6 +36,10 @@ from msmodelslim.utils.logging import logger_setter, get_logger, set_logger_leve
 from msmodelslim.core.runner.generated_runner import get_input_datas
 from msmodelslim.utils.exception import UnsupportedError
 from msmodelslim.core.context import ContextManager, get_current_context
+from msmodelslim.utils.distributed import (
+    clear_distributed_task_work_queue,
+    set_distributed_task_work_queue,
+)
 
 
 
@@ -95,7 +99,7 @@ class DPLayerWiseRunner(LayerWiseRunner):
     def distributed_worker(self, rank: int, world_size: int, device_indices: List[int],
                           model: Optional[nn.Module], calib_data: Optional[List[Any]], 
                           device: DeviceType, master_port: int = 29500,
-                          shared_ctx=None):
+                          shared_ctx=None, work_queue=None):
         """
         Worker function for distributed execution.
         
@@ -108,6 +112,7 @@ class DPLayerWiseRunner(LayerWiseRunner):
             device: Target device type
             master_port: Master port for distributed communication
             shared_ctx: Shared context instance
+            work_queue: ``multiprocessing.Queue`` created in parent before ``spawn``，用于任务并行调度器在各 rank 抢任务。
         """
         try:
             with ContextManager(ctx=shared_ctx):
@@ -115,28 +120,35 @@ class DPLayerWiseRunner(LayerWiseRunner):
 
                 # Get the actual device index for this rank
                 actual_device_idx = device_indices[rank]
-                
+
                 # Setup distributed environment
                 # rank is used for process group communication, actual_device_idx is used for device selection
                 setup_distributed(rank, world_size, self.backend, device_index=actual_device_idx, master_port=master_port)
-                
+
+                if work_queue is not None:
+                    set_distributed_task_work_queue(work_queue)
+                    get_logger().debug(
+                        "Rank %s injected distributed task queue: type=%s",
+                        rank,
+                        type(work_queue).__name__,
+                    )
+
                 get_logger().info(
                     f"Rank {rank}/{world_size} initialized on device {actual_device_idx} "
                     f"(device index {actual_device_idx}) with backend {self.backend}"
                 )
 
-            
                 # Initialize model in distributed environment
                 _ = get_input_datas(self.adapter, calib_data, DeviceType.CPU)
-                
+
                 if model is None:
                     get_logger().info('Start to init model in distributed environment')
                     model = self.adapter.init_model(device=DeviceType.CPU)
                     get_logger().info('Init model success in distributed environment')
-                
+
                 # Check if all processors support distributed execution (only rank 0 performs check)
                 unsupported_processors = self._check_distributed_support(self.process_config_list, model)
-                
+
                 if unsupported_processors:
                     # Found unsupported processors, raise error
                     unsupported_names = [str(p) for p in unsupported_processors]
@@ -146,11 +158,11 @@ class DPLayerWiseRunner(LayerWiseRunner):
                     )
                     get_logger().error(error_msg)
                     raise UnsupportedError(error_msg)
-                
+
                 # Execute quantization (based on layer_wise_runner.run)
                 processor_list = self.process_config_list.copy()
                 self.preprocess_processor(processor_list, model, device=device)
-                
+
                 from msmodelslim.core.base.protocol import DataUnit
                 data_recorder = DataUnit(None, None)
                 process_unit = self.build_process_unit(
@@ -160,13 +172,14 @@ class DPLayerWiseRunner(LayerWiseRunner):
                     calib_data=calib_data,
                     data_recorder=data_recorder
                 )
-                
+
                 self.generated_schedule(process_unit, data_recorder)
             
         except Exception as e:
             get_logger().error(f"Error in rank {rank}: {e}")
             raise
         finally:
+            clear_distributed_task_work_queue()
             if dist.is_initialized():
                 dist.destroy_process_group()
 
@@ -193,7 +206,7 @@ class DPLayerWiseRunner(LayerWiseRunner):
         get_logger().info(
             f"Starting distributed execution with {world_size} devices: {device_indices}. "
         )
-        
+
         try:
             # Set multiprocessing start method
             mp.set_start_method('spawn', force=True)
@@ -211,10 +224,16 @@ class DPLayerWiseRunner(LayerWiseRunner):
             
             shared_ctx = get_current_context()
 
+            # 进程间共享任务队列：在 spawn 前由父进程创建，并通过全局注入在各 rank 侧使用。
+            ctx = mp.get_context("spawn")
+            work_queue = ctx.Queue()
+            get_logger().info("Distributed task shared queue enabled (spawn ctx.Queue()).")
+            get_logger().debug("Parent created distributed task queue: type=%s", type(work_queue).__name__)
+
             # Start distributed execution
             mp.spawn(
                 self.distributed_worker,
-                args=(world_size, device_indices, model, calib_data, device, master_port, shared_ctx),
+                args=(world_size, device_indices, model, calib_data, device, master_port, shared_ctx, work_queue),
                 nprocs=world_size,
                 join=True
             )
